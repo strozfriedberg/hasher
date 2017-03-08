@@ -4,11 +4,11 @@ AM_CPPFLAGS = -I$(srcdir)/include $(PROJECT_CPPFLAGS)
 AM_CXXFLAGS = $(PROJECT_CXXFLAGS)
 AM_LDFLAGS = $(PROJECT_LDFLAGS)
 
-src_EXECUTABLE_SOURCES = \
+src_hasher_SOURCES = \
 	src/main.cpp \
 	src/hasher.cpp
 
-src_EXECUTABLE_LDADD = $(PROJECT_LIBS)
+src_hasher_LDADD = $(PROJECT_LIBS)
 
 noinst_PROGRAMS = src/hasher
 
