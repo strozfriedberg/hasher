@@ -9,7 +9,11 @@ HASHER_LIB_INT = src/libhasherint.la
 
 lib_LTLIBRARIES = $(HASHER_LIB)
 
+#if BUILD_DLL
+#src_libhasher_la_SOURCES = src/version.rc
+#else
 src_libhasher_la_SOURCES =
+#endif
 nodist_EXTRA_src_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 
 noinst_LTLIBRARIES = $(HASHER_LIB_INT)
@@ -19,8 +23,11 @@ src_libhasherint_la_SOURCES = \
 	src/matcher.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
-
+if BUILD_DLL
+src_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS) -avoid-version
+else
 src_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS)
+endif
 
 src_libhasher_ladir = $(includedir)
 

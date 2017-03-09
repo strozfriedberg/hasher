@@ -81,6 +81,40 @@ if test "x$scope_ok" != "xyes"; then
 fi
 
 #
+# Linking
+#
+
+# Ensure that we statically link everything which is not a system lib;
+# -all-static includes libstdc++ and libgcc, which are excluded by
+# -static.
+if test "x$enable_shared" != "xyes"; then
+  CXXLD="$CXX -all-static"
+
+  case "$host" in
+  i686-*-mingw*)
+    # FIXME: Really? This looks like it's just asking for trouble...
+    AX_APPEND_LINK_FLAGS([-Wl,--allow-multiple-definition], [HASHER_LIB_LDFLAGS])
+    ;;
+  esac
+else
+  CXXLD="$CXX"
+
+  case "$host" in
+  *-*-mingw*)
+    # -no-undefined is a libtool flag; adding it with AX_APPEND_LINK_FLAGS
+    # will fail because that tries flags with LD. So don't do that.
+    AX_APPEND_FLAG([-no-undefined], [HASHER_LIB_LDFLAGS])
+    HASHER_LIB_LDFLAGS="$HASHER_LIB_LDFLAGS -Wl,--output-def -Wl,src/.libs/$PACKAGE.def"
+#    LT_LANG([Windows Resource])
+    ;;
+  esac
+fi
+
+AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = "xyes" && echo "$host" | grep -q mingw])
+
+AC_SUBST([CXXLD])
+
+#
 # Ship out the flags to Makefile.am
 #
 
@@ -112,6 +146,7 @@ AC_SUBST([PROJECT_CPPFLAGS])
 AC_SUBST([PROJECT_CXXFLAGS])
 AC_SUBST([PROJECT_LDFLAGS])
 AC_SUBST([PROJECT_LIBS])
+AC_SUBST([HASHER_LIB_LDFLAGS])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
