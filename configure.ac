@@ -40,7 +40,7 @@ case "$host" in
   ;;
 esac
 
-#AX_PKG_CHECK_MODULES([BOTAN], [], [botan-2])
+AX_PKG_CHECK_MODULES([BOTAN], [], [botan-2])
 
 #
 # Test Dependencies
