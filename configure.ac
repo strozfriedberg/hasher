@@ -22,6 +22,27 @@ AX_APPEND_COMPILE_FLAGS([-W -Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe -O3
 AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 
 #
+# Dependencies
+#
+
+# pkg-config doesn't look in /usr/local/lib on some systems
+case "$host" in
+*-*-mingw*)
+  # pkg-config should not look in /usr/local/lib while cross-compiling
+  ;;
+*)
+  if test -z "$PKG_CONFIG_PATH"; then
+    PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+  else
+    PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
+  fi
+  export PKG_CONFIG_PATH
+  ;;
+esac
+
+#AX_PKG_CHECK_MODULES([BOTAN], [], [botan-2])
+
+#
 # Test Dependencies
 #
 
@@ -58,6 +79,34 @@ if test "x$scope_ok" != "xyes"; then
   fi
   AC_MSG_WARN([])
 fi
+
+#
+# Ship out the flags to Makefile.am
+#
+
+AC_DEFUN([SF_APPEND], [{
+  if test -n "[$]$1"; then
+    if test -n "$2"; then
+      AS_VAR_APPEND($1, " $2")
+    fi
+  else
+    $1=[$]$2
+  fi
+}])
+
+# collect the flags from everything which might set some
+for lib in BOTAN; do
+  # fold CFLAGS into CXXFLAGS since everything here is C++
+  h="${lib}_CXXFLAGS"
+  t=$(eval echo \"\$${lib}_CFLAGS\")
+  SF_APPEND($h, $t)
+
+  for var in CPPFLAGS CXXFLAGS LDFLAGS LIBS; do
+    h="PROJECT_$var"
+    t=$(eval echo \"\$${lib}_$var\")
+    SF_APPEND($h, $t)
+  done
+done
 
 AC_SUBST([PROJECT_CPPFLAGS])
 AC_SUBST([PROJECT_CXXFLAGS])
