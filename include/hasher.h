@@ -36,7 +36,7 @@ struct SFHASH_FileMatcher;
 
 struct LG_Error;
 
-SFHASH_FileMatcher* sfhash_create_matcher(const uint8_t* beg, const uint8_t* end, LG_Error** err);
+SFHASH_FileMatcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err);
 
 int sfhash_matcher_has_size(SFHASH_FileMatcher* matcher, uint64_t size);
 
@@ -49,6 +49,8 @@ int sfhash_matcher_size(SFHASH_FileMatcher* matcher);
 void sfhash_write_binary_matcher(SFHASH_FileMatcher* matcher, void* buf);
 
 SFHASH_FileMatcher* sfhash_read_binary_matcher(void* beg, void* end);
+
+void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 
 #ifdef __cplusplus
 }

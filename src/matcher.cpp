@@ -2,8 +2,8 @@
 
 using Matcher = SFHASH_FileMatcher;
 
-Matcher* sfhash_create_matcher(const uint8_t* beg, const uint8_t* end, LG_Error* err) {
-  return reinterpret_cast<Matcher*>(0xDEADBEEF);
+Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err) {
+  return nullptr;
 }
 
 int sfhash_matcher_has_size(Matcher* matcher, uint64_t size) {
@@ -26,5 +26,8 @@ void sfhash_write_binary_matcher(Matcher* matcher, void* buf) {
 }
 
 Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
-  return reinterpret_cast<Matcher*>(0xDEADBEEF);
+  return nullptr; 
+}
+
+void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher) {
 }
