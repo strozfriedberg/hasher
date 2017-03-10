@@ -20,7 +20,8 @@ noinst_LTLIBRARIES = $(HASHER_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
 	src/hasher.cpp \
-	src/matcher.cpp
+	src/matcher.cpp \
+	src/util.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
@@ -46,7 +47,8 @@ TESTS = $(check_PROGRAMS)
 
 test_test_SOURCES = \
 	test/test.cpp \
-	test/test_hasher.cpp
+	test/test_hasher.cpp \
+	test/test_matcher.cpp
 
 test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
 

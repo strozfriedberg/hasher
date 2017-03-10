@@ -40,7 +40,7 @@ SFHASH_FileMatcher* sfhash_create_matcher(const char* beg, const char* end, LG_E
 
 int sfhash_matcher_has_size(SFHASH_FileMatcher* matcher, uint64_t size);
 
-int sfhash_matcher_has_hash(SFHASH_FileMatcher* matcher, uint64_t size, uint8_t sha1[20]);
+int sfhash_matcher_has_hash(SFHASH_FileMatcher* matcher, uint64_t size, const uint8_t* sha1);
 
 int sfhash_matcher_has_filename(SFHASH_FileMatcher* matcher, const char* filename);
 
