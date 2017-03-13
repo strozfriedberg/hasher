@@ -38,15 +38,15 @@ struct LG_Error;
 
 SFHASH_FileMatcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err);
 
-int sfhash_matcher_has_size(SFHASH_FileMatcher* matcher, uint64_t size);
+int sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
 
-int sfhash_matcher_has_hash(SFHASH_FileMatcher* matcher, uint64_t size, const uint8_t* sha1);
+int sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, uint64_t size, const uint8_t* sha1);
 
 int sfhash_matcher_has_filename(SFHASH_FileMatcher* matcher, const char* filename);
 
-int sfhash_matcher_size(SFHASH_FileMatcher* matcher);
+int sfhash_matcher_size(const SFHASH_FileMatcher* matcher);
 
-void sfhash_write_binary_matcher(SFHASH_FileMatcher* matcher, void* buf);
+void sfhash_write_binary_matcher(const SFHASH_FileMatcher* matcher, void* buf);
 
 SFHASH_FileMatcher* sfhash_read_binary_matcher(void* beg, void* end);
 
