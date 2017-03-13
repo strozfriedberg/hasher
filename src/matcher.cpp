@@ -10,9 +10,18 @@
 
 #include <boost/lexical_cast.hpp>
 
-std::vector<std::pair<size_t, sha1_t>> load_hashset(const char* beg, const char* end) {
+using Matcher = SFHASH_FileMatcher;
+
+Matcher load_hashset(const char* beg, const char* end) {
 
   std::vector<std::pair<size_t, sha1_t>> table;
+
+  auto fsm = make_unique_del(lg_create_fsm(0), lg_destroy_fsm);
+  auto pmap = make_unique_del(lg_create_pattern_map(0), lg_destroy_pattern_map);
+  auto pat = make_unique_del(lg_create_pattern(), lg_destroy_pattern);
+
+  LG_Error* err = nullptr;
+  LG_KeyOptions kopts{1, 0};
 
   const HashsetIterator iend;
   for (HashsetIterator i(beg, end); i != iend; ++i) {
@@ -22,18 +31,29 @@ std::vector<std::pair<size_t, sha1_t>> load_hashset(const char* beg, const char*
               << to_hex(std::get<2>(*i)) << '\n';
 */
     table.emplace_back(std::get<1>(*i), std::get<2>(*i));
+
+    lg_parse_pattern(pat.get(), std::get<0>(*i).c_str(), &kopts, &err);
+    if (err) {
+      // TODO: handle error
+    }
+
+    lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &err);
+    if (err) {
+      // TODO: handle error
+    }
   }
 
   std::sort(table.begin(), table.end());
 
-  return std::move(table);
+  LG_ProgramOptions popts{0};
+  auto prog = make_unique_del(lg_create_program(fsm.get(), &popts), lg_destroy_program); 
+
+  return Matcher{
+    std::move(table),
+    std::move(pmap),
+    std::move(prog)
+  };
 }
-
-struct SFHASH_FileMatcher {
-  std::vector<std::pair<size_t, sha1_t>> table;
-};
-
-using Matcher = SFHASH_FileMatcher;
 
 Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err) {
   return new Matcher{load_hashset(beg, end)};

@@ -41,6 +41,7 @@ case "$host" in
 esac
 
 AX_PKG_CHECK_MODULES([BOTAN], [], [botan-2])
+AX_PKG_CHECK_MODULES([LIGHTGREP], [], [lightgrep])
 
 #
 # Test Dependencies
@@ -129,7 +130,7 @@ AC_DEFUN([SF_APPEND], [{
 }])
 
 # collect the flags from everything which might set some
-for lib in BOTAN; do
+for lib in BOTAN LIGHTGREP; do
   # fold CFLAGS into CXXFLAGS since everything here is C++
   h="${lib}_CXXFLAGS"
   t=$(eval echo \"\$${lib}_CFLAGS\")

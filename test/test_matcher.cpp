@@ -71,7 +71,9 @@ SCOPE_TEST(loadHashset) {
     { 456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3")}
   };
 
-  SCOPE_ASSERT_EQUAL(load_hashset(txt, txt + std::strlen(txt)), exp);
+  const SFHASH_FileMatcher m{load_hashset(txt, txt + std::strlen(txt))};
+
+  SCOPE_ASSERT_EQUAL(m.table, exp);
 }
 
 SCOPE_TEST(has_size) {
