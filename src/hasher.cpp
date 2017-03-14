@@ -52,8 +52,8 @@ class SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
     const std::pair<const char*, off_t> init[] {
-      { "MD5",    offsetof(HashValues, md5)    },
-      { "SHA1",   offsetof(HashValues, sha1)   },
+      { "MD5",     offsetof(HashValues, md5)    },
+      { "SHA1",    offsetof(HashValues, sha1)   },
       { "SHA-256", offsetof(HashValues, sha256) }
     };
 
