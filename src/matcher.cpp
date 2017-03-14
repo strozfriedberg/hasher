@@ -78,7 +78,7 @@ void cb(void *userData, const LG_SearchHit* const) {
   *static_cast<bool*>(userData) = true;
 } 
 
-int sfhash_matcher_has_filename(Matcher* matcher, const char* filename) {
+int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   LG_ContextOptions copt;
   auto ctx = make_unique_del(lg_create_context(matcher->prog.get(), &copt), lg_destroy_context);
   // TODO: check !ctx 
