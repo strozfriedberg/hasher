@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+#include <utility>
 #include <vector>
 
 #include <lightgrep/api.h>
@@ -11,4 +13,4 @@ struct SFHASH_FileMatcher {
   std::unique_ptr<ProgramHandle, decltype(lg_destroy_program)&> prog;
 };
 
-SFHASH_FileMatcher load_hashset(const char* beg, const char* end);
+std::unique_ptr<SFHASH_FileMatcher> load_hashset(const char* beg, const char* end);
