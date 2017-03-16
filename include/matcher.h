@@ -13,4 +13,4 @@ struct SFHASH_FileMatcher {
   std::unique_ptr<ProgramHandle, decltype(lg_destroy_program)&> prog;
 };
 
-std::unique_ptr<SFHASH_FileMatcher> load_hashset(const char* beg, const char* end);
+std::unique_ptr<SFHASH_FileMatcher> load_hashset(const char* beg, const char* end, LG_Error** err);

@@ -138,8 +138,11 @@ SCOPE_TEST(loadHashset) {
     { 456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3")}
   };
 
-  auto m{load_hashset(HSET, HSET + std::strlen(HSET))};
+  LG_Error* err = nullptr;
+  auto m{load_hashset(HSET, HSET + std::strlen(HSET), &err)};
 
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(m);
   SCOPE_ASSERT_EQUAL(m->table, exp);
 }
 
@@ -149,10 +152,15 @@ SCOPE_TEST(has_size) {
     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";
 
+  LG_Error* err = nullptr;
+
   auto m = make_unique_del(
-    sfhash_create_matcher(HSET, HSET + std::strlen(HSET), nullptr),
+    sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
     sfhash_destroy_matcher
   );
+
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(m);
 
   SCOPE_ASSERT(!sfhash_matcher_has_size(m.get(), 122));
   SCOPE_ASSERT(sfhash_matcher_has_size(m.get(), 123));
@@ -166,10 +174,15 @@ SCOPE_TEST(has_hash) {
     to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3")
   };
 
+  LG_Error* err = nullptr;
+
   auto m = make_unique_del(
-    sfhash_create_matcher(HSET, HSET + std::strlen(HSET), nullptr),
+    sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
     sfhash_destroy_matcher
   );
+
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(m);
 
   SCOPE_ASSERT(!sfhash_matcher_has_hash(m.get(), 122, hashes[0].data()));
   SCOPE_ASSERT(!sfhash_matcher_has_hash(m.get(), 123, hashes[0].data()));
@@ -178,10 +191,15 @@ SCOPE_TEST(has_hash) {
 }
 
 SCOPE_TEST(has_filename) {
+  LG_Error* err = nullptr;
+
   auto m = make_unique_del(
-    sfhash_create_matcher(HSET, HSET + std::strlen(HSET), nullptr),
+    sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
     sfhash_destroy_matcher
   );
+
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(m);
 
   SCOPE_ASSERT(sfhash_matcher_has_filename(m.get(), "xyzzy"));
   SCOPE_ASSERT(sfhash_matcher_has_filename(m.get(), "123x"));

@@ -12,7 +12,7 @@
 
 using Matcher = SFHASH_FileMatcher;
 
-std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end) {
+std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
   auto fsm = make_unique_del(lg_create_fsm(0), lg_destroy_fsm);
   if (!fsm) {
     return nullptr;
@@ -35,8 +35,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end) {
   std::vector<std::pair<size_t, sha1_t>> table;
   table.reserve(lines);
 
-  LG_Error* err = nullptr;
-  LG_KeyOptions kopts{1, 0};
+  const LG_KeyOptions kopts{1, 0};
 
   const HashsetIterator iend;
   for (HashsetIterator i(beg, end); i != iend; ++i) {
@@ -47,20 +46,18 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end) {
 */
     table.emplace_back(std::get<1>(*i), std::get<2>(*i));
 
-    lg_parse_pattern(pat.get(), std::get<0>(*i).c_str(), &kopts, &err);
-    if (err) {
-      // TODO: handle error
+    lg_parse_pattern(pat.get(), std::get<0>(*i).c_str(), &kopts, err);
+    if (*err) {
+      return nullptr; 
     }
 
-    lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &err);
-    if (err) {
-      // TODO: handle error
+    lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", err);
+    if (*err) {
+      return nullptr; 
     }
   }
 
-  std::sort(table.begin(), table.end());
-
-  LG_ProgramOptions popts{0};
+  const LG_ProgramOptions popts{0};
   auto prog = make_unique_del(
     lg_create_program(fsm.get(), &popts), lg_destroy_program
   );
@@ -68,13 +65,15 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end) {
     return nullptr;
   }
 
+  std::sort(table.begin(), table.end());
+
   return std::unique_ptr<Matcher>(
     new Matcher{std::move(table), std::move(prog)}
   );
 }
 
 Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err) {
-  return load_hashset(beg, end).release();
+    return load_hashset(beg, end, err).release();
 }
 
 int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
@@ -100,7 +99,7 @@ void cb(void *userData, const LG_SearchHit* const) {
 } 
 
 int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
-  LG_ContextOptions copt;
+  const LG_ContextOptions copt{};
   auto ctx = make_unique_del(
     lg_create_context(matcher->prog.get(), &copt), lg_destroy_context
   );
