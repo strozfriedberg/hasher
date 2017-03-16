@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HASHER_C_API_H_
+#define HASHER_C_API_H_
 
 #include <stdint.h>
 
@@ -68,3 +69,6 @@ void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* HASHER_C_API_H_ */
+
