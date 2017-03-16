@@ -143,6 +143,10 @@ for lib in BOTAN LIGHTGREP; do
   done
 done
 
+if test "x$enable_shared" != "xyes"; then
+  AS_VAR_APPEND(PROJECT_LIBS, " -lssp")
+fi
+
 AC_SUBST([PROJECT_CPPFLAGS])
 AC_SUBST([PROJECT_CXXFLAGS])
 AC_SUBST([PROJECT_LDFLAGS])
