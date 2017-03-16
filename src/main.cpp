@@ -1,4 +1,5 @@
 #include "hasher.h"
+#include "throw.h"
 #include "util.h"
 
 #include <fstream>
@@ -7,6 +8,8 @@
 #include <boost/lexical_cast.hpp>
 
 int main(int argc, char** argv) {
+  THROW_IF(argc != 3, "wrong number of arguments");
+
   const int algs = boost::lexical_cast<int>(argv[1]);
 
   auto hasher = make_unique_del(
