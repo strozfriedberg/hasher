@@ -28,8 +28,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end) {
     return nullptr;
   }
 
-  // the last byte is either \n or part of the last line if some horrible
-  // person has a file which doesn't end with EOL, count it as 1 either way
+  // The last byte is either \n or part of the last line if some horrible
+  // person has a file which doesn't end with EOL, count it as 1 either way.
   const size_t lines = std::count(beg, end-1, '\n') + 1;
 
   std::vector<std::pair<size_t, sha1_t>> table;
