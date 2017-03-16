@@ -43,23 +43,19 @@ using sha256_t = hash_t<32>;
 
 uint8_t char_to_nibble(char c);
 
-template <size_t N, typename C>
-std::array<uint8_t, N> to_bytes(C beg, C end) {
-  // TODO: fail if end - beg is odd
-  // TODO: fail if end - beg != N
-
+template <
+  size_t N,
+  class = typename std::enable_if<N % 2 == 0>::type
+>
+std::array<uint8_t, N> to_bytes(const char* c) {
   std::array<uint8_t, N> buf;
   uint8_t* out = &buf[0];
-  for (C c = beg; c != end; ++out, c += 2) {
+  const char* const end = c + 2*N;
+  for ( ; c != end; ++out, c += 2) {
     *out = (char_to_nibble(*c) << 4) | char_to_nibble(*(c+1));
   }
 
   return std::move(buf);
-}
-
-template <size_t N>
-std::array<uint8_t, N> to_bytes(const char* s) {
-  return to_bytes<N>(s, s + std::strlen(s));
 }
 
 class LineIterator {
@@ -183,8 +179,9 @@ private:
 
     i = j + 1;
     THROW_IF(i == end, "premature end of tokens");
-    j = end;
-    sha1_t hash = to_bytes<20, const char*>(i, j);
+    j = i + 40;
+    THROW_IF(j != end, "too many tokens");
+    sha1_t hash = to_bytes<20>(i);
 
     return {std::move(name), size, std::move(hash)};
   }
