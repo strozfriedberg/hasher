@@ -11,7 +11,7 @@ SCOPE_TEST(emptyHashNoUpdate) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
- 
+
   SCOPE_ASSERT_EQUAL(
     "d41d8cd98f00b204e9800998ecf8427e",
     to_hex(hashes.md5, hashes.md5+sizeof(hashes.md5))
@@ -38,7 +38,7 @@ SCOPE_TEST(emptyHashEmptyUpdate) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
- 
+
   SCOPE_ASSERT_EQUAL(
     "d41d8cd98f00b204e9800998ecf8427e",
     to_hex(hashes.md5, hashes.md5+sizeof(hashes.md5))
@@ -67,7 +67,7 @@ SCOPE_TEST(alphabetHash) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
- 
+
   SCOPE_ASSERT_EQUAL(
     "c3fcd3d76192e4007dfb496cca67e13b",
     to_hex(hashes.md5, hashes.md5+sizeof(hashes.md5))

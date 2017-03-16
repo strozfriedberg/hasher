@@ -63,7 +63,7 @@ public:
   using difference_type = std::ptrdiff_t;
   using value_type = std::pair<const char*, const char*>;
   using pointer = value_type*;
-  using reference = value_type&; 
+  using reference = value_type&;
   using iterator_category = std::input_iterator_tag;
 
   LineIterator(const char* beg, const char* end):

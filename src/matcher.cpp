@@ -33,7 +33,7 @@ std::tuple<std::string, size_t, sha1_t> parse_line(const char* beg, const char* 
   THROW_IF(j != end, "too many tokens");
   sha1_t hash = to_bytes<20>(i);
 
-  return {std::move(name), size, std::move(hash)}; 
+  return {std::move(name), size, std::move(hash)};
 }
 
 std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
@@ -44,7 +44,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
   auto pmap = make_unique_del(lg_create_pattern_map(0), lg_destroy_pattern_map);
   if (!pmap) {
-    return nullptr; 
+    return nullptr;
   }
 
   auto pat = make_unique_del(lg_create_pattern(), lg_destroy_pattern);
@@ -84,17 +84,17 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
       lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &local_err);
       THROW_IF(local_err, "");
-    }    
+    }
     catch (const std::runtime_error& e) {
       if (!local_err) {
-        local_err = new LG_Error{ 
+        local_err = new LG_Error{
           new char[std::strlen(e.what())+1],
           nullptr,
           nullptr,
           nullptr,
           lineno,
           nullptr
-        }; 
+        };
         std::strcpy(local_err->Message, e.what());
       }
 
@@ -106,7 +106,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
         tail_err->Next = local_err;
         tail_err = local_err;
       }
-      local_err = nullptr;     
+      local_err = nullptr;
     }
   }
 
@@ -153,7 +153,7 @@ int sfhash_matcher_has_hash(const Matcher* matcher, uint64_t size, const uint8_t
 
 void cb(void *userData, const LG_SearchHit* const) {
   *static_cast<bool*>(userData) = true;
-} 
+}
 
 int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   const LG_ContextOptions copt{};
@@ -166,7 +166,7 @@ int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   lg_search(ctx.get(), filename, filename + std::strlen(filename), 0, &hit, cb);
   lg_closeout_search(ctx.get(), &hit, cb);
 
-  return hit; 
+  return hit;
 }
 
 size_t table_size(const Matcher* matcher) {
@@ -180,7 +180,7 @@ int sfhash_matcher_size(const Matcher* matcher) {
 }
 
 void sfhash_write_binary_matcher(const Matcher* matcher, void* buf) {
-  const size_t tlen = table_size(matcher); 
+  const size_t tlen = table_size(matcher);
   *static_cast<size_t*>(buf) = tlen;
   buf = static_cast<void*>(static_cast<size_t*>(buf) + 1);
   std::memcpy(buf, matcher->table.data(), tlen);
@@ -192,9 +192,9 @@ Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
   const uint8_t* buf = static_cast<const uint8_t*>(beg);
   const size_t tlen = *reinterpret_cast<const size_t*>(buf);
   buf += sizeof(size_t);
- 
+
   if (buf + tlen > end) {
-    return nullptr; 
+    return nullptr;
   }
 
   std::vector<std::pair<size_t, sha1_t>> table(
@@ -202,7 +202,7 @@ Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
   );
   std::memcpy(table.data(), buf, tlen);
   buf += tlen;
- 
+
   const size_t plen = static_cast<const uint8_t*>(end) - buf;
   auto prog = make_unique_del(
     // TODO: remove the const_cast after fixing the liblg API

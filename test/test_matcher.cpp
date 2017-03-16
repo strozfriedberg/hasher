@@ -102,7 +102,7 @@ SCOPE_TEST(iterateLinesCRLFNoTerminalEOL) {
   SCOPE_ASSERT(++i == end);
 }
 
-const char HSET[] = 
+const char HSET[] =
     "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";
@@ -127,11 +127,11 @@ SCOPE_TEST(iterateHashset) {
 }
 
 SCOPE_TEST(loadHashset) {
-  const char HSET[] = 
+  const char HSET[] =
     "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";
-  
+
   const std::vector<std::pair<size_t, sha1_t>> exp = {
     { 0, to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160") },
     { 123, to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2") },
@@ -147,7 +147,7 @@ SCOPE_TEST(loadHashset) {
 }
 
 SCOPE_TEST(has_size) {
-  const char HSET[] = 
+  const char HSET[] =
     "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";

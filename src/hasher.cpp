@@ -71,7 +71,7 @@ public:
   }
 
   void get(HashValues* vals) {
-    for (auto& h: hashers) { 
+    for (auto& h: hashers) {
       h.first.get(reinterpret_cast<uint8_t*>(vals) + h.second);
     }
   }
@@ -80,7 +80,7 @@ public:
     for (auto& h: hashers) {
       h.first.reset();
     }
-  } 
+  }
 
 private:
   std::vector<std::pair<BotanHasher, off_t>> hashers;

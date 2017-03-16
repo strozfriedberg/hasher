@@ -32,11 +32,11 @@ int main(int argc, char** argv) {
   sfhash_get_hashes(hasher.get(), &hashes);
 
   if (algs & MD5) {
-    std::cout << to_hex(hashes.md5, hashes.md5+16) << '\n'; 
+    std::cout << to_hex(hashes.md5, hashes.md5+16) << '\n';
   }
 
   if (algs & SHA1) {
-    std::cout << to_hex(hashes.sha1, hashes.sha1+20) << '\n'; 
+    std::cout << to_hex(hashes.sha1, hashes.sha1+20) << '\n';
   }
 
   if (algs & SHA256) {
