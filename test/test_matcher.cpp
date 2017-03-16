@@ -14,6 +14,94 @@ std::ostream& operator<<(std::ostream& o, const hash_t<N>& h) {
   return o << to_hex(h);
 }
 
+SCOPE_TEST(iterateLinesLF) {
+  const char txt[] = "abc\ndef\ng\nhijk\n\nlmnop\n";
+  //                  012 3456 78 90123 4 567890 1
+
+  LineIterator i(txt, txt + std::strlen(txt));
+  const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
+
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+4, txt+7));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+8, txt+9));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+14));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+15, txt+15));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+16, txt+21));
+  SCOPE_ASSERT(++i == end);
+}
+
+SCOPE_TEST(iterateLinesLFNoTerminalEOL) {
+  const char txt[] = "abc\ndef\ng\nhijk\n\nlmnop";
+  //                  012 3456 78 90123 4 567890
+
+  LineIterator i(txt, txt + std::strlen(txt));
+  const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
+
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+4, txt+7));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+8, txt+9));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+14));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+15, txt+15));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+16, txt+21));
+  SCOPE_ASSERT(++i == end);
+}
+
+SCOPE_TEST(iterateLinesCRLF) {
+  const char txt[] = "abc\r\ndef\r\ng\r\nhijk\r\n\r\nlmnop\r\n";
+  //                  012 3 4567 8 90 1 23456 7 8 9 012345 6 7
+
+  LineIterator i(txt, txt + std::strlen(txt));
+  const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
+
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+5, txt+8));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+11));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+13, txt+17));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+19, txt+19));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+21, txt+26));
+  SCOPE_ASSERT(++i == end);
+}
+
+SCOPE_TEST(iterateLinesCRLFNoTerminalEOL) {
+  const char txt[] = "abc\r\ndef\r\ng\r\nhijk\r\n\r\nlmnop";
+  //                  012 3 4567 8 90 1 23456 7 8 9 012345
+
+  LineIterator i(txt, txt + std::strlen(txt));
+  const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
+
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+5, txt+8));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+11));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+13, txt+17));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+19, txt+19));
+  SCOPE_ASSERT(i != end);
+  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+21, txt+26));
+  SCOPE_ASSERT(++i == end);
+}
+
 SCOPE_TEST(tokenizeNonempty) {
   const char line[] = "abc\tdef\tg\nhijk\t\tlmnop\n";
 

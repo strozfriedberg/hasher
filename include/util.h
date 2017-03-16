@@ -60,6 +60,59 @@ std::array<uint8_t, N> to_bytes(const char* s) {
   return to_bytes<N>(s, s + std::strlen(s));
 }
 
+class LineIterator {
+public:
+  using difference_type = std::ptrdiff_t;
+  using value_type = std::pair<const char*, const char*>;
+  using pointer = value_type*;
+  using reference = value_type&; 
+  using iterator_category = std::input_iterator_tag;
+
+  LineIterator(const char* beg, const char* end):
+    cur(beg), next(find_next(beg, end)), end(end) {}
+
+  LineIterator(const LineIterator&) = default;
+
+  LineIterator& operator=(const LineIterator&) = default;
+
+  value_type operator*() const { return {cur, next}; }
+
+  LineIterator& operator++() {
+    if (next == end) {
+      cur = end;
+    }
+    else {
+      cur = next + (*next == '\r' ? 2 : 1);
+      next = find_next(cur, end);
+    }
+    return *this;
+  }
+
+  LineIterator operator++(int) {
+    LineIterator i(*this);
+    ++*this;
+    return i;
+  }
+
+  bool operator==(const LineIterator& o) const {
+    return cur == o.cur && next == o.next;
+  }
+
+  bool operator!=(const LineIterator& o) const {
+    return !(*this == o);
+  }
+
+private:
+  static const char* find_next(const char* pos, const char* end) {
+    const char* i = std::find(pos, end, '\n');
+    return (i == end || *(i-1) != '\r') ? i : i-1;
+  }
+
+  const char* cur;
+  const char* next;
+  const char* const end;
+};
+
 class TokenIterator {
 public:
   using difference_type = std::ptrdiff_t;
