@@ -114,16 +114,16 @@ SCOPE_TEST(iterateHashset) {
     { "filename with spaces", 0, to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160") }
   };
 
-  HashsetIterator i(HSET, HSET + std::strlen(HSET));
-  const HashsetIterator iend;  
+  LineIterator l(HSET, HSET + std::strlen(HSET));
+  const LineIterator lend(HSET + std::strlen(HSET), HSET + std::strlen(HSET));
 
-  SCOPE_ASSERT(i != iend);
-  SCOPE_ASSERT_EQUAL(*i, exp[0]);
-  SCOPE_ASSERT(++i != iend);
-  SCOPE_ASSERT_EQUAL(*i, exp[1]);
-  SCOPE_ASSERT(++i != iend);
-  SCOPE_ASSERT_EQUAL(*i, exp[2]);
-  SCOPE_ASSERT(++i == iend);
+  SCOPE_ASSERT(l != lend);
+  SCOPE_ASSERT_EQUAL(parse_line(l->first, l->second), exp[0]);
+  SCOPE_ASSERT(++l != lend);
+  SCOPE_ASSERT_EQUAL(parse_line(l->first, l->second), exp[1]);
+  SCOPE_ASSERT(++l != lend);
+  SCOPE_ASSERT_EQUAL(parse_line(l->first, l->second), exp[2]);
+  SCOPE_ASSERT(++l == lend);
 }
 
 SCOPE_TEST(loadHashset) {

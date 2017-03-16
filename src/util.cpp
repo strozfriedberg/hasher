@@ -1,3 +1,4 @@
+#include "throw.h"
 #include "util.h"
 
 uint8_t char_to_nibble(char c) {
@@ -12,6 +13,6 @@ uint8_t char_to_nibble(char c) {
     return c - 'a' + 10;
   }
   else {
-//    THROW("'" << c "' is not a hexadecimal digit");
+    THROW("'" << c << "' is not a hexadecimal digit");
   }
 }

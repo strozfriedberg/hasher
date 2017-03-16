@@ -12,6 +12,30 @@
 
 using Matcher = SFHASH_FileMatcher;
 
+std::tuple<std::string, size_t, sha1_t> parse_line(const char* beg, const char* const end) {
+  const char* i = beg;
+  const char* j;
+
+  THROW_IF(i == end, "premature end of tokens");
+  j = std::find(i, end, '\t');
+  THROW_IF(j == end, "premature end of tokens");
+  std::string name(i, j);
+
+  i = j + 1;
+  THROW_IF(i == end, "premature end of tokens");
+  j = std::find(i, end, '\t');
+  THROW_IF(j == end, "premature end of tokens");
+  const size_t size = boost::lexical_cast<size_t>(i, j - i);
+
+  i = j + 1;
+  THROW_IF(i == end, "premature end of tokens");
+  j = i + 40;
+  THROW_IF(j != end, "too many tokens");
+  sha1_t hash = to_bytes<20>(i);
+
+  return {std::move(name), size, std::move(hash)}; 
+}
+
 std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
   auto fsm = make_unique_del(lg_create_fsm(0), lg_destroy_fsm);
   if (!fsm) {
@@ -37,23 +61,25 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
   const LG_KeyOptions kopts{1, 0};
 
-  const HashsetIterator iend;
-  for (HashsetIterator i(beg, end); i != iend; ++i) {
-/*
-    std::cerr << std::get<0>(*i) << ", "
-              << std::get<1>(*i) << ", "
-              << to_hex(std::get<2>(*i)) << '\n';
-*/
-    table.emplace_back(std::get<1>(*i), std::get<2>(*i));
+  const LineIterator lend(end, end);
+  for (LineIterator l(beg, end); l != lend; ++l) {
+    auto t = parse_line(l->first, l->second);
 
-    lg_parse_pattern(pat.get(), std::get<0>(*i).c_str(), &kopts, err);
+/*
+    std::cerr << std::get<0>(t) << ", "
+              << std::get<1>(t) << ", "
+              << to_hex(std::get<2>(t)) << '\n';
+*/
+    table.emplace_back(std::get<1>(t), std::get<2>(t));
+
+    lg_parse_pattern(pat.get(), std::get<0>(t).c_str(), &kopts, err);
     if (*err) {
-      return nullptr; 
+      return nullptr;
     }
 
     lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", err);
     if (*err) {
-      return nullptr; 
+      return nullptr;
     }
   }
 
