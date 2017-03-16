@@ -52,7 +52,7 @@ int sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
 // returns nonzero if the given file size and hash occur in the hash set
 int sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, uint64_t size, const uint8_t* sha1);
 
-// returns nonzero if the given filename matches the hash set
+// returns nonzero if the given filename (in UTF-8) matches the hash set
 int sfhash_matcher_has_filename(const SFHASH_FileMatcher* matcher, const char* filename);
 
 // returns the size in bytes of the buffer for sfhash_write_binary_matcher
