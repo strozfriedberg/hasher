@@ -108,7 +108,7 @@ const char HSET[] =
     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";
 
 SCOPE_TEST(iterateHashset) {
-  const std::tuple<std::string, size_t, sha1_t> exp[] = {
+  const std::tuple<std::string, uint64_t, sha1_t> exp[] = {
     { "x", 123, to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2") },
     { "y", 456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3") },
     { "filename with spaces", 0, to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160") }
@@ -132,7 +132,7 @@ SCOPE_TEST(loadHashset) {
     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";
 
-  const std::vector<std::pair<size_t, sha1_t>> exp = {
+  const std::vector<std::pair<uint64_t, sha1_t>> exp = {
     { 0, to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160") },
     { 123, to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2") },
     { 456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3")}
