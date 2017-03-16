@@ -23,16 +23,16 @@ SCOPE_TEST(iterateLinesLF) {
 
   SCOPE_ASSERT(i != end);
   SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+4, txt+7));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+8, txt+9));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+14));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+15, txt+15));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+16, txt+21));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+4, txt+7));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+8, txt+9));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+10, txt+14));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+15, txt+15));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+16, txt+21));
   SCOPE_ASSERT(++i == end);
 }
 
@@ -45,16 +45,16 @@ SCOPE_TEST(iterateLinesLFNoTerminalEOL) {
 
   SCOPE_ASSERT(i != end);
   SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+4, txt+7));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+8, txt+9));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+14));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+15, txt+15));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+16, txt+21));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+4, txt+7));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+8, txt+9));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+10, txt+14));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+15, txt+15));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+16, txt+21));
   SCOPE_ASSERT(++i == end);
 }
 
@@ -67,16 +67,16 @@ SCOPE_TEST(iterateLinesCRLF) {
 
   SCOPE_ASSERT(i != end);
   SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+5, txt+8));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+11));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+13, txt+17));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+19, txt+19));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+21, txt+26));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+5, txt+8));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+10, txt+11));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+13, txt+17));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+19, txt+19));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+21, txt+26));
   SCOPE_ASSERT(++i == end);
 }
 
@@ -89,37 +89,16 @@ SCOPE_TEST(iterateLinesCRLFNoTerminalEOL) {
 
   SCOPE_ASSERT(i != end);
   SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt+3));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+5, txt+8));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+10, txt+11));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+13, txt+17));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+19, txt+19));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(txt+21, txt+26));
-  SCOPE_ASSERT(++i == end);
-}
-
-SCOPE_TEST(tokenizeNonempty) {
-  const char line[] = "abc\tdef\tg\nhijk\t\tlmnop\n";
-
-  TokenIterator i(line, line + std::strlen(line));
-  const TokenIterator end(line + std::strlen(line), line + std::strlen(line));
-
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(line, line+3));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(line+4, line+7));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(line+8, line+9));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(line+10, line+14));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(line+15, line+15));
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*++i, std::make_pair(line+16, line+21));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+5, txt+8));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+10, txt+11));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+13, txt+17));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+19, txt+19));
+  SCOPE_ASSERT(++i != end);
+  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt+21, txt+26));
   SCOPE_ASSERT(++i == end);
 }
 
@@ -140,10 +119,10 @@ SCOPE_TEST(iterateHashset) {
 
   SCOPE_ASSERT(i != iend);
   SCOPE_ASSERT_EQUAL(*i, exp[0]);
-  SCOPE_ASSERT(i != iend);
-  SCOPE_ASSERT_EQUAL(*++i, exp[1]);
-  SCOPE_ASSERT(i != iend);
-  SCOPE_ASSERT_EQUAL(*++i, exp[2]);
+  SCOPE_ASSERT(++i != iend);
+  SCOPE_ASSERT_EQUAL(*i, exp[1]);
+  SCOPE_ASSERT(++i != iend);
+  SCOPE_ASSERT_EQUAL(*i, exp[2]);
   SCOPE_ASSERT(++i == iend);
 }
 

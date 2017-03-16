@@ -12,6 +12,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "throw.h"
+
 template <class T, class D>
 std::unique_ptr<T, D> make_unique_del(T* p, D&& deleter) {
   return std::unique_ptr<T, D>{p, std::forward<D>(deleter)};
@@ -113,54 +115,6 @@ private:
   const char* const end;
 };
 
-class TokenIterator {
-public:
-  using difference_type = std::ptrdiff_t;
-  using value_type = std::pair<const char*, const char*>;
-  using pointer = value_type*;
-  using reference = value_type&; 
-  using iterator_category = std::input_iterator_tag;
-
-  TokenIterator(const char* beg, const char* end):
-    cur(beg), next(find_next(beg, end, 1)), end(end), count(1) {}
-
-  TokenIterator(const TokenIterator&) = default;
-
-  TokenIterator& operator=(const TokenIterator&) = default;
-
-  value_type operator*() const { return {cur, next}; }
-
-  TokenIterator& operator++() {
-    cur = next + 1;
-    next = find_next(cur, end, ++count);
-    return *this;
-  }
-
-  TokenIterator operator++(int) {
-    TokenIterator i(*this);
-    ++*this;
-    return i;
-  }
-
-  bool operator==(const TokenIterator& o) const {
-    return cur == o.cur && next == o.next;
-  }
-
-  bool operator!=(const TokenIterator& o) const {
-    return !(*this == o); 
-  }
-
-private:
-  static const char* find_next(const char* pos, const char* end, uint32_t count) {
-  return std::find(pos, end, count % 3 ? '\t' : '\n');
-}
-
-  const char* cur;
-  const char* next;
-  const char* const end;
-  uint32_t count;
-};
-
 class HashsetIterator {
 public:
   using difference_type = std::ptrdiff_t;
@@ -170,14 +124,15 @@ public:
   using iterator_category = std::input_iterator_tag;
 
   HashsetIterator(const char* beg, const char* end):
-    i(beg, end), iend(end, end), done(i == iend)
+    li(beg, end), lend(end, end), done(li == lend)
   {
     if (!done) {
-      t = fill(i, iend); 
+      t = fill(li); 
     }
   }
 
-  HashsetIterator(): i(nullptr, nullptr), iend(nullptr, nullptr), done(true) {}
+  HashsetIterator():
+    li(nullptr, nullptr), lend(nullptr, nullptr), done(true) {}
 
   HashsetIterator(const HashsetIterator&) = default;
 
@@ -186,8 +141,8 @@ public:
   const value_type& operator*() const { return t; }
 
   HashsetIterator& operator++() {
-    if (i != iend) {
-      t = fill(i, iend);
+    if (li != lend) {
+      t = fill(li);
     }
     else if (!done) {
       done = true;
@@ -202,28 +157,39 @@ public:
   }
 
   bool operator==(const HashsetIterator& o) const {
-    return done ? o.done : i == o.i;
+    return done ? o.done : li == o.li;
   }
 
   bool operator!=(const HashsetIterator& o) const { return !(*this == o); }
 
 private:
-  static value_type fill(TokenIterator& i, const TokenIterator iend) {
-    const char* tbeg;
-    const char* tend;
+  static value_type fill(LineIterator& li) {
+    const char* i;
+    const char* j;
+    const char* end;
+    std::tie(i, end) = *li;
+    ++li;
 
-// TODO: error checking
-    std::tie(tbeg, tend) = *i;
-    std::string name(tbeg, tend);
-    std::tie(tbeg, tend) = *++i;
-    size_t size = boost::lexical_cast<size_t>(tbeg, tend - tbeg);
-    std::tie(tbeg, tend) = *++i;
-    sha1_t hash = to_bytes<20, const char*>(tbeg, tend);
-    ++i;
+    THROW_IF(i == end, "premature end of tokens");
+    j = std::find(i, end, '\t');
+    THROW_IF(j == end, "premature end of tokens");
+    std::string name(i, j);
+
+    i = j + 1;
+    THROW_IF(i == end, "premature end of tokens");
+    j = std::find(i, end, '\t');
+    THROW_IF(j == end, "premature end of tokens");
+    const size_t size = boost::lexical_cast<size_t>(i, j - i);
+
+    i = j + 1;
+    THROW_IF(i == end, "premature end of tokens");
+    j = end;
+    sha1_t hash = to_bytes<20, const char*>(i, j);
+
     return {std::move(name), size, std::move(hash)};
   }
 
-  TokenIterator i, iend;
+  LineIterator li, lend;
   value_type t;
   bool done;
 };
