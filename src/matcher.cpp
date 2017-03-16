@@ -61,26 +61,57 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
   const LG_KeyOptions kopts{1, 0};
 
+  auto err_chain = make_unique_del(
+    static_cast<LG_Error*>(nullptr), lg_free_error
+  );
+  LG_Error* tail_err = nullptr;
+  LG_Error* local_err = nullptr;
+
+  int lineno = 1;
   const LineIterator lend(end, end);
-  for (LineIterator l(beg, end); l != lend; ++l) {
-    auto t = parse_line(l->first, l->second);
-
+  for (LineIterator l(beg, end); l != lend; ++l, ++lineno) {
+    try {
+      auto t = parse_line(l->first, l->second);
 /*
-    std::cerr << std::get<0>(t) << ", "
-              << std::get<1>(t) << ", "
-              << to_hex(std::get<2>(t)) << '\n';
+      std::cerr << std::get<0>(t) << ", "
+                << std::get<1>(t) << ", "
+                << to_hex(std::get<2>(t)) << '\n';
 */
-    table.emplace_back(std::get<1>(t), std::get<2>(t));
+      table.emplace_back(std::get<1>(t), std::get<2>(t));
 
-    lg_parse_pattern(pat.get(), std::get<0>(t).c_str(), &kopts, err);
-    if (*err) {
-      return nullptr;
-    }
+      lg_parse_pattern(pat.get(), std::get<0>(t).c_str(), &kopts, &local_err);
+      THROW_IF(local_err, "");
 
-    lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", err);
-    if (*err) {
-      return nullptr;
+      lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &local_err);
+      THROW_IF(local_err, "");
+    }    
+    catch (const std::runtime_error& e) {
+      if (!local_err) {
+        local_err = new LG_Error{ 
+          new char[std::strlen(e.what())+1],
+          nullptr,
+          nullptr,
+          nullptr,
+          lineno,
+          nullptr
+        }; 
+        std::strcpy(local_err->Message, e.what());
+      }
+
+      if (!err_chain) {
+        tail_err = local_err;
+        err_chain.reset(tail_err);
+      }
+      else {
+        tail_err->Next = local_err;
+        tail_err = local_err;
+      }
+      local_err = nullptr;     
     }
+  }
+
+  if (err_chain) {
+    *err = err_chain.release();
   }
 
   const LG_ProgramOptions popts{0};
