@@ -13,7 +13,7 @@
 
 using Matcher = SFHASH_FileMatcher;
 
-std::tuple<std::string, size_t, sha1_t> parse_line(const char* beg, const char* const end) {
+std::tuple<std::string, uint64_t, sha1_t> parse_line(const char* beg, const char* const end) {
   const char* i = beg;
   const char* j;
 
@@ -26,7 +26,7 @@ std::tuple<std::string, size_t, sha1_t> parse_line(const char* beg, const char* 
   THROW_IF(i == end, "premature end of tokens");
   j = std::find(i, end, '\t');
   THROW_IF(j == end, "premature end of tokens");
-  const size_t size = boost::lexical_cast<size_t>(i, j - i);
+  const uint64_t size = boost::lexical_cast<uint64_t>(i, j - i);
 
   i = j + 1;
   THROW_IF(i == end, "premature end of tokens");
@@ -57,7 +57,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   // person has a file which doesn't end with EOL, count it as 1 either way.
   const size_t lines = std::count(beg, end-1, '\n') + 1;
 
-  std::vector<std::pair<size_t, sha1_t>> table;
+  std::vector<std::pair<uint64_t, sha1_t>> table;
   table.reserve(lines);
 
   const LG_KeyOptions kopts{1, 0};
@@ -198,8 +198,8 @@ Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
     return nullptr;
   }
 
-  std::vector<std::pair<size_t, sha1_t>> table(
-    tlen / sizeof(std::pair<size_t, sha1_t>)
+  std::vector<std::pair<uint64_t, sha1_t>> table(
+    tlen / sizeof(std::pair<uint64_t, sha1_t>)
   );
   std::memcpy(table.data(), buf, tlen);
   buf += tlen;
