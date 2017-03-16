@@ -103,9 +103,6 @@ int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   auto ctx = make_unique_del(
     lg_create_context(matcher->prog.get(), &copt), lg_destroy_context
   );
-  if (!ctx) {
-    // TODO: check !ctx
-  }
 
   bool hit = false;
 
