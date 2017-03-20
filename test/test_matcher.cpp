@@ -205,3 +205,27 @@ SCOPE_TEST(has_filename) {
   SCOPE_ASSERT(sfhash_matcher_has_filename(m.get(), "123x"));
   SCOPE_ASSERT(!sfhash_matcher_has_filename(m.get(), "filename with space"));
 }
+
+SCOPE_TEST(binaryMatcherTableRoundTrip) {
+  LG_Error* err = nullptr;
+
+  auto m1 = make_unique_del(
+    sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
+    sfhash_destroy_matcher
+  );
+
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(m1);
+
+  const int msize = sfhash_matcher_size(m1.get());
+  std::unique_ptr<uint8_t[]> buf(new uint8_t[msize]);
+  sfhash_write_binary_matcher(m1.get(), buf.get());
+
+  auto m2 = make_unique_del(
+    sfhash_read_binary_matcher(buf.get(), buf.get() + msize),
+    sfhash_destroy_matcher
+  );
+
+  SCOPE_ASSERT(m2);
+  SCOPE_ASSERT_EQUAL(m2->table, m1->table);
+}
