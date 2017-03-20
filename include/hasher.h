@@ -62,7 +62,7 @@ int sfhash_matcher_size(const SFHASH_FileMatcher* matcher);
 void sfhash_write_binary_matcher(const SFHASH_FileMatcher* matcher, void* buf);
 
 // unserizalizes the matcher from a buffer
-SFHASH_FileMatcher* sfhash_read_binary_matcher(void* beg, void* end);
+SFHASH_FileMatcher* sfhash_read_binary_matcher(const void* beg, const void* end);
 
 void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 
