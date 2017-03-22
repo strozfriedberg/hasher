@@ -29,6 +29,9 @@ AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 case "$host" in
 *-*-mingw*)
   # pkg-config should not look in /usr/local/lib while cross-compiling
+  if test "x$enable_shared_fat" = "xyes"; then
+    PKG_CONFIG="$PKG_CONFIG --static"
+  fi
   ;;
 *)
   if test -z "$PKG_CONFIG_PATH"; then
@@ -42,6 +45,11 @@ esac
 
 AX_PKG_CHECK_MODULES([BOTAN], [], [botan-2])
 AX_PKG_CHECK_MODULES([LIGHTGREP], [], [lightgrep])
+
+# Botan requires libssp for static and shared fat builds
+if test "x$enable_shared" != "xyes" -o "x$enable_shared_fat" = "xyes"; then
+  AS_VAR_APPEND(BOTAN_LIBS, "-lssp")
+fi
 
 #
 # Test Dependencies
@@ -116,6 +124,28 @@ AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = "xyes" && echo "$host" | g
 AC_SUBST([CXXLD])
 
 #
+# Fat or thin shared library?
+#
+
+AC_ARG_ENABLE([shared-fat],
+  [AS_HELP_STRING([--enable-shared-fat],
+    [statically link libhasher to its dependencies (MinGW only)])])
+
+if test "x$enable_shared_fat" = "xyes"; then
+  case "$host" in
+  *-*-mingw*)
+    if test "x$enable_shared" != "xyes"; then
+      AC_MSG_ERROR([--enable-shared-fat requires --enable-shared.])
+    fi
+    echo "Enabling fat shared lib. Your shared libhasher is so fat, it will contain all of its dependencies."
+    ;;
+  *)
+    AC_MSG_ERROR([--enable-shared-fat requires building with MinGW.])
+    ;;
+  esac
+fi
+
+#
 # Ship out the flags to Makefile.am
 #
 
@@ -143,10 +173,6 @@ for lib in BOTAN LIGHTGREP; do
   done
 done
 
-if test "x$enable_shared" != "xyes"; then
-  AS_VAR_APPEND(PROJECT_LIBS, " -lssp")
-fi
-
 AC_SUBST([PROJECT_CPPFLAGS])
 AC_SUBST([PROJECT_CXXFLAGS])
 AC_SUBST([PROJECT_LDFLAGS])
@@ -155,3 +181,17 @@ AC_SUBST([HASHER_LIB_LDFLAGS])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
+
+# Force static linking of dependencies for our fat DLL.
+if test "x$enable_shared_fat" = "xyes"; then
+  # NB: This is likely to be fragile. It works only because the current
+  # version of libtool doesn't alter whole_archive_flag_spec and happens
+  # to put it in the right place in the linking command for our DLL.
+  sed -i '/^whole_archive_flag_spec=/s/"$/ \\${wl}-static"/' libtool
+
+  # We want NO dependencies for a fat DLL. libgcc_s is a stub for
+  # libgcc_s_seh-1.dll. libgcc_eh is the corresponding static lib.
+  sed -i '/^postdeps=/s/-lgcc_s/-lgcc_eh/g' libtool
+
+  echo 'Adjusted libtool for building fat DLL'
+fi
