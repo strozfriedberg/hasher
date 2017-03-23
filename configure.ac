@@ -28,8 +28,7 @@ AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 # pkg-config doesn't look in /usr/local/lib on some systems
 case "$host" in
 *-*-mingw*)
-  # pkg-config should not look in /usr/local/lib while cross-compiling
-  if test "x$enable_shared_fat" = "xyes"; then
+  if test "x$enable_shared" != "xyes" -o "x$enable_shared_fat" = "xyes"; then
     PKG_CONFIG="$PKG_CONFIG --static"
   fi
   ;;
