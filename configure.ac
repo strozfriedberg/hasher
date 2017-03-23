@@ -30,7 +30,7 @@ case "$host" in
 *-*-mingw*)
   # pkg-config should not look in /usr/local/lib while cross-compiling
   if test "x$enable_shared_fat" = "xyes"; then
-    export PKG_CONFIG="$PKG_CONFIG --static"
+    PKG_CONFIG="$PKG_CONFIG --static"
   fi
   ;;
 *)
