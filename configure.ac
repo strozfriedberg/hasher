@@ -42,13 +42,8 @@ case "$host" in
   ;;
 esac
 
-AX_PKG_CHECK_MODULES([BOTAN], [], [botan-2])
+AX_PKG_CHECK_MODULES([CRYPTO], [], [libcrypto])
 AX_PKG_CHECK_MODULES([LIGHTGREP], [], [lightgrep])
-
-# Botan requires libssp for static and shared fat builds
-if test "x$enable_shared" != "xyes" -o "x$enable_shared_fat" = "xyes"; then
-  AS_VAR_APPEND(BOTAN_LIBS, "-lssp")
-fi
 
 #
 # Test Dependencies
@@ -159,7 +154,7 @@ AC_DEFUN([SF_APPEND], [{
 }])
 
 # collect the flags from everything which might set some
-for lib in BOTAN LIGHTGREP; do
+for lib in CRYPTO LIGHTGREP; do
   # fold CFLAGS into CXXFLAGS since everything here is C++
   h="${lib}_CXXFLAGS"
   t=$(eval echo \"\$${lib}_CFLAGS\")

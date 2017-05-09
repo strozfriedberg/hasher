@@ -24,7 +24,7 @@ struct SFHASH_Hasher;
 // hashAlgs a bitwise-or of desired SFHASH_HashAlgorithms
 SFHASH_Hasher* sfhash_create_hasher(uint32_t hashAlgs);
 
-//SFHASH_Hasher* sfhash_clone_hasher(const SFHASH_Hasher* hasher);
+SFHASH_Hasher* sfhash_clone_hasher(const SFHASH_Hasher* hasher);
 
 // update the hash(es) with more data
 void sfhash_update_hasher(SFHASH_Hasher* hasher, const void* beg, const void* end);

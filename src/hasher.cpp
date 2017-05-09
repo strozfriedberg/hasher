@@ -1,68 +1,106 @@
 #include "hasher.h"
 
+#include <cstddef>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include <botan/ffi.h>
+#include <openssl/evp.h>
 
 using HashAlgorithms = SFHASH_HashAlgorithms;
 using HashValues = SFHASH_HashValues;
 
-class BotanHasher {
+class LibcryptoHasher {
 public:
-  BotanHasher(const char* name) {
-    botan_hash_init(&hasher, name, 0);
+  LibcryptoHasher(const EVP_MD* hfunc):
+    ctx(EVP_MD_CTX_create()), hfunc(hfunc), hlen(EVP_MD_size(hfunc))
+  {
+    reset();
   }
 
-  BotanHasher(const BotanHasher&) = delete;
-
-  BotanHasher(BotanHasher&& other): hasher(other.hasher) {
-    other.hasher = nullptr;
+  LibcryptoHasher(const LibcryptoHasher& other):
+    ctx(EVP_MD_CTX_create()), hfunc(other.hfunc), hlen(other.hlen)
+  {
+    if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
+      // error!
+    }
   }
 
-  BotanHasher& operator=(const BotanHasher&) = delete;
+  LibcryptoHasher(LibcryptoHasher&& other):
+    ctx(other.ctx), hfunc(other.hfunc), hlen(other.hlen)
+  {
+    other.ctx = nullptr;
+  }
 
-  BotanHasher& operator=(BotanHasher&& other) {
-    hasher = other.hasher;
+  LibcryptoHasher& operator=(const LibcryptoHasher& other) {
+    if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
+      // error!
+    }
+
+    hfunc = other.hfunc;
+    hlen = other.hlen;
     return *this;
   }
 
-  ~BotanHasher() {
-    botan_hash_destroy(hasher);
+  LibcryptoHasher& operator=(LibcryptoHasher&& other) {
+    ctx = other.ctx;
+    other.ctx = nullptr;
+    hfunc = other.hfunc;
+    hlen = other.hlen;
+    return *this;
+  }
+
+  ~LibcryptoHasher() {
+    EVP_MD_CTX_destroy(ctx);
   }
 
   void update(const uint8_t* beg, const uint8_t* end) {
-    botan_hash_update(hasher, beg, end - beg);
+    if (!EVP_DigestUpdate(ctx, beg, end - beg)) {
+      // error!
+    }
   }
 
   void get(uint8_t* val) {
-    botan_hash_final(hasher, val);
+    if (!EVP_DigestFinal_ex(ctx, val, nullptr)) {
+      // error!
+    }
   }
 
   void reset() {
-    botan_hash_clear(hasher);
+    if (!EVP_DigestInit(ctx, hfunc)) {
+      // error!
+    }
   }
 
 private:
-  botan_hash_t hasher;
+  EVP_MD_CTX* ctx;
+  const EVP_MD* hfunc;
+  uint32_t hlen;
 };
 
 class SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
-    const std::pair<const char*, off_t> init[] {
-      { "MD5",     offsetof(HashValues, md5)    },
-      { "SHA1",    offsetof(HashValues, sha1)   },
-      { "SHA-256", offsetof(HashValues, sha256) }
+    const std::pair<const EVP_MD* (*)(void), off_t> init[] {
+      { EVP_md5,    offsetof(SFHASH_HashValues, md5)    },
+      { EVP_sha1,   offsetof(HashValues, sha1)   },
+      { EVP_sha256, offsetof(HashValues, sha256) }
     };
 
     for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
       if (algs & 1) {
-        hashers.emplace_back(BotanHasher(init[i].first), init[i].second);
+        hashers.emplace_back(LibcryptoHasher(init[i].first()), init[i].second);
       }
     }
   }
+
+  SFHASH_Hasher(const SFHASH_Hasher&) = default;
+
+  SFHASH_Hasher(SFHASH_Hasher&& other) = default;
+
+  SFHASH_Hasher& operator=(const SFHASH_Hasher&) = default;
+
+  SFHASH_Hasher& operator=(SFHASH_Hasher&&) = default;
 
   void update(const uint8_t* beg, const uint8_t* end) {
     for (auto& h: hashers) {
@@ -83,7 +121,7 @@ public:
   }
 
 private:
-  std::vector<std::pair<BotanHasher, off_t>> hashers;
+  std::vector<std::pair<LibcryptoHasher, off_t>> hashers;
 };
 
 using Hasher = SFHASH_Hasher;
@@ -92,10 +130,9 @@ Hasher* sfhash_create_hasher(uint32_t hashAlgs) {
   return new Hasher(hashAlgs);
 }
 
-/*
 Hasher* sfhash_clone_hasher(const Hasher* hasher) {
+  return new Hasher(*hasher);
 }
-*/
 
 void sfhash_update_hasher(Hasher* hasher, const void* beg, const void* end) {
   hasher->update(static_cast<const uint8_t*>(beg),
