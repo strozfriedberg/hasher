@@ -1,8 +1,7 @@
 #include "hasher.h"
+#include "libcrypto_hasher.h"
 
 #include <cstddef>
-#include <iostream>
-#include <string>
 #include <vector>
 
 #include <openssl/evp.h>
@@ -10,86 +9,18 @@
 using HashAlgorithms = SFHASH_HashAlgorithms;
 using HashValues = SFHASH_HashValues;
 
-class LibcryptoHasher {
-public:
-  LibcryptoHasher(const EVP_MD* hfunc):
-    ctx(EVP_MD_CTX_create()), hfunc(hfunc), hlen(EVP_MD_size(hfunc))
-  {
-    reset();
-  }
-
-  LibcryptoHasher(const LibcryptoHasher& other):
-    ctx(EVP_MD_CTX_create()), hfunc(other.hfunc), hlen(other.hlen)
-  {
-    if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
-      // error!
-    }
-  }
-
-  LibcryptoHasher(LibcryptoHasher&& other):
-    ctx(other.ctx), hfunc(other.hfunc), hlen(other.hlen)
-  {
-    other.ctx = nullptr;
-  }
-
-  LibcryptoHasher& operator=(const LibcryptoHasher& other) {
-    if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
-      // error!
-    }
-
-    hfunc = other.hfunc;
-    hlen = other.hlen;
-    return *this;
-  }
-
-  LibcryptoHasher& operator=(LibcryptoHasher&& other) {
-    ctx = other.ctx;
-    other.ctx = nullptr;
-    hfunc = other.hfunc;
-    hlen = other.hlen;
-    return *this;
-  }
-
-  ~LibcryptoHasher() {
-    EVP_MD_CTX_destroy(ctx);
-  }
-
-  void update(const uint8_t* beg, const uint8_t* end) {
-    if (!EVP_DigestUpdate(ctx, beg, end - beg)) {
-      // error!
-    }
-  }
-
-  void get(uint8_t* val) {
-    if (!EVP_DigestFinal_ex(ctx, val, nullptr)) {
-      // error!
-    }
-  }
-
-  void reset() {
-    if (!EVP_DigestInit(ctx, hfunc)) {
-      // error!
-    }
-  }
-
-private:
-  EVP_MD_CTX* ctx;
-  const EVP_MD* hfunc;
-  uint32_t hlen;
-};
-
 class SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
-    const std::pair<const EVP_MD* (*)(void), off_t> init[] {
-      { EVP_md5,    offsetof(SFHASH_HashValues, md5)    },
-      { EVP_sha1,   offsetof(HashValues, sha1)   },
-      { EVP_sha256, offsetof(HashValues, sha256) }
+    const std::pair<LibcryptoHasher (*)(void), off_t> init[] {
+      { make_md5_hasher,    offsetof(HashValues, md5)    },
+      { make_sha1_hasher,   offsetof(HashValues, sha1)   },
+      { make_sha256_hasher, offsetof(HashValues, sha256) }
     };
 
     for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
       if (algs & 1) {
-        hashers.emplace_back(LibcryptoHasher(init[i].first()), init[i].second);
+        hashers.emplace_back(init[i].first(), init[i].second);
       }
     }
   }
