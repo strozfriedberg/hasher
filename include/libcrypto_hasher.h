@@ -14,7 +14,7 @@ public:
     ctx(EVP_MD_CTX_create()), hfunc(other.hfunc)
   {
     if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
-      // error!
+      // TODO: error!
     }
   }
 
@@ -26,7 +26,7 @@ public:
 
   LibcryptoHasher& operator=(const LibcryptoHasher& other) {
     if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
-      // error!
+      // TODO: error!
     }
 
     hfunc = other.hfunc;
@@ -46,19 +46,19 @@ public:
 
   void update(const uint8_t* beg, const uint8_t* end) {
     if (!EVP_DigestUpdate(ctx, beg, end - beg)) {
-      // error!
+      // TODO: error!
     }
   }
 
   void get(uint8_t* val) {
     if (!EVP_DigestFinal_ex(ctx, val, nullptr)) {
-      // error!
+      // TODO: error!
     }
   }
 
   void reset() {
     if (!EVP_DigestInit(ctx, hfunc)) {
-      // error!
+      // TODO: error!
     }
   }
 
