@@ -5,13 +5,13 @@
 class LibcryptoHasher {
 public:
   LibcryptoHasher(const EVP_MD* hfunc):
-    ctx(EVP_MD_CTX_create()), hfunc(hfunc), hlen(EVP_MD_size(hfunc))
+    ctx(EVP_MD_CTX_create()), hfunc(hfunc)
   {
     reset();
   }
 
   LibcryptoHasher(const LibcryptoHasher& other):
-    ctx(EVP_MD_CTX_create()), hfunc(other.hfunc), hlen(other.hlen)
+    ctx(EVP_MD_CTX_create()), hfunc(other.hfunc)
   {
     if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
       // error!
@@ -19,7 +19,7 @@ public:
   }
 
   LibcryptoHasher(LibcryptoHasher&& other):
-    ctx(other.ctx), hfunc(other.hfunc), hlen(other.hlen)
+    ctx(other.ctx), hfunc(other.hfunc)
   {
     other.ctx = nullptr;
   }
@@ -30,7 +30,6 @@ public:
     }
 
     hfunc = other.hfunc;
-    hlen = other.hlen;
     return *this;
   }
 
@@ -38,7 +37,6 @@ public:
     ctx = other.ctx;
     other.ctx = nullptr;
     hfunc = other.hfunc;
-    hlen = other.hlen;
     return *this;
   }
 
@@ -67,7 +65,6 @@ public:
 private:
   EVP_MD_CTX* ctx;
   const EVP_MD* hfunc;
-  uint32_t hlen;
 };
 
 inline LibcryptoHasher make_md5_hasher() {
