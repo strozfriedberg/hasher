@@ -71,6 +71,11 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   int lineno = 1;
   const LineIterator lend(end, end);
   for (LineIterator l(beg, end); l != lend; ++l, ++lineno) {
+    // skip empty lines
+    if (l->first == l->second) {
+      continue;
+    }
+
     try {
       auto t = parse_line(l->first, l->second);
 /*
