@@ -1,41 +1,19 @@
 #include "hasher.h"
+#include "parser.h"
 #include "matcher.h"
+#include "throw.h"
 #include "util.h"
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <utility>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
-
 using Matcher = SFHASH_FileMatcher;
 
-std::tuple<std::string, uint64_t, sha1_t> parse_line(const char* beg, const char* const end) {
-  const char* i = beg;
-  const char* j;
-
-  THROW_IF(i == end, "premature end of tokens");
-  j = std::find(i, end, '\t');
-  THROW_IF(j == end, "premature end of tokens");
-  std::string name(i, j);
-
-  i = j + 1;
-  THROW_IF(i == end, "premature end of tokens");
-  j = std::find(i, end, '\t');
-  THROW_IF(j == end, "premature end of tokens");
-  const uint64_t size = boost::lexical_cast<uint64_t>(i, j - i);
-
-  i = j + 1;
-  THROW_IF(i == end, "premature end of tokens");
-  j = i + 40;
-  THROW_IF(j != end, "too many tokens");
-  sha1_t hash = to_bytes<20>(i);
-
-  return {std::move(name), size, std::move(hash)};
-}
 
 std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
   auto fsm = make_unique_del(lg_create_fsm(0), lg_destroy_fsm);
@@ -78,18 +56,20 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
     try {
       auto t = parse_line(l->first, l->second);
-/*
-      std::cerr << std::get<0>(t) << ", "
-                << std::get<1>(t) << ", "
-                << to_hex(std::get<2>(t)) << '\n';
-*/
-      table.emplace_back(std::get<1>(t), std::get<2>(t));
 
-      lg_parse_pattern(pat.get(), std::get<0>(t).c_str(), &kopts, &local_err);
-      THROW_IF(local_err, "");
+      // turn the filename into a pattern
+      if (std::get<0>(t) & HAS_FILENAME) {
+        lg_parse_pattern(pat.get(), std::get<1>(t).c_str(), &kopts, &local_err);
+        THROW_IF(local_err, "");
 
-      lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &local_err);
-      THROW_IF(local_err, "");
+        lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &local_err);
+        THROW_IF(local_err, "");
+      }
+
+      // put the size and hash into the table
+      if (std::get<0>(t) & HAS_SIZE_AND_HASH) {
+        table.emplace_back(std::get<2>(t), std::get<3>(t));
+      }
     }
     catch (const std::runtime_error& e) {
       if (!local_err) {

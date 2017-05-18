@@ -20,6 +20,7 @@ noinst_LTLIBRARIES = $(HASHER_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
 	src/hasher.cpp \
+	src/parser.cpp \
 	src/matcher.cpp \
 	src/util.cpp
 
@@ -48,7 +49,8 @@ TESTS = $(check_PROGRAMS)
 test_test_SOURCES = \
 	test/test.cpp \
 	test/test_hasher.cpp \
-	test/test_matcher.cpp
+	test/test_matcher.cpp \
+	test/test_parser.cpp
 
 test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
 
