@@ -149,13 +149,14 @@ SCOPE_TEST(iterateHashsetBad) {
     "missing hash\t123\t\n"
     "missing hash column\t123\n"
     "bogus size\tNAN\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
+    "size with trailing junk\t123-\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
     "size too small\t-1\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
     "size too large\t18446744073709551617\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n";
 
   LineIterator l(HSET, HSET + std::strlen(HSET));
   const LineIterator lend(HSET + std::strlen(HSET), HSET + std::strlen(HSET));
 
-  for (int i = 0; i < 9; ++i, ++l) {
+  for (int i = 0; i < 10; ++i, ++l) {
     SCOPE_ASSERT(l != lend);
     SCOPE_EXPECT(parse_line(l->first, l->second), std::runtime_error);
   }
