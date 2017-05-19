@@ -55,3 +55,16 @@ test_test_SOURCES = \
 test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
 
 test_test_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
+
+pkgconfigdir = $(libdir)/pkgconfig
+nodist_pkgconfig_DATA = src/hasher.pc
+
+src/hasher.pc: src/hasher.pc.in Makefile
+	sed -e 's![@]prefix[@]!$(prefix)!g' \
+      -e 's![@]exec_prefix[@]!$(exec_prefix)!g' \
+      -e 's![@]includedir[@]!$(includedir)!g' \
+      -e 's![@]libdir[@]!$(libdir)!g' \
+      -e 's![@]PACKAGE_VERSION[@]!$(PACKAGE_VERSION)!g' \
+      $< >$@
+
+CLEANFILES = src/hasher.pc
