@@ -68,3 +68,6 @@ src/hasher.pc: src/hasher.pc.in Makefile
       $< >$@
 
 CLEANFILES = src/hasher.pc
+
+install-exec-hook:
+	rm $(DESTDIR)$(libdir)/libhasher.la
