@@ -6,7 +6,7 @@ AC_INIT([hasher], [0.1.0], [juckelman@strozfriedberg.co.uk])
  
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([src/main.cpp])
+AC_CONFIG_SRCDIR([src/hasher.cpp])
 AC_CONFIG_HEADERS([config.h])
  
 AM_INIT_AUTOMAKE([1.12 subdir-objects foreign])
@@ -44,6 +44,27 @@ esac
 
 AX_PKG_CHECK_MODULES([CRYPTO], [], [libcrypto])
 AX_PKG_CHECK_MODULES([LIGHTGREP], [], [lightgrep])
+
+if test "x$with_boost" = "xno"; then
+  AC_MSG_ERROR([--without-boost specified, but Boost is mandatory.])
+else
+  case "$host" in
+  *-*-mingw*)
+    # AX_BOOST_BASE doesn't find the Boost libs for mingw, we help it out
+    if test "$with_boost_libdir" = ""; then
+      with_boost_libdir="/usr/${host}/sys-root/mingw/lib"
+      AC_MSG_WARN([--with-boost-libdir not set. We are guessing ${with_boost_libdir}.])
+    fi
+    ;;
+  esac
+
+  AX_BOOST_BASE([1.49.0],
+    [],
+    [AC_MSG_ERROR([Failed to find usable Boost headers.])])
+fi
+
+AX_BOOST_SYSTEM
+AX_BOOST_FILESYSTEM
 
 #
 # Test Dependencies
@@ -154,7 +175,7 @@ AC_DEFUN([SF_APPEND], [{
 }])
 
 # collect the flags from everything which might set some
-for lib in CRYPTO LIGHTGREP; do
+for lib in BOOST CRYPTO LIGHTGREP; do
   # fold CFLAGS into CXXFLAGS since everything here is C++
   h="${lib}_CXXFLAGS"
   t=$(eval echo \"\$${lib}_CFLAGS\")

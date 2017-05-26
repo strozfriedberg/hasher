@@ -40,7 +40,7 @@ std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, c
       // eat whitespace
       const char* i = find_nonws(cbeg, cend);
       if (i != cend) {
-        
+
         // check for a minus sign, as lexical_cast rolls over negatives
         THROW_IF(*i == '-', "bad file size '" << std::string(i, cend) << "'");
 
@@ -78,7 +78,7 @@ std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, c
       THROW_IF(j - i != 40,
               "file hash is " << (j - i > 40 ? "longer" : "shorter")
                               << " than 40 characters");
-  
+
       // reject trailing nonwhitespace
       THROW_IF(
         find_nonws(j + 1, cend) != cend,

@@ -36,12 +36,17 @@ src_libhasher_ladir = $(includedir)
 src_libhasher_la_HEADERS = \
 	include/hasher.h
 
+src_matcher_SOURCES = \
+	src/matcher_main.cpp
+
+src_matcher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
+
 src_hasher_SOURCES = \
-	src/main.cpp
+	src/hasher_main.cpp
 
 src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-noinst_PROGRAMS = src/hasher
+noinst_PROGRAMS = src/hasher src/matcher
 
 check_PROGRAMS = test/test
 TESTS = $(check_PROGRAMS)
