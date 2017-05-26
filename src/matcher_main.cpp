@@ -18,7 +18,9 @@ namespace fs = boost::filesystem;
 
 int main(int argc, char** argv) {
   if (argc != 3) {
-    std::cerr << "Usage: matcher hashset targetdir" << std::endl;
+    std::cerr << "Usage: matcher HASHSET TARGETDIR\n"
+              << "Output: filename\tsize\tSHA1\tatime\tmtime\tctime\tfmatch\thmatch"
+              << std::endl;
     return -1;
   }
   

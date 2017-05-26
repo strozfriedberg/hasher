@@ -11,7 +11,12 @@
 
 int main(int argc, char** argv) {
   if (argc != 3) {
-    std::cerr << "Usage: hasher algs path" << std::endl;
+    std::cerr << "Usage: hasher ALGS PATH\n"
+              << "ALGS values: MD5 = " << MD5
+              << ", SHA1 = " << SHA1
+              << ", SHA256 = " << SHA256
+              << "; OR them for multihashing"
+              << std::endl;
     return -1;
   }
 
