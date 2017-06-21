@@ -1,6 +1,8 @@
+*.exe
 *.la
 *.lo
 *.o
+*.pyc
 .*.swp
 .deps/
 .dirstamp
@@ -24,8 +26,11 @@
 /m4/ltsugar.m4
 /m4/ltversion.m4
 /m4/lt~obsolete.m4
+/python/*.log
+/python/*.trs
 /src/hasher
 /src/hasher.pc
+/src/matcher
 /stamp-h1
 /test/test
 /test/test.exe

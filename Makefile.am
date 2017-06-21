@@ -49,7 +49,9 @@ src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 noinst_PROGRAMS = src/hasher src/matcher
 
 check_PROGRAMS = test/test
-TESTS = $(check_PROGRAMS)
+TESTS = \
+	$(check_PROGRAMS) \
+	python/test.sh
 
 test_test_SOURCES = \
 	test/test.cpp \
