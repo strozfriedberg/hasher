@@ -87,16 +87,14 @@ class Hasher(object):
 
         if blen < 8:
             # ctypes from_buffer and from_buffer_copy require at least 8 bytes
-            xbuf = bytearray(8)
-            xbuf[0:blen] = buf
-        else:
-            # use buf, it's long enough
-            xbuf = buf
+            tmp = bytearray(8)
+            tmp[0:blen] = buf
+            buf = tmp
 
         if isinstance(buf, bytes):
-            buf = (c_uint8 * len(xbuf)).from_buffer_copy(xbuf)
+            buf = (c_uint8 * len(buf)).from_buffer_copy(buf)
         elif isinstance(buf, bytearray):
-            buf = (c_uint8 * len(xbuf)).from_buffer(xbuf)
+            buf = (c_uint8 * len(buf)).from_buffer(buf)
        
         beg = addressof(buf) 
         end = cast(beg + blen, c_void_p)
