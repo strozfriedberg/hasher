@@ -103,10 +103,11 @@ class Hasher(object):
             tmp[0:blen] = buf
             buf = tmp
 
-        if isinstance(buf, bytes):
-            buf = (c_uint8 * len(buf)).from_buffer_copy(buf)
-        elif isinstance(buf, bytearray):
+        try:
             buf = (c_uint8 * len(buf)).from_buffer(buf)
+        except TypeError:
+            # from_buffer doesn't work on bytes and memoryviews on bytes
+            buf = (c_uint8 * len(buf)).from_buffer_copy(buf)
        
         beg = addressof(buf) 
         end = cast(beg + blen, c_void_p)
