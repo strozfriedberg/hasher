@@ -36,7 +36,9 @@ class HasherHashes(Structure):
         return NotImplemented
 
     def __ne__(self, other):
-        return not self == other
+        if isinstance(other, self.__class__):
+            return not self == other
+        return NotImplemented
 
 
 # SFHASH_Hasher* sfhash_create_hasher(uint32_t hashAlgs);
