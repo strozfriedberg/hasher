@@ -23,6 +23,14 @@ lc_alphabet_hashes = (
     "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73"
 )
 
+abc = b'abc'
+
+abc_hashes = (
+    '900150983cd24fb0d6963f7d28e17f72',
+    'a9993e364706816aba3e25717850c26c9cd0d89d',
+    'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
+)
+
 
 class TestHasher(unittest.TestCase):
     def hash_this(self, bufs, exp):
@@ -56,6 +64,12 @@ class TestHasher(unittest.TestCase):
             (bytearray(lc_alphabet[0:15]), bytearray(lc_alphabet[15:])),
             lc_alphabet_hashes
         )
+
+    def test_hash_bytes_short(self):
+        self.hash_this((abc,), abc_hashes)
+
+    def test_hash_bytes_short(self):
+        self.hash_this((bytearray(abc),), abc_hashes)
 
     def test_hash_reset(self):
         with hasher.Hasher(hasher.MD5 | hasher.SHA1 | hasher.SHA256) as h:

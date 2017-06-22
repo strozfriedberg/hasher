@@ -73,19 +73,33 @@ class Hasher(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.destroy()
+
+    def destroy(self):
         _sfhash_destroy_hasher(self.hasher)
+        self.hasher = None
 
     def clone(self):
         return Hasher(clone=self)
 
     def update(self, buf):
+        blen = len(buf)
+
+        if blen < 8:
+            # ctypes from_buffer and from_buffer_copy require at least 8 bytes
+            xbuf = bytearray(8)
+            xbuf[0:blen] = buf
+        else:
+            # use buf, it's long enough
+            xbuf = buf
+
         if isinstance(buf, bytes):
-            buf = (c_uint8 * len(buf)).from_buffer_copy(buf)
+            buf = (c_uint8 * len(xbuf)).from_buffer_copy(xbuf)
         elif isinstance(buf, bytearray):
-            buf = (c_uint8 * len(buf)).from_buffer(buf)
+            buf = (c_uint8 * len(xbuf)).from_buffer(xbuf)
        
         beg = addressof(buf) 
-        end = cast(beg + len(buf), c_void_p)
+        end = cast(beg + blen, c_void_p)
         _sfhash_update_hasher(self.hasher, beg, end)
 
     def reset(self):
