@@ -28,6 +28,16 @@ class HasherHashes(Structure):
                 ('sha1', c_uint8 * 20),
                 ('sha256', c_uint8 * 32)]
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.md5[:] == other.md5[:] and
+                    self.sha1[:] == other.sha1[:] and
+                    self.sha256[:] == other.sha256[:])
+        return NotImplemented
+
+    def __ne__(self, other):
+        return not self == other
+
 
 # SFHASH_Hasher* sfhash_create_hasher(uint32_t hashAlgs);
 _sfhash_create_hasher = _hasher.sfhash_create_hasher
@@ -80,7 +90,7 @@ class Hasher(object):
         self.hasher = None
 
     def clone(self):
-        return Hasher(clone=self)
+        return Hasher(0, clone=self.hasher)
 
     def update(self, buf):
         blen = len(buf)

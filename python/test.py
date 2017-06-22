@@ -73,9 +73,15 @@ class TestHasher(unittest.TestCase):
 
     def test_hash_reset(self):
         with hasher.Hasher(hasher.MD5 | hasher.SHA1 | hasher.SHA256) as h:
-            self.hash_it(h, (lc_alphabet,), lc_alphabet_hashes) 
-            h.reset() 
+            self.hash_it(h, (lc_alphabet,), lc_alphabet_hashes)
+            h.reset()
             self.hash_it(h, (), empty_hashes)
+
+    def test_hash_clone(self):
+        with hasher.Hasher(hasher.MD5 | hasher.SHA1 | hasher.SHA256) as h1:
+            self.hash_it(h1, (lc_alphabet,), lc_alphabet_hashes)
+            with h1.clone() as h2:
+                self.assertEqual(h1.get_hashes(), h2.get_hashes())
 
 
 if __name__ == "__main__":
