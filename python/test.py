@@ -71,7 +71,12 @@ class TestHasher(unittest.TestCase):
     def test_hash_bytes_short(self):
         self.hash_this((bytearray(abc),), abc_hashes)
 
-    def test_hash_reset(self):
+    def test_hash_reset_before_use(self):
+        with hasher.Hasher(hasher.MD5 | hasher.SHA1 | hasher.SHA256) as h:
+            h.reset()
+            self.hash_it(h, (), empty_hashes)
+
+    def test_hash_reset_after_use(self):
         with hasher.Hasher(hasher.MD5 | hasher.SHA1 | hasher.SHA256) as h:
             self.hash_it(h, (lc_alphabet,), lc_alphabet_hashes)
             h.reset()
