@@ -53,8 +53,14 @@ class TestHasher(unittest.TestCase):
     def test_hash_bytes_one_buffer(self):
         self.hash_this((lc_alphabet,), lc_alphabet_hashes)
 
+    def test_hash_memoryview_of_bytes_one_buffer(self):
+        self.hash_this((memoryview(lc_alphabet),), lc_alphabet_hashes)
+
     def test_hash_bytearray_one_buffer(self):
         self.hash_this((bytearray(lc_alphabet),), lc_alphabet_hashes)
+
+    def test_hash_memoryview_of_bytearray_one_buffer(self):
+        self.hash_this((memoryview(bytearray(lc_alphabet)),), lc_alphabet_hashes)
 
     def test_hash_bytes_two_buffers(self):
         self.hash_this((lc_alphabet[0:12], lc_alphabet[12:]), lc_alphabet_hashes)
@@ -68,8 +74,14 @@ class TestHasher(unittest.TestCase):
     def test_hash_bytes_short(self):
         self.hash_this((abc,), abc_hashes)
 
-    def test_hash_bytes_short(self):
+    def test_hash_memoryview_of_bytes_short(self):
+        self.hash_this((memoryview(abc),), abc_hashes)
+
+    def test_hash_bytearray_short(self):
         self.hash_this((bytearray(abc),), abc_hashes)
+
+    def test_hash_memoryview_of_bytearray_short(self):
+        self.hash_this((memoryview(bytearray(abc)),), abc_hashes)
 
     def test_hash_reset_before_use(self):
         with hasher.Hasher(hasher.MD5 | hasher.SHA1 | hasher.SHA256) as h:

@@ -23,6 +23,25 @@ except Exception as e:
     raise e
 
 
+c_ssize_p = POINTER(c_ssize_t)
+
+
+class Py_buffer(Structure):
+    _fields_ = [
+        ('buf', c_void_p),
+        ('obj', py_object),
+        ('len', c_ssize_t),
+        ('itemsize', c_ssize_t),
+        ('readonly', c_int),
+        ('ndim', c_int),
+        ('format', c_char_p),
+        ('shape', c_ssize_p),
+        ('strides', c_ssize_p),
+        ('suboffsets', c_ssize_p),
+        ('internal', c_void_p)
+    ]
+
+
 class HasherHashes(Structure):
     _fields_ = [('md5', c_uint8 * 16),
                 ('sha1', c_uint8 * 20),
@@ -97,19 +116,26 @@ class Hasher(object):
     def update(self, buf):
         blen = len(buf)
 
-        if blen < 8:
+        if isinstance(buf, bytes):
+            # yay, we can get a pointer from a bytes
+            beg = cast(buf, POINTER(c_uint8 * blen))[0]
+        elif blen < 8:
             # ctypes from_buffer requires at least 8 bytes,
             # so we copy to a bytes instead
             buf = bytes(buf[:blen])
             beg = cast(buf, POINTER(c_uint8 * blen))[0]
+        elif not isinstance(buf, memoryview) or not buf.readonly:
+            # we have some writable buffer
+            beg = (c_uint8 * blen).from_buffer(buf)
         else:
+            # we have a read-only memoryview, so have to do some gymnastics
+            pb = Py_buffer()
+            obj = py_object(buf)
             try:
-                beg = (c_uint8 * blen).from_buffer(buf)
-            except TypeError:
-                # from_buffer doesn't work on read-only buffers, such as bytes
-                # and memoryviews on bytes; oddly, casting doesn't work on
-                # bytearrays and their memoryviews, hence the other case...
-                beg = cast(buf, POINTER(c_uint8 * blen))[0]
+                pythonapi.PyObject_GetBuffer(obj, byref(pb), 0)
+                beg = (c_uint8 * pb.len).from_address(pb.buf)
+            finally:
+                pythonapi.PyBuffer_Release(byref(pb))
 
         end = byref(beg, blen)
         _sfhash_update_hasher(self.hasher, beg, end)
