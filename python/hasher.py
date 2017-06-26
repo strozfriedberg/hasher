@@ -98,7 +98,8 @@ class Hasher(object):
         blen = len(buf)
 
         if blen < 8:
-            # ctypes from_buffer requires at least 8 bytes
+            # ctypes from_buffer requires at least 8 bytes,
+            # so we copy to a bytes instead
             buf = bytes(buf[:blen])
             beg = cast(buf, POINTER(c_uint8 * blen))[0]
         else:
@@ -106,7 +107,8 @@ class Hasher(object):
                 beg = (c_uint8 * blen).from_buffer(buf)
             except TypeError:
                 # from_buffer doesn't work on read-only buffers, such as bytes
-                # and memoryviews on bytes
+                # and memoryviews on bytes; oddly, casting doesn't work on
+                # bytearrays and their memoryviews, hence the other case...
                 beg = cast(buf, POINTER(c_uint8 * blen))[0]
 
         end = byref(beg, blen)
