@@ -98,19 +98,18 @@ class Hasher(object):
         blen = len(buf)
 
         if blen < 8:
-            # ctypes from_buffer and from_buffer_copy require at least 8 bytes
-            tmp = bytearray(8)
-            tmp[0:blen] = buf
-            buf = tmp
+            # ctypes from_buffer requires at least 8 bytes
+            buf = bytes(buf[:blen])
+            beg = cast(buf, POINTER(c_uint8 * blen))[0]
+        else:
+            try:
+                beg = (c_uint8 * blen).from_buffer(buf)
+            except TypeError:
+                # from_buffer doesn't work on read-only buffers, such as bytes
+                # and memoryviews on bytes
+                beg = cast(buf, POINTER(c_uint8 * blen))[0]
 
-        try:
-            buf = (c_uint8 * len(buf)).from_buffer(buf)
-        except TypeError:
-            # from_buffer doesn't work on bytes and memoryviews on bytes
-            buf = (c_uint8 * len(buf)).from_buffer_copy(buf)
-       
-        beg = addressof(buf) 
-        end = cast(beg + blen, c_void_p)
+        end = byref(beg, blen)
         _sfhash_update_hasher(self.hasher, beg, end)
 
     def reset(self):
