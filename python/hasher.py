@@ -99,6 +99,7 @@ SHA256 = 1 << 2
 class Hasher(object):
     def __init__(self, algs, clone=None):
         self.hasher = _sfhash_clone_hasher(clone) if clone else _sfhash_create_hasher(algs)
+        self.pbuf = Py_buffer()
 
     def __enter__(self):
         return self
@@ -119,23 +120,17 @@ class Hasher(object):
         if isinstance(buf, bytes):
             # yay, we can get a pointer from a bytes
             beg = cast(buf, POINTER(c_uint8 * blen))[0]
-        elif blen < 8:
-            # ctypes from_buffer requires at least 8 bytes,
-            # so we copy to a bytes instead
-            buf = bytes(buf[:blen])
-            beg = cast(buf, POINTER(c_uint8 * blen))[0]
-        elif not isinstance(buf, memoryview) or not buf.readonly:
-            # we have some writable buffer
+        elif blen >= 8 and (not isinstance(buf, memoryview) or not buf.readonly):
+            # we have a writable buffer; from_buffer requires len >= 8
             beg = (c_uint8 * blen).from_buffer(buf)
         else:
             # we have a read-only memoryview, so have to do some gymnastics
-            pb = Py_buffer()
             obj = py_object(buf)
             try:
-                pythonapi.PyObject_GetBuffer(obj, byref(pb), 0)
-                beg = (c_uint8 * pb.len).from_address(pb.buf)
+                pythonapi.PyObject_GetBuffer(obj, byref(self.pbuf), 0)
+                beg = (c_uint8 * self.pbuf.len).from_address(self.pbuf.buf)
             finally:
-                pythonapi.PyBuffer_Release(byref(pb))
+                pythonapi.PyBuffer_Release(byref(self.pbuf))
 
         end = byref(beg, blen)
         _sfhash_update_hasher(self.hasher, beg, end)
