@@ -81,7 +81,7 @@ std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, c
 
       // reject trailing nonwhitespace
       THROW_IF(
-        find_nonws(j + 1, cend) != cend,
+        j + 1 < cend && find_nonws(j + 1, cend) != cend,
         "bad hash '" << std::string(i, cend) << "'"
       );
 
