@@ -22,6 +22,28 @@ AX_APPEND_COMPILE_FLAGS([-W -Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe -O3
 AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 
 #
+# Define platform macroses
+#
+# AC_CANONICAL_HOST is needed to access the 'host_os' variable
+AC_CANONICAL_HOST
+
+# Detect the target system
+case "${host_os}" in
+    linux*)
+        AC_DEFINE([_LINUX], [1], [Linux platform])
+        ;;
+    cygwin*|mingw*)
+        AC_DEFINE([_WIN32], [1], [Windows platform])
+        ;;
+    darwin*)
+        AC_DEFINE([_MACOSX], [1], [Macosx platform])
+        ;;
+    *)
+        AC_MSG_ERROR(["OS $host_os is not supported"])
+        ;;
+esac
+
+#
 # Dependencies
 #
 
