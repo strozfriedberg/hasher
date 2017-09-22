@@ -104,9 +104,6 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   auto prog = make_unique_del(
     lg_create_program(fsm.get(), &popts), lg_destroy_program
   );
-  if (!prog) {
-    return nullptr;
-  }
 
   std::sort(table.begin(), table.end());
 
@@ -142,15 +139,17 @@ void cb(void *userData, const LG_SearchHit* const) {
 }
 
 int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
-  const LG_ContextOptions copt{};
-  auto ctx = make_unique_del(
-    lg_create_context(matcher->prog.get(), &copt), lg_destroy_context
-  );
-
   bool hit = false;
+  auto prog = matcher->prog.get();
+  if (prog) {
+    const LG_ContextOptions copt{};
+    auto ctx = make_unique_del(
+      lg_create_context(prog, &copt), lg_destroy_context
+    );
 
-  lg_search(ctx.get(), filename, filename + std::strlen(filename), 0, &hit, cb);
-  lg_closeout_search(ctx.get(), &hit, cb);
+    lg_search(ctx.get(), filename, filename + std::strlen(filename), 0, &hit, cb);
+    lg_closeout_search(ctx.get(), &hit, cb);
+  }
 
   return hit;
 }
