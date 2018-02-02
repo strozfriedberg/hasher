@@ -2,7 +2,7 @@
 # Replace PATH/TO/SOMEFILE.cpp with the path to some source file.
 
 AC_PREREQ([2.69])
-AC_INIT([hasher], [0.1.0], [juckelman@strozfriedberg.co.uk])
+AC_INIT([hasher], [0.2.0], [juckelman@strozfriedberg.co.uk])
  
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
@@ -153,11 +153,15 @@ if test "x$enable_shared_fat" = "xyes"; then
       AC_MSG_ERROR([--enable-shared-fat requires --enable-shared.])
     fi
     echo "Enabling fat shared lib. Your shared libhasher is so fat, it will contain all of its dependencies."
+
+    TEST_LIBS=
     ;;
   *)
     AC_MSG_ERROR([--enable-shared-fat requires building with MinGW.])
     ;;
   esac
+else
+  TEST_LIBS="$PROJECT_LIBS"
 fi
 
 #
@@ -193,6 +197,7 @@ AC_SUBST([PROJECT_CXXFLAGS])
 AC_SUBST([PROJECT_LDFLAGS])
 AC_SUBST([PROJECT_LIBS])
 AC_SUBST([HASHER_LIB_LDFLAGS])
+AC_SUBST([TEST_LIBS])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

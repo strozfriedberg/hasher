@@ -19,6 +19,7 @@ nodist_EXTRA_src_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 noinst_LTLIBRARIES = $(HASHER_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
+	src/entropy.cpp \
 	src/hasher.cpp \
 	src/parser.cpp \
 	src/matcher.cpp \
@@ -34,7 +35,13 @@ endif
 src_libhasher_ladir = $(includedir)
 
 src_libhasher_la_HEADERS = \
+	include/entropy.h \
 	include/hasher.h
+
+src_entropy_SOURCES = \
+	src/entropy_main.cpp
+
+src_entropy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 src_matcher_SOURCES = \
 	src/matcher_main.cpp
@@ -46,7 +53,7 @@ src_hasher_SOURCES = \
 
 src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-noinst_PROGRAMS = src/hasher src/matcher
+noinst_PROGRAMS = src/entropy src/hasher src/matcher
 
 check_PROGRAMS = test/test
 TESTS = \
@@ -55,13 +62,14 @@ TESTS = \
 
 test_test_SOURCES = \
 	test/test.cpp \
+	test/test_entropy.cpp \
 	test/test_hasher.cpp \
 	test/test_matcher.cpp \
 	test/test_parser.cpp
 
 test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
 
-test_test_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
+test_test_LDADD = $(HASHER_LIB) $(TEST_LIBS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 nodist_pkgconfig_DATA = src/hasher.pc

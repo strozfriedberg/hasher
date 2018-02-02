@@ -1,5 +1,5 @@
 #!/bin/bash -e
 
-if [ -x src/lib/.libs/libhasher.so ]; then
-  LD_LIBRARY_PATH=src/lib/.libs python/test.py -v
+if [ -e src/.libs/libhasher.so ]; then
+  LD_LIBRARY_PATH=src/.libs:/usr/local/lib python/test.py -v
 fi
