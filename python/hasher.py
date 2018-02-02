@@ -23,25 +23,6 @@ except Exception as e:
     raise e
 
 
-c_ssize_p = POINTER(c_ssize_t)
-
-
-class Py_buffer(Structure):
-    _fields_ = [
-        ('buf', c_void_p),
-        ('obj', py_object),
-        ('len', c_ssize_t),
-        ('itemsize', c_ssize_t),
-        ('readonly', c_int),
-        ('ndim', c_int),
-        ('format', c_char_p),
-        ('shape', c_ssize_p),
-        ('strides', c_ssize_p),
-        ('suboffsets', c_ssize_p),
-        ('internal', c_void_p)
-    ]
-
-
 class HasherHashes(Structure):
     _fields_ = [('md5', c_uint8 * 16),
                 ('sha1', c_uint8 * 20),
@@ -96,6 +77,47 @@ SHA1   = 1 << 1
 SHA256 = 1 << 2
 
 
+c_ssize_p = POINTER(c_ssize_t)
+
+
+class Py_buffer(Structure):
+    _fields_ = [
+        ('buf', c_void_p),
+        ('obj', py_object),
+        ('len', c_ssize_t),
+        ('itemsize', c_ssize_t),
+        ('readonly', c_int),
+        ('ndim', c_int),
+        ('format', c_char_p),
+        ('shape', c_ssize_p),
+        ('strides', c_ssize_p),
+        ('suboffsets', c_ssize_p),
+        ('internal', c_void_p)
+    ]
+
+
+def ptr_range(buf, pbuf, ptype):
+    blen = len(buf)
+
+    if isinstance(buf, bytes):
+        # yay, we can get a pointer from a bytes
+        beg = cast(buf, POINTER(ptype * blen))[0]
+    elif blen >= 8 and (not isinstance(buf, memoryview) or not buf.readonly):
+        # we have a writable buffer; from_buffer requires len >= 8
+        beg = (ptype * blen).from_buffer(buf)
+    else:
+        # we have a read-only memoryview, so have to do some gymnastics
+        obj = py_object(buf)
+        try:
+            pythonapi.PyObject_GetBuffer(obj, byref(pbuf), 0)
+            beg = (ptype * pbuf.len).from_address(pbuf.buf)
+        finally:
+            pythonapi.PyBuffer_Release(byref(pbuf))
+
+    end = byref(beg, blen)
+    return beg, end
+
+
 class Hasher(object):
     def __init__(self, algs, clone=None):
         self.hasher = _sfhash_clone_hasher(clone) if clone else _sfhash_create_hasher(algs)
@@ -115,25 +137,7 @@ class Hasher(object):
         return Hasher(0, clone=self.hasher)
 
     def update(self, buf):
-        blen = len(buf)
-
-        if isinstance(buf, bytes):
-            # yay, we can get a pointer from a bytes
-            beg = cast(buf, POINTER(c_uint8 * blen))[0]
-        elif blen >= 8 and (not isinstance(buf, memoryview) or not buf.readonly):
-            # we have a writable buffer; from_buffer requires len >= 8
-            beg = (c_uint8 * blen).from_buffer(buf)
-        else:
-            # we have a read-only memoryview, so have to do some gymnastics
-            obj = py_object(buf)
-            try:
-                pythonapi.PyObject_GetBuffer(obj, byref(self.pbuf), 0)
-                beg = (c_uint8 * self.pbuf.len).from_address(self.pbuf.buf)
-            finally:
-                pythonapi.PyBuffer_Release(byref(self.pbuf))
-
-        end = byref(beg, blen)
-        _sfhash_update_hasher(self.hasher, beg, end)
+        _sfhash_update_hasher(self.hasher, *ptr_range(buf, self.pbuf, c_uint8))
 
     def reset(self):
         _sfhash_reset_hasher(self.hasher)
