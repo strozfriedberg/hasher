@@ -9,6 +9,7 @@
 
 #include <boost/filesystem.hpp>
 
+#include "config.h"
 #include "hasher.h"
 #include "throw.h"
 #include "util.h"
@@ -104,14 +105,20 @@ int main(int argc, char** argv) {
             std::cout << n << '\t'
                       << size << '\t'
                       << to_hex(hashes.sha1, hashes.sha1+20) << '\t'
-#ifdef _WIN32
+#if defined(_WIN32)
                       << s.st_atime << '\t'
                       << s.st_mtime << '\t'
                       << s.st_ctime << '\t'
-#else
+#elif defined (_LINUX)
                       << s.st_atim.tv_sec << '\t'
                       << s.st_mtim.tv_sec << '\t'
                       << s.st_ctim.tv_sec << '\t'
+#elif defined (_MACOSX)
+                      << s.st_atimespec.tv_sec << '\t'
+                      << s.st_mtimespec.tv_sec << '\t'
+                      << s.st_ctimespec.tv_sec << '\t'
+#else
+#error  Please, define one of the platform.
 #endif
                       << fmatch << '\t'
                       << hmatch << '\t'
