@@ -3,5 +3,5 @@
 #include <cstdint>
 
 struct SFHASH_Entropy {
-  uint64_t count[256] = {0};
+  uint64_t hist[256] = {0};
 };

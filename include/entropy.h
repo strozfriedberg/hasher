@@ -15,6 +15,8 @@ void sfhash_update_entropy(SFHASH_Entropy* entropy, const void* beg, const void*
 
 double sfhash_get_entropy(SFHASH_Entropy* entropy);
 
+void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend);
+
 void sfhash_reset_entropy(SFHASH_Entropy* entropy);
 
 void sfhash_destroy_entropy(SFHASH_Entropy* entropy);
