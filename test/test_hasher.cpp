@@ -1,5 +1,7 @@
 #include <scope/test.h>
 
+#include <iterator>
+
 #include "hasher.h"
 #include "util.h"
 
@@ -14,17 +16,17 @@ SCOPE_TEST(emptyHashNoUpdate) {
 
   SCOPE_ASSERT_EQUAL(
     "d41d8cd98f00b204e9800998ecf8427e",
-    to_hex(hashes.md5, hashes.md5+sizeof(hashes.md5))
+    to_hex(std::begin(hashes.md5), std::end(hashes.md5))
   );
 
   SCOPE_ASSERT_EQUAL(
     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-    to_hex(hashes.sha1, hashes.sha1+sizeof(hashes.sha1))
+    to_hex(std::begin(hashes.sha1), std::end(hashes.sha1))
   );
 
   SCOPE_ASSERT_EQUAL(
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    to_hex(hashes.sha256, hashes.sha256+sizeof(hashes.sha256))
+    to_hex(std::begin(hashes.sha256), std::end(hashes.sha256))
   );
 }
 
@@ -41,17 +43,17 @@ SCOPE_TEST(emptyHashEmptyUpdate) {
 
   SCOPE_ASSERT_EQUAL(
     "d41d8cd98f00b204e9800998ecf8427e",
-    to_hex(hashes.md5, hashes.md5+sizeof(hashes.md5))
+    to_hex(std::begin(hashes.md5), std::end(hashes.md5))
   );
 
   SCOPE_ASSERT_EQUAL(
     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-    to_hex(hashes.sha1, hashes.sha1+sizeof(hashes.sha1))
+    to_hex(std::begin(hashes.sha1), std::end(hashes.sha1))
   );
 
   SCOPE_ASSERT_EQUAL(
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    to_hex(hashes.sha256, hashes.sha256+sizeof(hashes.sha256))
+    to_hex(std::begin(hashes.sha256), std::end(hashes.sha256))
   );
 }
 
@@ -70,16 +72,16 @@ SCOPE_TEST(alphabetHash) {
 
   SCOPE_ASSERT_EQUAL(
     "c3fcd3d76192e4007dfb496cca67e13b",
-    to_hex(hashes.md5, hashes.md5+sizeof(hashes.md5))
+    to_hex(std::begin(hashes.md5), std::end(hashes.md5))
   );
 
   SCOPE_ASSERT_EQUAL(
     "32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
-    to_hex(hashes.sha1, hashes.sha1+sizeof(hashes.sha1))
+    to_hex(std::begin(hashes.sha1), std::end(hashes.sha1))
   );
 
   SCOPE_ASSERT_EQUAL(
     "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
-    to_hex(hashes.sha256, hashes.sha256+sizeof(hashes.sha256))
+    to_hex(std::begin(hashes.sha256), std::end(hashes.sha256))
   );
 }
