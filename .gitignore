@@ -28,6 +28,7 @@
 /m4/lt~obsolete.m4
 /python/*.log
 /python/*.trs
+/src/entropy
 /src/hasher
 /src/hasher.pc
 /src/matcher
