@@ -86,6 +86,11 @@ _sfhash_update_entropy = _hasher.sfhash_update_entropy
 _sfhash_update_entropy.argtypes = [c_void_p, c_void_p, c_void_p]
 _sfhash_update_entropy.restype = None
 
+# void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend);
+_sfhash_accumulate_entropy = _hasher.sfhash_accumulate_entropy
+_sfhash_accumulate_entropy.argtypes = [c_void_p, c_void_p]
+_sfhash_accumulate_entropy.restype = None
+
 # double sfhash_get_entropy(SFHASH_Entropy* entropy);
 _sfhash_get_entropy = _hasher.sfhash_get_entropy
 _sfhash_get_entropy.argtypes = [c_void_p]
@@ -198,6 +203,10 @@ class Entropy(object):
 
     def update(self, buf):
         _sfhash_update_entropy(self.entropy, *ptr_range(buf, self.pbuf, c_uint8))
+
+    def __iadd__(self, other):
+        _sfhash_accumulate_entropy(self.entropy, other.entropy)
+        return self
 
     def reset(self):
         _sfhash_reset_entropy(self.entropy)

@@ -171,6 +171,13 @@ class TestEntropy(unittest.TestCase):
             with e1.clone() as e2:
                 self.assertEqual(e1.get_entropy(), e2.get_entropy())
 
+    def test_plus_equals(self):
+        with hasher.Entropy() as e1:
+            with hasher.Entropy() as e2:
+                self.process_it(e2, (lc_alphabet,), lc_alphabet_entropy)
+                e1 += e2
+                self.assertEqual(e1.get_entropy(), e2.get_entropy())
+
 
 if __name__ == "__main__":
     unittest.main()
