@@ -39,11 +39,6 @@ class HasherHashes(Structure):
                     self.entropy == other.entropy)
         return NotImplemented
 
-    def __ne__(self, other):
-        if isinstance(other, self.__class__):
-            return not self == other
-        return NotImplemented
-
     @property
     def fuzzy(self):
       return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
