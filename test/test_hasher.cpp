@@ -7,7 +7,7 @@
 
 SCOPE_TEST(emptyHashNoUpdate) {
   auto hasher = make_unique_del(
-    sfhash_create_hasher(MD5 | SHA1 | SHA256),
+    sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY),
     sfhash_destroy_hasher
   );
 
@@ -28,11 +28,16 @@ SCOPE_TEST(emptyHashNoUpdate) {
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     to_hex(std::begin(hashes.sha256), std::end(hashes.sha256))
   );
+
+  SCOPE_ASSERT_EQUAL(
+    "3::",
+    std::string((const char*)hashes.fuzzy)
+  );
 }
 
 SCOPE_TEST(emptyHashEmptyUpdate) {
   auto hasher = make_unique_del(
-    sfhash_create_hasher(MD5 | SHA1 | SHA256),
+    sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY),
     sfhash_destroy_hasher
   );
 
@@ -55,13 +60,18 @@ SCOPE_TEST(emptyHashEmptyUpdate) {
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     to_hex(std::begin(hashes.sha256), std::end(hashes.sha256))
   );
+
+  SCOPE_ASSERT_EQUAL(
+    "3::",
+    std::string((const char*)hashes.fuzzy)
+  );
 }
 
 SCOPE_TEST(alphabetHash) {
   const char a[] = "abcdefghijklmnopqrstuvwxyz";
 
   auto hasher = make_unique_del(
-    sfhash_create_hasher(MD5 | SHA1 | SHA256),
+    sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY),
     sfhash_destroy_hasher
   );
 
@@ -83,5 +93,10 @@ SCOPE_TEST(alphabetHash) {
   SCOPE_ASSERT_EQUAL(
     "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
     to_hex(std::begin(hashes.sha256), std::end(hashes.sha256))
+  );
+
+  SCOPE_ASSERT_EQUAL(
+    "3:u+6LO5Sfn:u+6LO5Sfn",
+    std::string((const char*)hashes.fuzzy)
   );
 }
