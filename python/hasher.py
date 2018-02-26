@@ -27,7 +27,7 @@ class HasherHashes(Structure):
     _fields_ = [('md5', c_uint8 * 16),
                 ('sha1', c_uint8 * 20),
                 ('sha256', c_uint8 * 32),
-                ('fuzzy', c_uint8 * 148),
+                ('_fuzzy', c_uint8 * 148),
                 ('entropy', c_double)]
 
     def __eq__(self, other):
@@ -35,6 +35,7 @@ class HasherHashes(Structure):
             return (self.md5[:] == other.md5[:] and
                     self.sha1[:] == other.sha1[:] and
                     self.sha256[:] == other.sha256[:] and
+                    self.fuzzy == other.fuzzy and
                     self.entropy == other.entropy)
         return NotImplemented
 
@@ -42,6 +43,10 @@ class HasherHashes(Structure):
         if isinstance(other, self.__class__):
             return not self == other
         return NotImplemented
+
+    @property
+    def fuzzy(self):
+      return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
 
 
 # SFHASH_Hasher* sfhash_create_hasher(uint32_t hashAlgs);
@@ -83,6 +88,7 @@ MD5     = 1 << 0
 SHA1    = 1 << 1
 SHA256  = 1 << 2
 ENTROPY = 1 << 3
+FUZZY   = 1 << 4
 
 
 c_ssize_p = POINTER(c_ssize_t)
