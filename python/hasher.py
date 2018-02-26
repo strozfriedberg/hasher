@@ -59,6 +59,10 @@ _sfhash_update_hasher = _hasher.sfhash_update_hasher
 _sfhash_update_hasher.argtypes = [c_void_p, c_void_p, c_void_p]
 _sfhash_update_hasher.restype = None
 
+_sfhash_hasher_set_total_input_length = _hasher.sfhash_hasher_set_total_input_length
+_sfhash_hasher_set_total_input_length.argtype = [c_void_p, c_uint64]
+_sfhash_hasher_set_total_input_length.restype = None
+
 # void sfhash_get_hashes(SFHASH_Hasher* hasher, SFHASH_HashValues* out_hashes);
 _sfhash_get_hashes = _hasher.sfhash_get_hashes
 _sfhash_get_hashes.argtypes = [c_void_p, POINTER(HasherHashes)]
@@ -142,6 +146,9 @@ class Hasher(object):
 
     def update(self, buf):
         _sfhash_update_hasher(self.hasher, *ptr_range(buf, self.pbuf, c_uint8))
+
+    def set_total_input_length(self, length):
+        _sfhash_hasher_set_total_input_length(self.hasher, length)
 
     def reset(self):
         _sfhash_reset_hasher(self.hasher)

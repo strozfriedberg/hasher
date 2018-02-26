@@ -49,6 +49,8 @@ public:
     }
   }
 
+  virtual void set_total_input_length(uint64_t) {}
+
   virtual void get(void* val) {
     if (!EVP_DigestFinal_ex(ctx, static_cast<uint8_t*>(val), nullptr)) {
       // TODO: error!

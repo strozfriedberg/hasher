@@ -50,6 +50,12 @@ public:
     }
   }
 
+  void set_total_input_length(uint64_t len) {
+    for (auto& h: hashers) {
+      h.first->set_total_input_length(len);
+    }
+  }
+
   void get(HashValues* vals) {
     for (auto& h: hashers) {
       h.first->get(reinterpret_cast<uint8_t*>(vals) + h.second);
@@ -88,6 +94,10 @@ Hasher* sfhash_clone_hasher(const Hasher* hasher) {
 void sfhash_update_hasher(Hasher* hasher, const void* beg, const void* end) {
   hasher->update(static_cast<const uint8_t*>(beg),
                  static_cast<const uint8_t*>(end));
+}
+
+void sfhash_hasher_set_total_input_length(Hasher* hasher, uint64_t total_fixed_length) {
+  hasher->set_total_input_length(total_fixed_length);
 }
 
 void sfhash_get_hashes(Hasher* hasher, HashValues* hashes) {

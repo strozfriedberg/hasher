@@ -33,6 +33,9 @@ SFHASH_Hasher* sfhash_clone_hasher(const SFHASH_Hasher* hasher);
 // update the hash(es) with more data
 void sfhash_update_hasher(SFHASH_Hasher* hasher, const void* beg, const void* end);
 
+// optional
+void sfhash_hasher_set_total_input_length(SFHASH_Hasher* hasher, uint64_t total_fixed_length);
+
 void sfhash_get_hashes(SFHASH_Hasher* hasher, SFHASH_HashValues* out_hashes);
 
 void sfhash_reset_hasher(SFHASH_Hasher* hasher);

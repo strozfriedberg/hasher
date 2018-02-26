@@ -172,5 +172,22 @@ class TestEntropy(unittest.TestCase):
                 self.assertEqual(h1.get_hashes(), h2.get_hashes())
 
 
+class TestFuzzy(unittest.TestCase):
+    def test_set_total_input_length(self):
+        self.hash_this((lc_alphabet,), '3:u+6LO5Sfn:u+6LO5Sfn')
+
+    def hash_this(self, bufs, exp):
+        with hasher.Hasher(hasher.FUZZY) as h:
+            self.hash_it(h, bufs, exp)
+
+    def hash_it(self, h, bufs, exp):
+        h.set_total_input_length(sum(len(x) for x in bufs))
+        for buf in bufs:
+            h.update(buf)
+
+        hashes = h.get_hashes()
+
+        self.assertEqual(exp, hashes.fuzzy)
+
 if __name__ == "__main__":
     unittest.main()

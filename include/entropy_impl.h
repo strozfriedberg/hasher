@@ -24,6 +24,8 @@ public:
     }
   }
 
+  virtual void set_total_input_length(uint64_t) {}
+
   virtual void get(void* val) {
     *static_cast<double*>(val) = entropy();
   }

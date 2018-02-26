@@ -30,6 +30,12 @@ public:
     }
   }
 
+  virtual void set_total_input_length(uint64_t len) {
+    if (!fuzzy_set_total_input_length(ctx, len)) {
+      // TODO: error!
+    }
+  }
+
   virtual void get(void* val) {
     if (!fuzzy_digest(ctx, reinterpret_cast<char*>(val), 0)) {
       // TODO: error!
