@@ -67,6 +67,11 @@ esac
 AX_PKG_CHECK_MODULES([CRYPTO], [], [libcrypto])
 AX_PKG_CHECK_MODULES([LIGHTGREP], [], [lightgrep])
 
+AX_CHECK_LIBRARY([FUZZY], [fuzzy.h], [fuzzy],
+                 [FUZZY_LIBS=-lfuzzy],
+                 [AC_MSG_ERROR([Failed to find libfuzzy])])
+AC_SUBST([FUZZY_LIBS])
+
 if test "x$with_boost" = "xno"; then
   AC_MSG_ERROR([--without-boost specified, but Boost is mandatory.])
 else
@@ -201,7 +206,7 @@ AC_DEFUN([SF_APPEND], [{
 }])
 
 # collect the flags from everything which might set some
-for lib in BOOST CRYPTO LIGHTGREP; do
+for lib in BOOST CRYPTO LIGHTGREP FUZZY; do
   # fold CFLAGS into CXXFLAGS since everything here is C++
   h="${lib}_CXXFLAGS"
   t=$(eval echo \"\$${lib}_CFLAGS\")

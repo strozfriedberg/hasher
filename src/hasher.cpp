@@ -3,6 +3,7 @@
 #include "hasher_impl.h"
 #include "entropy_impl.h"
 #include "libcrypto_hasher.h"
+#include "fuzzy_impl.h"
 
 #include <cstddef>
 #include <vector>
@@ -18,7 +19,8 @@ public:
       { make_md5_hasher,         offsetof(HashValues, md5)     },
       { make_sha1_hasher,        offsetof(HashValues, sha1)    },
       { make_sha256_hasher,      offsetof(HashValues, sha256)  },
-      { make_entropy_calculator, offsetof(HashValues, entropy) }
+      { make_entropy_calculator, offsetof(HashValues, entropy) },
+      { make_fuzzy_hasher,   offsetof(HashValues, fuzzy)   }
     };
 
     for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
