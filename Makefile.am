@@ -35,13 +35,7 @@ endif
 src_libhasher_ladir = $(includedir)
 
 src_libhasher_la_HEADERS = \
-	include/entropy.h \
 	include/hasher.h
-
-src_entropy_SOURCES = \
-	src/entropy_main.cpp
-
-src_entropy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 src_matcher_SOURCES = \
 	src/matcher_main.cpp
@@ -53,7 +47,7 @@ src_hasher_SOURCES = \
 
 src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-noinst_PROGRAMS = src/entropy src/hasher src/matcher
+noinst_PROGRAMS = src/hasher src/matcher
 
 check_PROGRAMS = test/test
 TESTS = \

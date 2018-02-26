@@ -8,15 +8,17 @@ extern "C" {
 #endif
 
 enum SFHASH_HashAlgorithms {
-  MD5    = 1 << 0,
-  SHA1   = 1 << 1,
-  SHA256 = 1 << 2
+  MD5     = 1 << 0,
+  SHA1    = 1 << 1,
+  SHA256  = 1 << 2,
+  ENTROPY = 1 << 3
 };
 
 typedef struct SFHASH_HashValues {
   uint8_t md5[16],
           sha1[20],
           sha256[32];
+  double  entropy;
 } SFHASH_HashValues;
 
 struct SFHASH_Hasher;

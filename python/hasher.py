@@ -26,13 +26,15 @@ except Exception as e:
 class HasherHashes(Structure):
     _fields_ = [('md5', c_uint8 * 16),
                 ('sha1', c_uint8 * 20),
-                ('sha256', c_uint8 * 32)]
+                ('sha256', c_uint8 * 32),
+                ('entropy', c_double)]
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return (self.md5[:] == other.md5[:] and
                     self.sha1[:] == other.sha1[:] and
-                    self.sha256[:] == other.sha256[:])
+                    self.sha256[:] == other.sha256[:] and
+                    self.entropy == other.entropy)
         return NotImplemented
 
     def __ne__(self, other):
@@ -71,45 +73,11 @@ _sfhash_destroy_hasher = _hasher.sfhash_destroy_hasher
 _sfhash_destroy_hasher.argtypes = [c_void_p]
 _sfhash_destroy_hasher.restype = None
 
-# SFHASH_Entropy* sfhash_create_entropy();
-_sfhash_create_entropy = _hasher.sfhash_create_entropy
-_sfhash_create_entropy.argtypes = None
-_sfhash_create_entropy.restype = c_void_p
 
-# SFHASH_Entropy* sfhash_clone_entropy(const SFHASH_Entropy* entropy);
-_sfhash_clone_entropy = _hasher.sfhash_clone_entropy
-_sfhash_clone_entropy.argtypes = [c_void_p]
-_sfhash_clone_entropy.restype = c_void_p
-
-# void sfhash_update_entropy(SFHASH_Entropy* entropy, const void* beg, const void* end)
-_sfhash_update_entropy = _hasher.sfhash_update_entropy
-_sfhash_update_entropy.argtypes = [c_void_p, c_void_p, c_void_p]
-_sfhash_update_entropy.restype = None
-
-# void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend);
-_sfhash_accumulate_entropy = _hasher.sfhash_accumulate_entropy
-_sfhash_accumulate_entropy.argtypes = [c_void_p, c_void_p]
-_sfhash_accumulate_entropy.restype = None
-
-# double sfhash_get_entropy(SFHASH_Entropy* entropy);
-_sfhash_get_entropy = _hasher.sfhash_get_entropy
-_sfhash_get_entropy.argtypes = [c_void_p]
-_sfhash_get_entropy.restype = c_double
-
-# void sfhash_reset_entropy(SFHASH_Entropy* entropy);
-_sfhash_reset_entropy = _hasher.sfhash_reset_entropy
-_sfhash_reset_entropy.argtypes = [c_void_p]
-_sfhash_reset_entropy.restype = None
-
-# void sfhash_destroy_entropy(SFHASH_Entropy* entropy);
-_sfhash_destroy_entropy = _hasher.sfhash_destroy_entropy
-_sfhash_destroy_entropy.argtypes = [c_void_p]
-_sfhash_destroy_entropy.restype = None
-
-
-MD5    = 1 << 0
-SHA1   = 1 << 1
-SHA256 = 1 << 2
+MD5     = 1 << 0
+SHA1    = 1 << 1
+SHA256  = 1 << 2
+ENTROPY = 1 << 3
 
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -181,35 +149,3 @@ class Hasher(object):
         h = HasherHashes()
         _sfhash_get_hashes(self.hasher, byref(h))
         return h
-
-
-class Entropy(object):
-    def __init__(self, clone=None):
-        self.entropy = _sfhash_clone_entropy(clone) if clone else _sfhash_create_entropy()
-        self.pbuf = Py_buffer()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.destroy()
-
-    def destroy(self):
-        _sfhash_destroy_entropy(self.entropy)
-        self.entropy = None
-
-    def clone(self):
-        return Entropy(clone=self.entropy)
-
-    def update(self, buf):
-        _sfhash_update_entropy(self.entropy, *ptr_range(buf, self.pbuf, c_uint8))
-
-    def __iadd__(self, other):
-        _sfhash_accumulate_entropy(self.entropy, other.entropy)
-        return self
-
-    def reset(self):
-        _sfhash_reset_entropy(self.entropy)
-
-    def get_entropy(self):
-        return _sfhash_get_entropy(self.entropy)

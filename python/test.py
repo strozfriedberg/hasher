@@ -106,17 +106,15 @@ class TestHasher(unittest.TestCase):
             with h1.clone() as h2:
                 self.assertEqual(h1.get_hashes(), h2.get_hashes())
 
-
-class TestEntropy(unittest.TestCase):
     def process_this(self, bufs, exp):
-        with hasher.Entropy() as e:
-            self.process_it(e, bufs, exp)
+        with hasher.Hasher(hasher.ENTROPY) as h:
+            self.process_it(h, bufs, exp)
 
-    def process_it(self, e, bufs, exp):
+    def process_it(self, h, bufs, exp):
         for buf in bufs:
-            e.update(buf)
+            h.update(buf)
 
-        self.assertEqual(exp, e.get_entropy())
+        self.assertEqual(exp, h.get_hashes().entropy)
 
     def test_entropy_nothing(self):
         self.process_this((), empty_entropy)
@@ -155,28 +153,21 @@ class TestEntropy(unittest.TestCase):
         self.process_this((memoryview(bytearray(abc)),), abc_entropy)
 
     def test_reset_before_use(self):
-        with hasher.Entropy() as e:
-            e.reset()
-            self.process_it(e, (), empty_entropy)
+        with hasher.Hasher(hasher.ENTROPY) as h:
+            h.reset()
+            self.process_it(h, (), empty_entropy)
 
     def test_reset_after_use(self):
-        with hasher.Entropy() as e:
-            self.process_it(e, (lc_alphabet,), lc_alphabet_entropy)
-            e.reset()
-            self.process_it(e, (), empty_entropy)
+        with hasher.Hasher(hasher.ENTROPY) as h:
+            self.process_it(h, (lc_alphabet,), lc_alphabet_entropy)
+            h.reset()
+            self.process_it(h, (), empty_entropy)
 
     def test_clone(self):
-        with hasher.Entropy() as e1:
-            self.process_it(e1, (lc_alphabet,), lc_alphabet_entropy)
-            with e1.clone() as e2:
-                self.assertEqual(e1.get_entropy(), e2.get_entropy())
-
-    def test_plus_equals(self):
-        with hasher.Entropy() as e1:
-            with hasher.Entropy() as e2:
-                self.process_it(e2, (lc_alphabet,), lc_alphabet_entropy)
-                e1 += e2
-                self.assertEqual(e1.get_entropy(), e2.get_entropy())
+        with hasher.Hasher(hasher.ENTROPY) as h1:
+            self.process_it(h1, (lc_alphabet,), lc_alphabet_entropy)
+            with h1.clone() as h2:
+                self.assertEqual(h1.get_hashes(), h2.get_hashes())
 
 
 if __name__ == "__main__":

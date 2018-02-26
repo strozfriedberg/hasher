@@ -4,7 +4,9 @@
 
 #include <exception>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 
 #include <boost/lexical_cast.hpp>
 
@@ -12,10 +14,12 @@
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: hasher ALGS PATH\n"
-              << "ALGS values: MD5 = " << MD5
-              << ", SHA1 = " << SHA1
-              << ", SHA256 = " << SHA256
-              << "; OR them for multihashing"
+              << "ALGS values:\n"
+              << "  " << MD5     << " MD5\n"
+              << "  " << SHA1    << " SHA1\n"
+              << "  " << SHA256  << " SHA256\n"
+              << "  " << ENTROPY << " ENTROPY\n"
+              << "Bitwise-OR them for multihashing."
               << std::endl;
     return -1;
   }
@@ -53,6 +57,12 @@ int main(int argc, char** argv) {
 
     if (algs & SHA256) {
       std::cout << to_hex(hashes.sha256, hashes.sha256+32) << '\n';
+    }
+
+    if (algs & ENTROPY) {
+      std::cout << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+                << std::fixed
+                << hashes.entropy << '\n';
     }
   }
   catch (const std::exception& e) {
