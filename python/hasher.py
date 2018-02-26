@@ -27,6 +27,7 @@ class HasherHashes(Structure):
     _fields_ = [('md5', c_uint8 * 16),
                 ('sha1', c_uint8 * 20),
                 ('sha256', c_uint8 * 32),
+                ('fuzzy', c_uint8 * 148),
                 ('entropy', c_double)]
 
     def __eq__(self, other):
