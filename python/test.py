@@ -106,6 +106,8 @@ class TestHasher(unittest.TestCase):
             with h1.clone() as h2:
                 self.assertEqual(h1.get_hashes(), h2.get_hashes())
 
+
+class TestEntropy(unittest.TestCase):
     def process_this(self, bufs, exp):
         with hasher.Hasher(hasher.ENTROPY) as h:
             self.process_it(h, bufs, exp)
