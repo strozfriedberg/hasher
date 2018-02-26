@@ -7,7 +7,6 @@
 
 class FuzzyHasher: public HasherImpl {
 public:
-  // TODO: set_total_input_length
   virtual ~FuzzyHasher() {
     fuzzy_free(ctx);
   }
