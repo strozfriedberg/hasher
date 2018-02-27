@@ -23,6 +23,7 @@ src_libhasherint_la_SOURCES = \
 	src/hasher.cpp \
 	src/parser.cpp \
 	src/matcher.cpp \
+	src/fuzzy.cpp \
 	src/util.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
@@ -59,6 +60,7 @@ test_test_SOURCES = \
 	test/test_entropy.cpp \
 	test/test_hasher.cpp \
 	test/test_matcher.cpp \
+	test/test_fuzzy_matcher.cpp \
 	test/test_parser.cpp
 
 test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)

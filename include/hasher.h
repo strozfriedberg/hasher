@@ -44,6 +44,8 @@ void sfhash_destroy_hasher(SFHASH_Hasher* hasher);
 
 struct SFHASH_FileMatcher;
 
+struct SFHASH_FuzzyMatcher;
+
 struct LG_Error;
 
 // Input is a three-column tab-separated UTF-8 text file, where each line
@@ -72,6 +74,21 @@ void sfhash_write_binary_matcher(const SFHASH_FileMatcher* matcher, void* buf);
 SFHASH_FileMatcher* sfhash_read_binary_matcher(const void* beg, const void* end);
 
 void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
+
+// Fuzzy Matching!
+// Input is the ssdeep CSV file format version 1.1
+// The first line is the header
+// ssdeep,1.1--blocksize:hash:hash,filename
+//
+// Each line after represents the fuzzy hash of one file:
+// blocksize:hash:hash,"filename"
+// The filename must be quoted and \-escaped.
+
+SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
+
+int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* sig);
+
+void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher*);
 
 #ifdef __cplusplus
 }
