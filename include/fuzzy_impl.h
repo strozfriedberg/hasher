@@ -36,7 +36,7 @@ public:
   }
 
   virtual void get(void* val) {
-    if (!fuzzy_digest(ctx, reinterpret_cast<char*>(val), 0)) {
+    if (!fuzzy_digest(ctx, static_cast<char*>(val), 0)) {
       // TODO: error!
     }
   }
@@ -51,7 +51,7 @@ public:
   }
 
 private:
-  struct fuzzy_state* ctx;
+  fuzzy_state* ctx;
 };
 
 inline std::unique_ptr<HasherImpl> make_fuzzy_hasher() {
