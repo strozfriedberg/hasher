@@ -19,8 +19,8 @@ public:
       { make_md5_hasher,         offsetof(HashValues, md5)     },
       { make_sha1_hasher,        offsetof(HashValues, sha1)    },
       { make_sha256_hasher,      offsetof(HashValues, sha256)  },
-      { make_entropy_calculator, offsetof(HashValues, entropy) },
-      { make_fuzzy_hasher,   offsetof(HashValues, fuzzy)   }
+      { make_fuzzy_hasher,   offsetof(HashValues, fuzzy)   },
+      { make_entropy_calculator, offsetof(HashValues, entropy) }
     };
 
     for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
