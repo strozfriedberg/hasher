@@ -1,6 +1,7 @@
 #include <scope/test.h>
 
 #include <iterator>
+#include <fuzzy.h>
 
 #include "hasher.h"
 #include "util.h"
@@ -99,4 +100,8 @@ SCOPE_TEST(alphabetHash) {
     "3:u+6LO5Sfn:u+6LO5Sfn",
     std::string((const char*)hashes.fuzzy)
   );
+}
+
+SCOPE_TEST(FUZZY_MAX_LEN_SIZE) {
+  SCOPE_ASSERT_EQUAL(FUZZY_MAX_RESULT, sizeof((static_cast<SFHASH_HashValues*>(0))->fuzzy) / sizeof((static_cast<SFHASH_HashValues*>(0)->fuzzy[0])));
 }
