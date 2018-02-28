@@ -48,7 +48,12 @@ src_hasher_SOURCES = \
 
 src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-noinst_PROGRAMS = src/hasher src/matcher
+src_fuzzy_SOURCES = \
+        src/fuzzy_main.cpp
+
+src_fuzzy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
+
+noinst_PROGRAMS = src/hasher src/matcher src/fuzzy
 
 check_PROGRAMS = test/test
 TESTS = \

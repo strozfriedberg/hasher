@@ -59,6 +59,7 @@ std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const c
       if (line != "ssdeep,1.1--blocksize:hash:hash,filename") {
         return nullptr;
       }
+      continue;
     }
     // skip empty lines
     if (l->first == l->second) {
@@ -66,7 +67,7 @@ std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const c
     }
 
     FuzzyHash hash{std::string(l->first, l->second - l->first)};
-    if (!hash.validate()) {
+    if (hash.validate()) {
       return nullptr;
     }
     matcher->add(hash);

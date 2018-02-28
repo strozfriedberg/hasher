@@ -29,6 +29,7 @@
 /python/*.log
 /python/*.trs
 /src/entropy
+/src/fuzzy
 /src/hasher
 /src/hasher.pc
 /src/matcher
