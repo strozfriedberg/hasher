@@ -38,11 +38,6 @@ int sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher, const char* sig) {
   FuzzyHash hash{sig};
   auto blocksize = hash.blocksize();
 
-  auto search = matcher->db.find(blocksize);
-  if (search == matcher->db.end()) {
-    return 0;
-  }
-  auto chunk_map = search->second;
   int max = 0;
   max = std::max(max, lookup_clusters(matcher, blocksize, hash.chunks(), sig));
   max = std::max(max, lookup_clusters(matcher, 2 * blocksize, hash.double_chunks(), sig));
@@ -86,7 +81,7 @@ void SFHASH_FuzzyMatcher::add(FuzzyHash hash) {
 void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash hash) {
   auto search = db.find(blocksize);
   if (search != db.end()) {
-    auto chunk_db = search->second;
+    auto& chunk_db = search->second;
 
     for(uint64_t chunk: chunks) {
       auto chunk_search = chunk_db.find(chunk);
