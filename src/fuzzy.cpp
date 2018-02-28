@@ -71,14 +71,14 @@ std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const c
   return matcher;
 }
 
-void SFHASH_FuzzyMatcher::add(FuzzyHash hash) {
+void SFHASH_FuzzyMatcher::add(FuzzyHash& hash) {
   hash.id = hashes.size();
   hashes.push_back(hash);
   add(hash.blocksize(), hash.chunks(), hash);
   add(2 * hash.blocksize(), hash.double_chunks(), hash);
 }
 
-void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash hash) {
+void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash& hash) {
   auto search = db.find(blocksize);
   if (search != db.end()) {
     auto& chunk_db = search->second;

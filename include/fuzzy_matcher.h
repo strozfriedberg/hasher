@@ -28,10 +28,10 @@ struct SFHASH_FuzzyMatcher {
   std::vector<FuzzyHash> hashes;
   std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::vector<ssize_t>>> db;
 
-  void add(FuzzyHash hash);
+  void add(FuzzyHash& hash);
 
 private:
-  void add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash hash);
+  void add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash& hash);
 
 };
 
