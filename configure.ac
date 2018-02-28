@@ -2,7 +2,7 @@
 # Replace PATH/TO/SOMEFILE.cpp with the path to some source file.
 
 AC_PREREQ([2.69])
-AC_INIT([hasher], [0.2.0], [juckelman@strozfriedberg.co.uk])
+AC_INIT([hasher], [0.3.0], [juckelman@strozfriedberg.co.uk])
  
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
