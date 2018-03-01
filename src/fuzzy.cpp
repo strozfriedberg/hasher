@@ -32,7 +32,7 @@ int lookup_clusters(
   }
   int max = 0;
   for (ssize_t id: matches) {
-        max = std::max(max, fuzzy_compare(matcher->hashes[id].hash.c_str(), sig));
+    max = std::max(max, fuzzy_compare(matcher->hashes[id].hash.c_str(), sig));
   }
   return max;
 
