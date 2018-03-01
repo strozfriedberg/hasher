@@ -30,10 +30,20 @@ struct SFHASH_FuzzyMatcher {
   std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::unordered_set<ssize_t>>> db;
 
   void add(FuzzyHash& hash);
+  int match(const char* sig);
+  std::unique_ptr<SFHASH_FuzzyResult> get_match(size_t i);
 
 private:
+  std::vector<std::pair<ssize_t, int>> matches;
+  FuzzyHash query = FuzzyHash("");
   void add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash& hash);
+  void lookup_clusters(uint64_t blocksize, const std::vector<uint64_t>& it);
+};
 
+struct SFHASH_FuzzyResult {
+  std::string filename;
+  std::string query_filename;
+  int score;
 };
 
 std::vector<uint64_t> decode_chunks(const std::string& s);

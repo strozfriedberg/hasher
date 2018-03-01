@@ -46,6 +46,8 @@ struct SFHASH_FileMatcher;
 
 struct SFHASH_FuzzyMatcher;
 
+struct SFHASH_FuzzyResult;
+
 struct LG_Error;
 
 // Input is a three-column tab-separated UTF-8 text file, where each line
@@ -86,7 +88,14 @@ void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 
 SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
 
+// Returns the number of matches
 int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* sig);
+
+SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
+const char* sfhash_fuzzy_result_filename(SFHASH_FuzzyResult*);
+const char* sfhash_fuzzy_result_query_filename(SFHASH_FuzzyResult*);
+int sfhash_fuzzy_result_score(SFHASH_FuzzyResult*);
+void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult*);
 
 void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher*);
 

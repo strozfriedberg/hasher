@@ -75,9 +75,15 @@ int main(int argc, char** argv) {
         if (l->first == l->second) {
           continue;
         }
-        int hmatch = sfhash_fuzzy_matcher_compare(matcher, std::string(l->first, l->second-l->first).c_str());
-        if (hmatch > 0) {
-          std::cout << line << " matched " << hmatch << std::endl;
+        int num_matches= sfhash_fuzzy_matcher_compare(matcher, std::string(l->first, l->second-l->first).c_str());
+
+        for (int i = 0; i < num_matches; ++i) {
+          SFHASH_FuzzyResult* result = sfhash_fuzzy_get_match(matcher, i);
+          std::cout << "\"" << sfhash_fuzzy_result_query_filename(result) << "\","
+                    << "\"" << sfhash_fuzzy_result_filename(result) << "\","
+                    << sfhash_fuzzy_result_score(result)
+                    << std::endl;
+          sfhash_fuzzy_destroy_match(result);
         }
       }
     }

@@ -19,6 +19,51 @@ SCOPE_TEST(test_parse_invalid_sig) {
   SCOPE_ASSERT_EQUAL(1, FuzzyHash("").validate());
 }
 
+SCOPE_TEST(test_decode_small_chunk) {
+  std::string hash = "SNsFov";
+  std::vector<uint64_t> expected = { 2718292808 };
+
+  std::vector<uint64_t> actual = decode_chunks(hash);
+  SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+  for (size_t i = 0; i < expected.size(); ++i) {
+    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+  }
+}
+
+SCOPE_TEST(test_decode_empty) {
+  std::string hash = "";
+  std::vector<uint64_t> expected = { 0 };
+
+  std::vector<uint64_t> actual = decode_chunks(hash);
+  SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+  for (size_t i = 0; i < expected.size(); ++i) {
+    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+  }
+
+}
+
+SCOPE_TEST(test_decode_single_character) {
+  std::string hash = "t";
+  std::vector<uint64_t> expected = { 180 };
+
+  std::vector<uint64_t> actual = decode_chunks(hash);
+  SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+  for (size_t i = 0; i < expected.size(); ++i) {
+    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+  }
+}
+
+SCOPE_TEST(test_decode_padding) {
+  std::string hash = "sWEyn";
+  std::vector<uint64_t> expected = { 2620547505 };
+
+  std::vector<uint64_t> actual = decode_chunks(hash);
+  SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+  for (size_t i = 0; i < expected.size(); ++i) {
+    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+  }
+}
+
 SCOPE_TEST(test_decode_chunks) {
   std::string hash = "HEI9Xg7+P9yImaNk3qrDwpXe9gf5xkIZ";
   std::vector<uint64_t> expected = {
@@ -47,6 +92,7 @@ SCOPE_TEST(test_decode_chunks) {
     672151957341,
     111251806331,
     286806050806,
+    577949007489,
   };
   std::vector<uint64_t> actual = decode_chunks(hash);
   SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
@@ -86,5 +132,32 @@ SCOPE_TEST(test_find_match) {
 
   auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
   std::string sig = "6:S8y5dFFwj+Q4HRhOhahxlA/FG65WOCWn9M9r9Rg:Ty5Agxho/r5Wun9M9r9Rg";
-  SCOPE_ASSERT_EQUAL(80, sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str()));
+  int result_count = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str());
+  SCOPE_ASSERT_EQUAL(10, result_count);
+
+  int max = 0;
+  for (int i = 0; i < result_count; ++i) {
+    auto result = matcher->get_match(i);
+    max = std::max(max, result->score);
+  }
+  SCOPE_ASSERT_EQUAL(80, max);
+}
+
+SCOPE_TEST(test_find_match_suffix) {
+  std::string data = "ssdeep,1.1--blocksize:hash:hash,filename\n" \
+                     "3:Z3FOlll+leh/kreWWe05OrLO516xr5/16n4bGWfqKMLkcTitn:Z3FK/aeh/1KMKr57bGWyx6,\"a.txt\"\n";
+  // Hash blocks have a common suffix
+
+  auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
+  std::string sig = "3:ZklllCllGrOj28lhGKZzllNzXsmf5jDHO5oERE2J5xAIGIJi/2XnXLkcTitn:ZsaOrOS87dZzllSo5jDuPi23fPGSnx6";
+  int result_count = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str());
+  SCOPE_ASSERT_EQUAL(1, result_count);
+
+  int max = 0;
+  for (int i = 0; i < result_count; ++i) {
+    auto result = matcher->get_match(i);
+    max = std::max(max, result->score);
+  }
+  SCOPE_ASSERT_EQUAL(36, max);
+
 }
