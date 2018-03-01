@@ -185,12 +185,15 @@ std::vector<uint64_t> decode_chunks(const std::string& s) {
     boost::archive::iterators::binary_from_base64<std::string::const_iterator>, 8, 6
   >;
 
+  char buf[8] = {};
+
   std::vector<uint64_t> results;
   for (size_t i = 0; i + 7 < s.size(); ++i) {
     std::string sub = s.substr(i, 7);
     std::string decoded(base64_iterator(sub.begin()), base64_iterator(sub.end()));
-    // Well, this is ugly
-    results.push_back(*reinterpret_cast<const uint64_t*>(("\x00\x00\x00" + decoded).c_str()));
+    memcpy(buf, decoded.c_str(), decoded.length());
+    uint64_t val = *reinterpret_cast<const uint64_t*>(buf);
+    results.push_back(val);
   }
   return results;
 }
