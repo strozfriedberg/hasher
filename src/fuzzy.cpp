@@ -21,14 +21,18 @@ int lookup_clusters(
     return 0;
   }
 
-  int max = 0;
+  std::unordered_set<ssize_t> matches;
   for (auto& cluster: it) {
     auto cluster_search = search->second.find(cluster);
     if (cluster_search != search->second.end()) {
       for (ssize_t id: cluster_search->second) {
-        max = std::max(max, fuzzy_compare(matcher->hashes[id].hash.c_str(), sig));
+        matches.insert(id);
       }
     }
+  }
+  int max = 0;
+  for (ssize_t id: matches) {
+        max = std::max(max, fuzzy_compare(matcher->hashes[id].hash.c_str(), sig));
   }
   return max;
 
@@ -38,10 +42,8 @@ int sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher, const char* sig) {
   FuzzyHash hash{sig};
   auto blocksize = hash.blocksize();
 
-  int max = 0;
-  max = std::max(max, lookup_clusters(matcher, blocksize, hash.chunks(), sig));
-  max = std::max(max, lookup_clusters(matcher, 2 * blocksize, hash.double_chunks(), sig));
-  return max;
+  return std::max(lookup_clusters(matcher, blocksize, hash.chunks(), sig),
+                  lookup_clusters(matcher, 2 * blocksize, hash.double_chunks(), sig));
 }
 
 std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end) {
@@ -86,18 +88,18 @@ void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::vector<uint64_t> chunks, 
     for(uint64_t chunk: chunks) {
       auto chunk_search = chunk_db.find(chunk);
       if (chunk_search != chunk_db.end()) {
-        chunk_search->second.push_back(hash.id);
+        chunk_search->second.insert(hash.id);
       }
       else {
-        chunk_db.emplace(chunk, std::vector<ssize_t> { hash.id });
+        chunk_db.emplace(chunk,std::unordered_set<ssize_t> { hash.id });
       }
     }
   }
   else {
-    std::unordered_map<uint64_t, std::vector<ssize_t>> chunk_db;
+    std::unordered_map<uint64_t, std::unordered_set<ssize_t>> chunk_db;
 
     for(uint64_t chunk: chunks) {
-      chunk_db.emplace(chunk, std::vector<ssize_t> { hash.id });
+      chunk_db.emplace(chunk, std::unordered_set<ssize_t> { hash.id });
     }
     db.emplace(blocksize, chunk_db);
   }
