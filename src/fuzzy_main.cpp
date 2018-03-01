@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 
 #include "config.h"
+#include "parser.h"
 #include "hasher.h"
 #include "throw.h"
 #include "util.h"
@@ -53,40 +54,30 @@ int main(int argc, char** argv) {
       sfhash_destroy_hasher
     };
 
-    SFHASH_Hasher* hasher = hptr.get();
-    char buf[1024*1024];
-    SFHASH_HashValues hashes;
-
-    // walk the tree
-    const fs::recursive_directory_iterator end;
-    for (fs::recursive_directory_iterator d(argv[2]); d != end; ++d) {
-      const fs::path p(d->path());
-      if (!fs::is_directory(p)) {
-        const std::string n = p.string();
-
-        try {
-          sfhash_reset_hasher(hasher);
-
-          std::ifstream f;
-          f.exceptions(std::ifstream::badbit);
-          f.rdbuf()->pubsetbuf(0, 0); // unbuffered
-          f.open(n, std::ios_base::in | std::ios_base::binary);
-          do {
-            f.read(buf, sizeof(buf));
-            sfhash_update_hasher(hasher, buf, buf + f.gcount());
-          } while (f);
-
-          sfhash_get_hashes(hasher, &hashes);
-          int hmatch = sfhash_fuzzy_matcher_compare(matcher, reinterpret_cast<char*>(hashes.fuzzy));
-          if (hmatch > 0) {
-            std::cout << "Found fuzzy match for: " << n << ", confidence=" << hmatch << "." << std::endl;
+    {
+      std::ifstream in(argv[2], std::ios::binary);
+      in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+      const std::string hset((std::istreambuf_iterator<char>(in)),
+                             (std::istreambuf_iterator<char>()));
+      in.close();
+      int lineno = 1;
+      const LineIterator lend(hset.c_str()+hset.length(), hset.c_str()+hset.length());
+      for (LineIterator l(hset.c_str(), hset.c_str() + hset.length()); l != lend; ++l, ++lineno) {
+        std::string line(l->first, l->second - l->first);
+        if (lineno == 1) {
+          if (line != "ssdeep,1.1--blocksize:hash:hash,filename") {
+            std::cerr << "Invalid match file" << std::endl;
+            return -1;
           }
+          continue;
         }
-        catch (const fs::filesystem_error& e) {
-          std::cerr << "Error: " << p << ": " << e.what() << std::endl;
+        // skip empty lines
+        if (l->first == l->second) {
+          continue;
         }
-        catch (const std::runtime_error& e) {
-          std::cerr << "Error: " << p << ": " << e.what() << std::endl;
+        int hmatch = sfhash_fuzzy_matcher_compare(matcher, std::string(l->first, l->second-l->first).c_str());
+        if (hmatch > 0) {
+          std::cout << line << " matched " << hmatch << std::endl;
         }
       }
     }
