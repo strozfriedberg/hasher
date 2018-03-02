@@ -10,20 +10,29 @@
 
 using FuzzyMatcher = SFHASH_FuzzyMatcher;
 
+inline size_t blocksize_index(uint64_t blocksize) {
+  blocksize /= 3;
+  size_t result = 0;
+  while (blocksize > 1) {
+    ++result;
+    blocksize >>= 1;
+  }
+  return result;
+}
+
 void FuzzyMatcher::lookup_clusters(
     uint64_t blocksize,
     const std::unordered_set<uint64_t>& it)
 {
-  auto search = db.find(blocksize);
-  if (search == db.end()) {
+  if (blocksize_index(blocksize) >= db.size()) {
     return;
   }
 
   std::unordered_set<FuzzyHash*> candidates;
   for (auto& cluster: it) {
-    auto cluster_search = search->second.find(cluster);
-    if (cluster_search != search->second.end()) {
-      for (FuzzyHash* hash: cluster_search->second) {
+    auto search = db[blocksize_index(blocksize)].find(cluster);
+    if (search != db[blocksize_index(blocksize)].end()) {
+      for (FuzzyHash* hash: search->second) {
         candidates.insert(hash);
       }
     }
@@ -84,8 +93,40 @@ int sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher, const char* beg, const c
   return matcher->match(beg, end);
 }
 
+void reserve_space(FuzzyMatcher* matcher, const char* beg, const char* end) {
+
+  int lineno = 1;
+  const LineIterator lend(end, end);
+  // Count lines, chunks per block
+  std::map<uint64_t, uint64_t> map;
+  uint64_t max = 0;
+  for (LineIterator l(beg, end); l != lend; ++l, ++lineno) {
+    if (lineno == 1 || l->first == l->second) {
+      continue;
+    }
+    FuzzyHash hash(l->first, l->second);
+
+    if (hash.validate()) {
+      continue;
+    }
+    map[blocksize_index(hash.blocksize())]++;
+    max = std::max(max, hash.blocksize());
+  }
+  size_t max_index = blocksize_index(max) + 2;
+  matcher->hashes.reserve(lineno);
+  matcher->db.reserve(max_index);
+  matcher->db.resize(max_index);
+
+  for (size_t i = 0; i < max_index; ++i) {
+    matcher->db[i].reserve(map[i]);
+  }
+
+}
+
 std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end) {
   std::unique_ptr<FuzzyMatcher> matcher(new FuzzyMatcher);
+  reserve_space(matcher.get(), beg, end);
+
   int lineno = 1;
   const LineIterator lend(end, end);
   for (LineIterator l(beg, end); l != lend; ++l, ++lineno) {
@@ -119,7 +160,7 @@ void SFHASH_FuzzyMatcher::add(std::unique_ptr<FuzzyHash> hash) {
 
 void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, FuzzyHash* hash) {
   for(uint64_t chunk: chunks) {
-    db[blocksize][chunk].push_back(hash);
+    db[blocksize_index(blocksize)][chunk].push_back(hash);
   }
 }
 

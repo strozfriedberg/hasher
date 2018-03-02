@@ -29,7 +29,7 @@ struct SFHASH_FuzzyMatcher {
   // blocksize -> (hash_substring_int -> hash)
   int threshold;
   std::vector<std::unique_ptr<FuzzyHash>> hashes;
-  std::map<uint64_t, spp::sparse_hash_map<uint64_t, std::vector<FuzzyHash*>>> db;
+  std::vector<spp::sparse_hash_map<uint64_t, std::vector<FuzzyHash*>>> db;
 
   void add(std::unique_ptr<FuzzyHash> hash);
   int match(const char* beg, const char* end);
