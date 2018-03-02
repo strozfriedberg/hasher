@@ -12,7 +12,7 @@ using FuzzyMatcher = SFHASH_FuzzyMatcher;
 
 void FuzzyMatcher::lookup_clusters(
     uint64_t blocksize,
-    const std::vector<uint64_t>& it)
+    const std::unordered_set<uint64_t>& it)
 {
   auto search = db.find(blocksize);
   if (search == db.end()) {
@@ -118,7 +118,7 @@ void SFHASH_FuzzyMatcher::add(FuzzyHash& hash) {
   add(2 * hash.blocksize(), hash.double_chunks(), hash);
 }
 
-void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash& hash) {
+void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, FuzzyHash& hash) {
   auto search = db.find(blocksize);
   if (search != db.end()) {
     auto& chunk_db = search->second;
@@ -126,18 +126,18 @@ void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::vector<uint64_t> chunks, 
     for(uint64_t chunk: chunks) {
       auto chunk_search = chunk_db.find(chunk);
       if (chunk_search != chunk_db.end()) {
-        chunk_search->second.insert(hash.id);
+        chunk_search->second.push_back(hash.id);
       }
       else {
-        chunk_db.emplace(chunk,std::unordered_set<ssize_t> { hash.id });
+        chunk_db.emplace(chunk,std::vector<ssize_t> { hash.id });
       }
     }
   }
   else {
-    std::unordered_map<uint64_t, std::unordered_set<ssize_t>> chunk_db;
+    std::unordered_map<uint64_t, std::vector<ssize_t>> chunk_db;
 
     for(uint64_t chunk: chunks) {
-      chunk_db.emplace(chunk, std::unordered_set<ssize_t> { hash.id });
+      chunk_db.emplace(chunk, std::vector<ssize_t> { hash.id });
     }
     db.emplace(blocksize, chunk_db);
   }
@@ -218,7 +218,7 @@ std::string FuzzyHash::filename() {
   return filename;
 }
 
-std::vector<uint64_t> decode_chunks(const std::string& s) {
+std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
   // Get all of the 7-grams from the hash string,
   // base64 decode and reinterpret as (5-byte) integer
   using base64_iterator = boost::archive::iterators::transform_width<
@@ -239,22 +239,22 @@ std::vector<uint64_t> decode_chunks(const std::string& s) {
     return {val};
   }
 
-  std::vector<uint64_t> results;
+  std::unordered_set<uint64_t> results;
   for (size_t i = 0; i + 7 <= block.length(); ++i) {
     std::string sub = block.substr(i, 7);
     std::string decoded(base64_iterator(sub.begin()), base64_iterator(sub.end()));
     memcpy(buf, decoded.c_str(), decoded.length());
     uint64_t val = *reinterpret_cast<const uint64_t*>(buf);
-    results.push_back(val);
+    results.insert(val);
   }
   return results;
 }
 
-std::vector<uint64_t> FuzzyHash::chunks() {
+std::unordered_set<uint64_t> FuzzyHash::chunks() {
   return decode_chunks(block());
 }
 
-std::vector<uint64_t> FuzzyHash::double_chunks() {
+std::unordered_set<uint64_t> FuzzyHash::double_chunks() {
   return decode_chunks(double_block());
 }
 

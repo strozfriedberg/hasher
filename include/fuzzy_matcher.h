@@ -15,8 +15,8 @@ struct FuzzyHash {
 
   FuzzyHash(const std::string& sig);
   int validate();
-  std::vector<uint64_t> chunks();
-  std::vector<uint64_t> double_chunks();
+  std::unordered_set<uint64_t> chunks();
+  std::unordered_set<uint64_t> double_chunks();
   std::string block();
   std::string double_block();
   std::string filename();
@@ -27,7 +27,7 @@ struct SFHASH_FuzzyMatcher {
   // blocksize -> (hash_substring_int -> hash)
   int threshold;
   std::vector<FuzzyHash> hashes;
-  std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::unordered_set<ssize_t>>> db;
+  std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::vector<ssize_t>>> db;
 
   void add(FuzzyHash& hash);
   int match(const char* sig);
@@ -36,8 +36,8 @@ struct SFHASH_FuzzyMatcher {
 private:
   std::vector<std::pair<ssize_t, int>> matches;
   FuzzyHash query = FuzzyHash("");
-  void add(uint64_t blocksize, std::vector<uint64_t> chunks, FuzzyHash& hash);
-  void lookup_clusters(uint64_t blocksize, const std::vector<uint64_t>& it);
+  void add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, FuzzyHash& hash);
+  void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it);
 };
 
 struct SFHASH_FuzzyResult {
@@ -46,6 +46,6 @@ struct SFHASH_FuzzyResult {
   int score;
 };
 
-std::vector<uint64_t> decode_chunks(const std::string& s);
+std::unordered_set<uint64_t> decode_chunks(const std::string& s);
 
 std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end);
