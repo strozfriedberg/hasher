@@ -23,10 +23,11 @@ SCOPE_TEST(test_decode_small_chunk) {
   std::string hash = "SNsFov";
   std::vector<uint64_t> expected = { 2718292808 };
 
-  std::vector<uint64_t> actual = decode_chunks(hash);
+  auto actual = decode_chunks(hash);
   SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+
   for (size_t i = 0; i < expected.size(); ++i) {
-    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+    SCOPE_ASSERT(actual.find(expected[i]) != actual.end());
   }
 }
 
@@ -34,10 +35,11 @@ SCOPE_TEST(test_decode_empty) {
   std::string hash = "";
   std::vector<uint64_t> expected = { 0 };
 
-  std::vector<uint64_t> actual = decode_chunks(hash);
+  auto actual = decode_chunks(hash);
   SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+
   for (size_t i = 0; i < expected.size(); ++i) {
-    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+    SCOPE_ASSERT(actual.find(expected[i]) != actual.end());
   }
 
 }
@@ -46,10 +48,11 @@ SCOPE_TEST(test_decode_single_character) {
   std::string hash = "t";
   std::vector<uint64_t> expected = { 180 };
 
-  std::vector<uint64_t> actual = decode_chunks(hash);
+  auto actual = decode_chunks(hash);
   SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+
   for (size_t i = 0; i < expected.size(); ++i) {
-    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+    SCOPE_ASSERT(actual.find(expected[i]) != actual.end());
   }
 }
 
@@ -57,10 +60,11 @@ SCOPE_TEST(test_decode_padding) {
   std::string hash = "sWEyn";
   std::vector<uint64_t> expected = { 2620547505 };
 
-  std::vector<uint64_t> actual = decode_chunks(hash);
+  auto actual = decode_chunks(hash);
   SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+
   for (size_t i = 0; i < expected.size(); ++i) {
-    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+    SCOPE_ASSERT(actual.find(expected[i]) != actual.end());
   }
 }
 
@@ -94,10 +98,11 @@ SCOPE_TEST(test_decode_chunks) {
     286806050806,
     577949007489,
   };
-  std::vector<uint64_t> actual = decode_chunks(hash);
+  auto actual = decode_chunks(hash);
   SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
+
   for (size_t i = 0; i < expected.size(); ++i) {
-    SCOPE_ASSERT_EQUAL(expected[i], actual[i]);
+    SCOPE_ASSERT(actual.find(expected[i]) != actual.end());
   }
 }
 
