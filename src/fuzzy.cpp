@@ -118,27 +118,8 @@ void SFHASH_FuzzyMatcher::add(std::unique_ptr<FuzzyHash> hash) {
 }
 
 void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, FuzzyHash* hash) {
-  auto search = db.find(blocksize);
-  if (search != db.end()) {
-    auto& chunk_db = search->second;
-
-    for(uint64_t chunk: chunks) {
-      auto chunk_search = chunk_db.find(chunk);
-      if (chunk_search != chunk_db.end()) {
-        chunk_search->second.push_back(hash);
-      }
-      else {
-        chunk_db.emplace(chunk,std::vector<FuzzyHash*> { hash });
-      }
-    }
-  }
-  else {
-    std::unordered_map<uint64_t, std::vector<FuzzyHash*>> chunk_db;
-
-    for(uint64_t chunk: chunks) {
-      chunk_db.emplace(chunk, std::vector<FuzzyHash*> { hash });
-    }
-    db.emplace(blocksize, chunk_db);
+  for(uint64_t chunk: chunks) {
+    db[blocksize][chunk].push_back(hash);
   }
 }
 
