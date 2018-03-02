@@ -19,19 +19,19 @@ void FuzzyMatcher::lookup_clusters(
     return;
   }
 
-  std::unordered_set<ssize_t> candidates;
+  std::unordered_set<FuzzyHash*> candidates;
   for (auto& cluster: it) {
     auto cluster_search = search->second.find(cluster);
     if (cluster_search != search->second.end()) {
-      for (ssize_t id: cluster_search->second) {
-        candidates.insert(id);
+      for (FuzzyHash* hash: cluster_search->second) {
+        candidates.insert(hash);
       }
     }
   }
-  for (ssize_t id: candidates) {
-    int score = fuzzy_compare(hashes[id].hash.c_str(), query.hash.c_str());
+  for (FuzzyHash* candidate: candidates) {
+    int score = fuzzy_compare(candidate->hash.c_str(), query.hash.c_str());
     if (score > 0) {
-      matches.push_back(std::make_pair(id, score));
+      matches.push_back(std::make_pair(candidate, score));
     }
   }
 
@@ -60,9 +60,9 @@ void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult* result) {
 std::unique_ptr<SFHASH_FuzzyResult> FuzzyMatcher::get_match(size_t i) {
   return std::unique_ptr<SFHASH_FuzzyResult>(
       new SFHASH_FuzzyResult {
-      hashes[matches[i].first].filename(),
+      matches[i].first->filename(),
       query.filename(),
-      matches[i].second,
+      matches[i].second
   });
 }
 
@@ -101,24 +101,23 @@ std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const c
       continue;
     }
 
-    FuzzyHash hash{std::string(l->first, l->second - l->first)};
-    if (hash.validate()) {
+    std::unique_ptr<FuzzyHash> hash(new FuzzyHash(std::string(l->first, l->second - l->first)));
+    if (hash->validate()) {
       return nullptr;
     }
-    matcher->add(hash);
-
+    matcher->add(std::move(hash));
   }
   return matcher;
 }
 
-void SFHASH_FuzzyMatcher::add(FuzzyHash& hash) {
-  hash.id = hashes.size();
-  hashes.push_back(hash);
-  add(hash.blocksize(), hash.chunks(), hash);
-  add(2 * hash.blocksize(), hash.double_chunks(), hash);
+void SFHASH_FuzzyMatcher::add(std::unique_ptr<FuzzyHash> hash) {
+  FuzzyHash* ptr = hash.get();
+  hashes.push_back(std::move(hash));
+  add(ptr->blocksize(), ptr->chunks(), ptr);
+  add(2 * ptr->blocksize(), ptr->double_chunks(), ptr);
 }
 
-void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, FuzzyHash& hash) {
+void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, FuzzyHash* hash) {
   auto search = db.find(blocksize);
   if (search != db.end()) {
     auto& chunk_db = search->second;
@@ -126,18 +125,18 @@ void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t> c
     for(uint64_t chunk: chunks) {
       auto chunk_search = chunk_db.find(chunk);
       if (chunk_search != chunk_db.end()) {
-        chunk_search->second.push_back(hash.id);
+        chunk_search->second.push_back(hash);
       }
       else {
-        chunk_db.emplace(chunk,std::vector<ssize_t> { hash.id });
+        chunk_db.emplace(chunk,std::vector<FuzzyHash*> { hash });
       }
     }
   }
   else {
-    std::unordered_map<uint64_t, std::vector<ssize_t>> chunk_db;
+    std::unordered_map<uint64_t, std::vector<FuzzyHash*>> chunk_db;
 
     for(uint64_t chunk: chunks) {
-      chunk_db.emplace(chunk, std::vector<ssize_t> { hash.id });
+      chunk_db.emplace(chunk, std::vector<FuzzyHash*> { hash });
     }
     db.emplace(blocksize, chunk_db);
   }
