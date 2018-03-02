@@ -5,7 +5,7 @@
 SCOPE_TEST(test_parse_valid_sig) {
   std::string sig = "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure\"\"\".ac\"";
 
-  FuzzyHash hash(sig);
+  FuzzyHash hash(sig.c_str(), sig.c_str()+sig.length());
   SCOPE_ASSERT_EQUAL(0, hash.validate());
   SCOPE_ASSERT_EQUAL(192, hash.blocksize());
   SCOPE_ASSERT_EQUAL("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV", hash.block());
@@ -14,9 +14,10 @@ SCOPE_TEST(test_parse_valid_sig) {
 }
 
 SCOPE_TEST(test_parse_invalid_sig) {
-  SCOPE_ASSERT_EQUAL(1, FuzzyHash("abcd").validate());
-  SCOPE_ASSERT_EQUAL(1, FuzzyHash("6:abcd:defg,\"no_trailing_quote").validate());
-  SCOPE_ASSERT_EQUAL(1, FuzzyHash("").validate());
+  std::vector<std::string> tests = { "abcd", "6:abcd:defg,\"no_trailing_quote", "" };
+  for (auto s: tests) {
+    SCOPE_ASSERT_EQUAL(1, FuzzyHash(s.c_str(), s.c_str()+s.length()).validate());
+  }
 }
 
 SCOPE_TEST(test_decode_small_chunk) {
@@ -137,7 +138,7 @@ SCOPE_TEST(test_find_match) {
 
   auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
   std::string sig = "6:S8y5dFFwj+Q4HRhOhahxlA/FG65WOCWn9M9r9Rg:Ty5Agxho/r5Wun9M9r9Rg";
-  int result_count = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str());
+  int result_count = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str(), sig.c_str()+sig.length());
   SCOPE_ASSERT_EQUAL(10, result_count);
 
   int max = 0;
@@ -155,7 +156,7 @@ SCOPE_TEST(test_find_match_suffix) {
 
   auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
   std::string sig = "3:ZklllCllGrOj28lhGKZzllNzXsmf5jDHO5oERE2J5xAIGIJi/2XnXLkcTitn:ZsaOrOS87dZzllSo5jDuPi23fPGSnx6";
-  int result_count = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str());
+  int result_count = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str(), sig.c_str()+sig.length());
   SCOPE_ASSERT_EQUAL(1, result_count);
 
   int max = 0;

@@ -31,12 +31,13 @@ int main(int argc, char** argv) {
     };
 
     // make a matcher
+    std::string hset;
     {
       // read the hashset file
       std::ifstream in(argv[1], std::ios::binary);
       in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      const std::string hset((std::istreambuf_iterator<char>(in)),
-                             (std::istreambuf_iterator<char>()));
+      hset = std::string((std::istreambuf_iterator<char>(in)),
+                         (std::istreambuf_iterator<char>()));
       in.close();
 
       // create the matcher
@@ -57,12 +58,12 @@ int main(int argc, char** argv) {
     {
       std::ifstream in(argv[2], std::ios::binary);
       in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      const std::string hset((std::istreambuf_iterator<char>(in)),
+      const std::string tset((std::istreambuf_iterator<char>(in)),
                              (std::istreambuf_iterator<char>()));
       in.close();
       int lineno = 1;
-      const LineIterator lend(hset.c_str()+hset.length(), hset.c_str()+hset.length());
-      for (LineIterator l(hset.c_str(), hset.c_str() + hset.length()); l != lend; ++l, ++lineno) {
+      const LineIterator lend(tset.c_str()+tset.length(), tset.c_str()+tset.length());
+      for (LineIterator l(tset.c_str(), tset.c_str() + tset.length()); l != lend; ++l, ++lineno) {
         std::string line(l->first, l->second - l->first);
         if (lineno == 1) {
           if (line != "ssdeep,1.1--blocksize:hash:hash,filename") {
@@ -75,7 +76,7 @@ int main(int argc, char** argv) {
         if (l->first == l->second) {
           continue;
         }
-        int num_matches= sfhash_fuzzy_matcher_compare(matcher, std::string(l->first, l->second-l->first).c_str());
+        int num_matches= sfhash_fuzzy_matcher_compare(matcher, l->first, l->second);
 
         for (int i = 0; i < num_matches; ++i) {
           SFHASH_FuzzyResult* result = sfhash_fuzzy_get_match(matcher, i);

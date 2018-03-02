@@ -89,7 +89,7 @@ void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
 
 // Returns the number of matches
-int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* sig);
+int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
 
 SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
 const char* sfhash_fuzzy_result_filename(SFHASH_FuzzyResult*);
