@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <map>
 #include <unordered_set>
+#include <sparsepp/spp.h>
 #include <vector>
 
 #include "hasher.h"
@@ -27,7 +28,7 @@ struct SFHASH_FuzzyMatcher {
   // blocksize -> (hash_substring_int -> hash)
   int threshold;
   std::vector<std::unique_ptr<FuzzyHash>> hashes;
-  std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::vector<FuzzyHash*>>> db;
+  spp::sparse_hash_map<uint64_t, spp::sparse_hash_map<uint64_t, std::vector<FuzzyHash*>>> db;
 
   void add(std::unique_ptr<FuzzyHash> hash);
   int match(const char* sig);
