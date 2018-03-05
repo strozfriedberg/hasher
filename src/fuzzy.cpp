@@ -26,14 +26,16 @@ void FuzzyMatcher::lookup_clusters(
                     uint64_t blocksize,
                     const std::unordered_set<uint64_t>& it)
 {
+  const auto idx = blocksize_index(blocksize);
   if (blocksize_index(blocksize) >= db.size()) {
     return;
   }
 
   std::unordered_set<uint32_t> candidates;
+  auto& chunks = db[idx];
   for (auto& cluster: it) {
-    auto search = db[blocksize_index(blocksize)].find(cluster);
-    if (search != db[blocksize_index(blocksize)].end()) {
+    auto search = chunks.find(cluster);
+    if (search != chunks.end()) {
       candidates.insert(search->second.begin(), search->second.end());
     }
   }
@@ -68,7 +70,7 @@ void sfhash_fuzzy_destroy_match(FuzzyResult* result) {
 
 std::unique_ptr<FuzzyResult> FuzzyMatcher::get_match(size_t i) const {
   return std::unique_ptr<FuzzyResult>(
-      new FuzzyResult {
+    new FuzzyResult {
       hashes[matches[i].first].filename(),
       query.filename(),
       matches[i].second
@@ -99,7 +101,7 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
   const LineIterator lend(end, end);
   // Count lines, chunks per block
   std::map<uint64_t, uint64_t> map;
-  uint64_t max = 0;
+  size_t max = 0;
   for (LineIterator l(beg, end); l != lend; ++l, ++lineno) {
     if (lineno == 1 || l->first == l->second) {
       continue;
@@ -109,13 +111,14 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
     if (validate_hash(l->first, l->second)) {
       continue;
     }
-    map[blocksize_index(hash.blocksize())]++;
-    max = std::max(max, hash.blocksize());
+    const auto idx = blocksize_index(hash.blocksize());
+    map[idx]++;
+    max = std::max(max, idx);
   }
   // If blocksize B is present at index I,
   // Then we'll have an entry for blocksize 2*B at I+1
   // Hence we need an array of length I+2
-  size_t num_blocksizes = blocksize_index(max) + 2;
+  size_t num_blocksizes = max + 2;
   hashes.reserve(lineno);
   db.resize(num_blocksizes);
 
