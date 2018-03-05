@@ -112,11 +112,14 @@ void reserve_space(FuzzyMatcher* matcher, const char* beg, const char* end) {
     map[blocksize_index(hash.blocksize())]++;
     max = std::max(max, hash.blocksize());
   }
-  size_t max_index = blocksize_index(max) + 2;
+  // If blocksize B is present at index I,
+  // Then we'll have an entry for blocksize 2*B at I+1
+  // Hence we need an array of length I+2
+  size_t num_blocksizes = blocksize_index(max) + 2;
   matcher->hashes.reserve(lineno);
-  matcher->db.resize(max_index);
+  matcher->db.resize(num_blocksizes);
 
-  for (size_t i = 0; i < max_index; ++i) {
+  for (size_t i = 0; i < num_blocksizes; ++i) {
     matcher->db[i].reserve(map[i]);
   }
 
@@ -243,7 +246,7 @@ std::string FuzzyHash::filename() const {
 
 std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
   // Get all of the 7-grams from the hash string,
-  // base64 decode and reinterpret as (5-byte) integer
+  // base64 decode and reinterpret as (6-byte) integer
   using base64_iterator = boost::archive::iterators::transform_width<
     boost::archive::iterators::binary_from_base64<std::string::const_iterator>, 8, 6
   >;
