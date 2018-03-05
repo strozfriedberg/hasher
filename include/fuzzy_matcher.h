@@ -16,12 +16,14 @@ struct FuzzyHash {
 
   FuzzyHash(const char* a, const char* b);
   std::string get_hash() const;
-  std::unordered_set<uint64_t> chunks() const;
-  std::unordered_set<uint64_t> double_chunks() const;
+
+  uint64_t blocksize()const;
   std::string block() const;
   std::string double_block() const;
   std::string filename() const;
-  uint64_t blocksize()const;
+
+  std::unordered_set<uint64_t> chunks() const;
+  std::unordered_set<uint64_t> double_chunks() const;
 };
 
 struct SFHASH_FuzzyMatcher {
@@ -36,14 +38,15 @@ struct SFHASH_FuzzyMatcher {
 private:
   std::vector<std::pair<uint32_t, int>> matches;
   FuzzyHash query = FuzzyHash(nullptr, nullptr);
+
   void add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, uint32_t hash_id);
   void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it);
 };
 
 struct SFHASH_FuzzyResult {
-  std::string filename;
-  std::string query_filename;
-  int score;
+  const std::string filename;
+  const std::string query_filename;
+  const int score;
 };
 
 int validate_hash(const char* a, const char* b);
