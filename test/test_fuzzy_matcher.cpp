@@ -6,7 +6,7 @@ SCOPE_TEST(test_parse_valid_sig) {
   std::string sig = "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure\"\"\".ac\"";
 
   FuzzyHash hash(sig.c_str(), sig.c_str()+sig.length());
-  SCOPE_ASSERT_EQUAL(0, hash.validate());
+  SCOPE_ASSERT_EQUAL(0, validate_hash(hash.beg, hash.end));
   SCOPE_ASSERT_EQUAL(192, hash.blocksize());
   SCOPE_ASSERT_EQUAL("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV", hash.block());
   SCOPE_ASSERT_EQUAL("R4qzN+idbyboj19xRRZE2IkWO/5Z", hash.double_block());
@@ -16,7 +16,7 @@ SCOPE_TEST(test_parse_valid_sig) {
 SCOPE_TEST(test_parse_invalid_sig) {
   std::vector<std::string> tests = { "abcd", "6:abcd:defg,\"no_trailing_quote", "" };
   for (auto s: tests) {
-    SCOPE_ASSERT_EQUAL(1, FuzzyHash(s.c_str(), s.c_str()+s.length()).validate());
+    SCOPE_ASSERT_EQUAL(1, validate_hash(s.c_str(), s.c_str()+s.length()));
   }
 }
 
