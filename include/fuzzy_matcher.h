@@ -14,14 +14,14 @@
 struct FuzzyHash {
   const char *beg, *end;
 
-  FuzzyHash(const char* a, const char* b) : beg(a), end(b) {}
-  std::string get_hash() { return std::string(beg, end-beg); }
-  std::unordered_set<uint64_t> chunks();
-  std::unordered_set<uint64_t> double_chunks();
-  std::string block();
-  std::string double_block();
-  std::string filename();
-  uint64_t blocksize();
+  FuzzyHash(const char* a, const char* b);
+  std::string get_hash() const;
+  std::unordered_set<uint64_t> chunks() const;
+  std::unordered_set<uint64_t> double_chunks() const;
+  std::string block() const;
+  std::string double_block() const;
+  std::string filename() const;
+  uint64_t blocksize()const;
 };
 
 struct SFHASH_FuzzyMatcher {
@@ -31,7 +31,7 @@ struct SFHASH_FuzzyMatcher {
 
   void add(FuzzyHash&& hash);
   int match(const char* beg, const char* end);
-  std::unique_ptr<SFHASH_FuzzyResult> get_match(size_t i);
+  std::unique_ptr<SFHASH_FuzzyResult> get_match(size_t i) const;
 
 private:
   std::vector<std::pair<uint32_t, int>> matches;

@@ -66,7 +66,7 @@ void sfhash_fuzzy_destroy_match(FuzzyResult* result) {
   delete result;
 }
 
-std::unique_ptr<FuzzyResult> FuzzyMatcher::get_match(size_t i) {
+std::unique_ptr<FuzzyResult> FuzzyMatcher::get_match(size_t i) const {
   return std::unique_ptr<FuzzyResult>(
       new FuzzyResult {
       hashes[matches[i].first].filename(),
@@ -196,7 +196,7 @@ int validate_hash(const char* a, const char* b) {
   return 0;
 }
 
-uint64_t FuzzyHash::blocksize() {
+uint64_t FuzzyHash::blocksize() const {
   std::string hash = get_hash();
   auto i = hash.find_first_of(':', 0);
   uint64_t blocksize = 0;
@@ -208,14 +208,14 @@ uint64_t FuzzyHash::blocksize() {
 
 }
 
-std::string FuzzyHash::block() {
+std::string FuzzyHash::block() const {
   std::string hash = get_hash();
   auto i = hash.find_first_of(':', 0);
   auto j = hash.find_first_of(':', i + 1);
   return hash.substr(i + 1, j-i-1);
 }
 
-std::string FuzzyHash::double_block() {
+std::string FuzzyHash::double_block() const {
   std::string hash = get_hash();
   auto i = hash.find_first_of(':', 0);
   auto j = hash.find_first_of(':', i + 1);
@@ -223,7 +223,7 @@ std::string FuzzyHash::double_block() {
   return hash.substr(j+1, k - j - 1);
 }
 
-std::string FuzzyHash::filename() {
+std::string FuzzyHash::filename() const {
   std::string hash = get_hash();
   auto i = hash.find_first_of(':', 0);
   auto j = hash.find_first_of(':', i + 1);
@@ -273,13 +273,21 @@ std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
   return results;
 }
 
-std::unordered_set<uint64_t> FuzzyHash::chunks() {
+std::unordered_set<uint64_t> FuzzyHash::chunks() const {
   return decode_chunks(block());
 }
 
-std::unordered_set<uint64_t> FuzzyHash::double_chunks() {
+std::unordered_set<uint64_t> FuzzyHash::double_chunks() const {
   return decode_chunks(double_block());
 }
+
+std::string FuzzyHash::get_hash() const {
+  return std::string(beg, end-beg);
+}
+
+FuzzyHash::FuzzyHash(const char* a, const char* b) :
+  beg(a), end(b)
+{}
 
 FuzzyHasher::~FuzzyHasher() {
   fuzzy_free(ctx);
