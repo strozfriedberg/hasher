@@ -23,8 +23,8 @@ inline size_t blocksize_index(uint64_t blocksize) {
 }
 
 void FuzzyMatcher::lookup_clusters(
-    uint64_t blocksize,
-    const std::unordered_set<uint64_t>& it)
+                    uint64_t blocksize,
+                    const std::unordered_set<uint64_t>& it)
 {
   if (blocksize_index(blocksize) >= db.size()) {
     return;
@@ -38,7 +38,7 @@ void FuzzyMatcher::lookup_clusters(
     }
   }
   for (uint32_t hash_id: candidates) {
-    int score = fuzzy_compare(hashes[hash_id].get_hash().c_str(), query.get_hash().c_str());
+    int score = fuzzy_compare(hashes[hash_id].hash().c_str(), query.hash().c_str());
     if (score > 0) {
       matches.push_back(std::make_pair(hash_id, score));
     }
@@ -93,7 +93,7 @@ int sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher, const char* beg, const c
   return matcher->match(beg, end);
 }
 
-void reserve_space(FuzzyMatcher* matcher, const char* beg, const char* end) {
+void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
 
   int lineno = 1;
   const LineIterator lend(end, end);
@@ -116,18 +116,18 @@ void reserve_space(FuzzyMatcher* matcher, const char* beg, const char* end) {
   // Then we'll have an entry for blocksize 2*B at I+1
   // Hence we need an array of length I+2
   size_t num_blocksizes = blocksize_index(max) + 2;
-  matcher->hashes.reserve(lineno);
-  matcher->db.resize(num_blocksizes);
+  hashes.reserve(lineno);
+  db.resize(num_blocksizes);
 
   for (size_t i = 0; i < num_blocksizes; ++i) {
-    matcher->db[i].reserve(map[i]);
+    db[i].reserve(map[i]);
   }
 
 }
 
 std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end) {
   std::unique_ptr<FuzzyMatcher> matcher(new FuzzyMatcher);
-  reserve_space(matcher.get(), beg, end);
+  matcher->reserve_space(beg, end);
 
   int lineno = 1;
   const LineIterator lend(end, end);
@@ -174,25 +174,25 @@ void sfhash_destroy_fuzzy_matcher(FuzzyMatcher* matcher) {
 
 int validate_hash(const char* a, const char* b) {
   // blocksize:hash1:hash2,"filename"
-  std::string hash(a, b);
-  auto i = hash.find_first_of(':', 0);
+  std::string h(a, b);
+  auto i = h.find_first_of(':', 0);
   if (i == std::string::npos) {
     return 1;
   }
 
-  auto j = hash.find_first_of(':', i + 1);
+  auto j = h.find_first_of(':', i + 1);
   if (j == std::string::npos) {
     return 1;
   }
 
-  auto k = hash.find_first_of(',', j + 1);
-  if (hash[k+1] != '"' ||  hash[hash.size() -1] != '"') {
+  auto k = h.find_first_of(',', j + 1);
+  if (h[k+1] != '"' ||  h[h.size() -1] != '"') {
     return 1;
   }
 
 
   try {
-    boost::lexical_cast<uint64_t>(hash.substr(0, i));
+    boost::lexical_cast<uint64_t>(h.substr(0, i));
   } catch(boost::bad_lexical_cast) {
     return 1;
   }
@@ -200,43 +200,43 @@ int validate_hash(const char* a, const char* b) {
 }
 
 uint64_t FuzzyHash::blocksize() const {
-  std::string hash = get_hash();
-  auto i = hash.find_first_of(':', 0);
+  std::string h = hash();
+  auto i = h.find_first_of(':', 0);
   uint64_t blocksize = 0;
   try {
 
-    blocksize = boost::lexical_cast<uint64_t>(hash.substr(0, i));
+    blocksize = boost::lexical_cast<uint64_t>(h.substr(0, i));
   } catch(boost::bad_lexical_cast) {}
   return blocksize;
 
 }
 
 std::string FuzzyHash::block() const {
-  std::string hash = get_hash();
-  auto i = hash.find_first_of(':', 0);
-  auto j = hash.find_first_of(':', i + 1);
-  return hash.substr(i + 1, j-i-1);
+  std::string h = hash();
+  auto i = h.find_first_of(':', 0);
+  auto j = h.find_first_of(':', i + 1);
+  return h.substr(i + 1, j-i-1);
 }
 
 std::string FuzzyHash::double_block() const {
-  std::string hash = get_hash();
-  auto i = hash.find_first_of(':', 0);
-  auto j = hash.find_first_of(':', i + 1);
-  auto k = hash.find_first_of(',', j + 1);
-  return hash.substr(j+1, k - j - 1);
+  std::string h = hash();
+  auto i = h.find_first_of(':', 0);
+  auto j = h.find_first_of(':', i + 1);
+  auto k = h.find_first_of(',', j + 1);
+  return h.substr(j+1, k - j - 1);
 }
 
 std::string FuzzyHash::filename() const {
-  std::string hash = get_hash();
-  auto i = hash.find_first_of(':', 0);
-  auto j = hash.find_first_of(':', i + 1);
-  auto k = hash.find_first_of(',', j + 1);
+  std::string h = hash();
+  auto i = h.find_first_of(':', 0);
+  auto j = h.find_first_of(':', i + 1);
+  auto k = h.find_first_of(',', j + 1);
   std::string filename;
   if (k == std::string::npos) {
     filename = "";
   }
   else {
-    filename = hash.substr(k + 2, hash.length() - k - 3);
+    filename = h.substr(k + 2, h.length() - k - 3);
     while (filename.find("\\\"") != std::string::npos) {
       filename.replace(filename.find("\\\""), 2, "\"");
     }
@@ -284,7 +284,7 @@ std::unordered_set<uint64_t> FuzzyHash::double_chunks() const {
   return decode_chunks(double_block());
 }
 
-std::string FuzzyHash::get_hash() const {
+std::string FuzzyHash::hash() const {
   return std::string(beg, end-beg);
 }
 

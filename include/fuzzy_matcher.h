@@ -11,11 +11,11 @@
 
 #include "hasher.h"
 
-struct FuzzyHash {
-  const char *beg, *end;
+class FuzzyHash {
+public:
 
   FuzzyHash(const char* a, const char* b);
-  std::string get_hash() const;
+  std::string hash() const;
 
   uint64_t blocksize()const;
   std::string block() const;
@@ -24,23 +24,27 @@ struct FuzzyHash {
 
   std::unordered_set<uint64_t> chunks() const;
   std::unordered_set<uint64_t> double_chunks() const;
+
+private:
+  const char *beg, *end;
 };
 
-struct SFHASH_FuzzyMatcher {
-  std::vector<FuzzyHash> hashes;
-  // blocksize -> (hash_substring_int -> hash_index)
-  std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> db;
-
+class SFHASH_FuzzyMatcher {
+public:
+  void reserve_space(const char* beg, const char* end);
   void add(FuzzyHash&& hash);
   int match(const char* beg, const char* end);
   std::unique_ptr<SFHASH_FuzzyResult> get_match(size_t i) const;
 
 private:
-  std::vector<std::pair<uint32_t, int>> matches;
-  FuzzyHash query = FuzzyHash(nullptr, nullptr);
-
   void add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, uint32_t hash_id);
   void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it);
+
+  std::vector<FuzzyHash> hashes;
+  // blocksize -> (hash_substring_int -> hash_index)
+  std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> db;
+  std::vector<std::pair<uint32_t, int>> matches;
+  FuzzyHash query = FuzzyHash(nullptr, nullptr);
 };
 
 struct SFHASH_FuzzyResult {
