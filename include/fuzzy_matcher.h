@@ -12,10 +12,10 @@
 #include "hasher.h"
 
 struct FuzzyHash {
-  const char* beg, *end;
+  const char *beg, *end;
 
   FuzzyHash(const char* a, const char* b) : beg(a), end(b) {}
-  std::string getHash() { return std::string(beg, end-beg); }
+  std::string get_hash() { return std::string(beg, end-beg); }
   std::unordered_set<uint64_t> chunks();
   std::unordered_set<uint64_t> double_chunks();
   std::string block();
@@ -25,9 +25,8 @@ struct FuzzyHash {
 };
 
 struct SFHASH_FuzzyMatcher {
-  // blocksize -> (hash_substring_int -> hash)
-  int threshold;
   std::vector<FuzzyHash> hashes;
+  // blocksize -> (hash_substring_int -> hash_index)
   std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> db;
 
   void add(FuzzyHash&& hash);
