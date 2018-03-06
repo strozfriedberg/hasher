@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <numeric>
 
-
 SCOPE_TEST(entropyNoUpdate) {
   auto hasher = make_unique_del(
     sfhash_create_hasher(ENTROPY),

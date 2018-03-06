@@ -13,7 +13,6 @@ struct SFHASH_Entropy {
   uint64_t hist[256] = {0};
 };
 
-
 class EntropyCalculator: public HasherImpl {
 public:
   virtual ~EntropyCalculator() {}

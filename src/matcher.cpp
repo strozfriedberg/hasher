@@ -14,7 +14,6 @@
 
 using Matcher = SFHASH_FileMatcher;
 
-
 std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
   auto fsm = make_unique_del(lg_create_fsm(0), lg_destroy_fsm);
   if (!fsm) {

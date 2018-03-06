@@ -17,7 +17,6 @@
 
 namespace fs = boost::filesystem;
 
-
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: fuzzy HASHSET TARGETDIR\n"

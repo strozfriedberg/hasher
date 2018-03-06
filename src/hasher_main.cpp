@@ -10,7 +10,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: hasher ALGS PATH\n"
