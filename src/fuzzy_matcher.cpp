@@ -178,7 +178,7 @@ std::unique_ptr<FuzzyResult> FuzzyMatcher::get_match(size_t i) const {
   });
 }
 
-void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, uint32_t hash_id) {
+void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id) {
   for(uint64_t chunk: chunks) {
     db[blocksize_index(blocksize)][chunk].push_back(hash_id);
   }

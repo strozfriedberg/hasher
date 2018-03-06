@@ -37,7 +37,7 @@ public:
   std::unique_ptr<SFHASH_FuzzyResult> get_match(size_t i) const;
 
 private:
-  void add(uint64_t blocksize, std::unordered_set<uint64_t> chunks, uint32_t hash_id);
+  void add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id);
   void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it);
 
   std::vector<FuzzyHash> hashes;
