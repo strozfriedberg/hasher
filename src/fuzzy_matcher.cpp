@@ -204,7 +204,7 @@ void FuzzyMatcher::lookup_clusters(
   for (uint32_t hash_id: candidates) {
     const int score = fuzzy_compare(hashes[hash_id].hash().c_str(), query.hash().c_str());
     if (score > 0) {
-      matches.push_back(std::make_pair(hash_id, score));
+      matches.emplace_back(hash_id, score);
     }
   }
 }
