@@ -1,13 +1,15 @@
-#include "hasher.h"
-#include "parser.h"
-#include "fuzzy_matcher.h"
-#include "fuzzy_impl.h"
+#include <iostream>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <fuzzy.h>
-#include <iostream>
+
+#include "fuzzy_impl.h"
+#include "fuzzy_matcher.h"
+#include "hasher.h"
+#include "parser.h"
 
 using FuzzyMatcher = SFHASH_FuzzyMatcher;
 using FuzzyResult  = SFHASH_FuzzyResult;
@@ -61,7 +63,6 @@ uint64_t FuzzyHash::blocksize() const {
     blocksize = boost::lexical_cast<uint64_t>(h.substr(0, i));
   } catch(boost::bad_lexical_cast) {}
   return blocksize;
-
 }
 
 std::string FuzzyHash::block() const {
@@ -145,7 +146,6 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
   for (size_t i = 0; i < num_blocksizes; ++i) {
     db[i].reserve(map[i]);
   }
-
 }
 
 void SFHASH_FuzzyMatcher::add(FuzzyHash&& hash) {
@@ -204,7 +204,6 @@ void FuzzyMatcher::lookup_clusters(
       matches.push_back(std::make_pair(hash_id, score));
     }
   }
-
 }
 
 int validate_hash(const char* a, const char* b) {

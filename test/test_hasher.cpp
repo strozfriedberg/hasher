@@ -1,6 +1,7 @@
 #include <scope/test.h>
 
 #include <iterator>
+
 #include <fuzzy.h>
 
 #include "hasher.h"

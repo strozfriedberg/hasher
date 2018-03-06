@@ -1,9 +1,9 @@
 #include "hasher.h"
 
-#include "hasher_impl.h"
 #include "entropy_impl.h"
-#include "libcrypto_hasher.h"
 #include "fuzzy_impl.h"
+#include "hasher_impl.h"
+#include "libcrypto_hasher.h"
 
 #include <cstddef>
 #include <vector>

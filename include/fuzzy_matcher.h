@@ -1,13 +1,13 @@
-
 # pragma once
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <map>
 #include <unordered_set>
-#include <sparsepp/spp.h>
 #include <vector>
+
+#include <sparsepp/spp.h>
 
 #include "hasher.h"
 

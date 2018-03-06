@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "hasher_impl.h"
