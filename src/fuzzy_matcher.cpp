@@ -212,6 +212,7 @@ void FuzzyMatcher::lookup_clusters(
 int validate_hash(const char* a, const char* b) {
   // blocksize:hash1:hash2,"filename"
   std::string h(a, b);
+
   auto i = h.find_first_of(':', 0);
   if (i == std::string::npos) {
     return 1;
@@ -220,6 +221,10 @@ int validate_hash(const char* a, const char* b) {
   auto j = h.find_first_of(':', i + 1);
   if (j == std::string::npos) {
     return 1;
+  }
+
+  if (h.back() == '\x00') {
+    h.pop_back();
   }
 
   auto k = h.find_first_of(',', j + 1);
