@@ -25,15 +25,15 @@ FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i) {
   return matcher->get_match(i).release();
 }
 
-const char* sfhash_fuzzy_result_filename(FuzzyResult* result) {
+const char* sfhash_fuzzy_result_filename(const FuzzyResult* result) {
   return result->filename.c_str();
 }
 
-const char* sfhash_fuzzy_result_query_filename(FuzzyResult* result) {
+const char* sfhash_fuzzy_result_query_filename(const FuzzyResult* result) {
   return result->query_filename.c_str();
 }
 
-int sfhash_fuzzy_result_score(FuzzyResult* result) {
+int sfhash_fuzzy_result_score(const FuzzyResult* result) {
   return result->score;
 }
 

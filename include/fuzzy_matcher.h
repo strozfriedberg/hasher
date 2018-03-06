@@ -48,9 +48,9 @@ private:
 };
 
 struct SFHASH_FuzzyResult {
-  const std::string filename;
-  const std::string query_filename;
-  const int score;
+  std::string filename;
+  std::string query_filename;
+  int score;
 };
 
 int validate_hash(const char* a, const char* b);
