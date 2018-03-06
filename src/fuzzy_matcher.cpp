@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/lexical_cast.hpp>
@@ -129,7 +127,8 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
       continue;
     }
     const auto idx = blocksize_index(hash.blocksize());
-    ++map[idx];
+    map[idx] += std::max((int)hash.block().length() - 6, 1);
+    map[idx+1] += std::max((int)hash.double_block().length() - 6, 1);
     max = std::max(max, idx);
   }
   // If blocksize B is present at index I,
@@ -140,7 +139,12 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
   db.resize(num_blocksizes);
 
   for (size_t i = 0; i < num_blocksizes; ++i) {
-    db[i].reserve(map[i]);
+    // map[i] is the total number of chunks for this blocksize,
+    // but not necessarily the number of distinct chunks
+    // A factor of 2 is probably on the conservative side (i.e., will underestimate the amount of space needed)
+    // for a typical (?) data set
+    // TODO: can we be more scientific about this?
+    db[i].reserve(map[i] / 2);
   }
 }
 
