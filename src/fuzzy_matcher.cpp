@@ -54,42 +54,35 @@ std::string FuzzyHash::hash() const {
 }
 
 uint64_t FuzzyHash::blocksize() const {
-  std::string h = hash();
-  auto i = h.find_first_of(':', 0);
-  uint64_t blocksize = 0;
-  try {
-
-    blocksize = boost::lexical_cast<uint64_t>(h.substr(0, i));
-  } catch(boost::bad_lexical_cast) {}
-  return blocksize;
+  return std::strtoull(beg, nullptr, 10);
 }
 
 std::string FuzzyHash::block() const {
-  std::string h = hash();
-  auto i = h.find_first_of(':', 0);
-  auto j = h.find_first_of(':', i + 1);
-  return h.substr(i + 1, j-i-1);
+  const char* i = static_cast<const char*>(std::memchr(beg, ':', end-beg));
+  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', end - (i+1)));
+  return std::string(i+1, j - (i + 1));
 }
 
 std::string FuzzyHash::double_block() const {
-  std::string h = hash();
-  auto i = h.find_first_of(':', 0);
-  auto j = h.find_first_of(':', i + 1);
-  auto k = h.find_first_of(',', j + 1);
-  return h.substr(j+1, k - j - 1);
+  const char* i = static_cast<const char*>(std::memchr(beg, ':', end-beg));
+  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', end - (i+1)));
+  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', end - (j+1)));
+  if (!k) {
+    k = end;
+  }
+  return std::string(j + 1, k - (j + 1));
 }
 
 std::string FuzzyHash::filename() const {
-  std::string h = hash();
-  auto i = h.find_first_of(':', 0);
-  auto j = h.find_first_of(':', i + 1);
-  auto k = h.find_first_of(',', j + 1);
+  const char* i = static_cast<const char*>(std::memchr(beg, ':', end-beg));
+  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', end - (i+1)));
+  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', end - (j+1)));
   std::string filename;
-  if (k == std::string::npos) {
+  if (!k) {
     filename = "";
   }
   else {
-    filename = h.substr(k + 2, h.length() - k - 3);
+    filename = std::string(k+2, end - (k+3));
     while (filename.find("\\\"") != std::string::npos) {
       filename.replace(filename.find("\\\""), 2, "\"");
     }

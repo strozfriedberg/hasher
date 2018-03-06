@@ -17,13 +17,25 @@ void check_decode_chunks(const std::string& hash, const std::vector<uint64_t> e)
 SCOPE_TEST(test_parse_valid_sig) {
   const std::string sig = "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure\"\"\".ac\"";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
-
   const FuzzyHash hash(beg, end);
+
   SCOPE_ASSERT_EQUAL(0, validate_hash(beg, end));
   SCOPE_ASSERT_EQUAL(192, hash.blocksize());
   SCOPE_ASSERT_EQUAL("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV", hash.block());
   SCOPE_ASSERT_EQUAL("R4qzN+idbyboj19xRRZE2IkWO/5Z", hash.double_block());
   SCOPE_ASSERT_EQUAL("configure\"\"\".ac", hash.filename());
+}
+
+SCOPE_TEST(test_parse_valid_sig_no_filename) {
+  const std::string sig = "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z";
+  const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
+  const FuzzyHash hash(beg, end);
+
+  SCOPE_ASSERT_EQUAL(1, validate_hash(beg, end));
+  SCOPE_ASSERT_EQUAL(192, hash.blocksize());
+  SCOPE_ASSERT_EQUAL("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV", hash.block());
+  SCOPE_ASSERT_EQUAL("R4qzN+idbyboj19xRRZE2IkWO/5Z", hash.double_block());
+  SCOPE_ASSERT_EQUAL("", hash.filename());
 }
 
 SCOPE_TEST(test_parse_invalid_sig) {
@@ -91,11 +103,11 @@ SCOPE_TEST(test_decode_chunks) {
 }
 
 SCOPE_TEST(test_load_fuzzy) {
-  const char data[] = "ssdeep,1.1--blocksize:hash:hash,filename\n"
-                      "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure.ac\"\n"
-                      "6144:Ux9sXthkMmK4C4VRp7Q8QPTxoToVLGv8Hde2w7i9grh+B8Q+pDKHTvKWNpYrXYnL:oIbG4zHdizhHib9iBMoW,\"configure\"";
+  std::string data = "ssdeep,1.1--blocksize:hash:hash,filename\n"
+                     "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure.ac\"\n"
+                     "6144:Ux9sXthkMmK4C4VRp7Q8QPTxoToVLGv8Hde2w7i9grh+B8Q+pDKHTvKWNpYrXYnL:oIbG4zHdizhHib9iBMoW,\"configure\"";
 
-  auto matcher = load_fuzzy_hashset(std::begin(data), std::end(data));
+  auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
   SCOPE_ASSERT(matcher.get());
 }
 
