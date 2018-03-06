@@ -20,7 +20,8 @@ noinst_LTLIBRARIES = $(HASHER_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
 	src/entropy.cpp \
-	src/fuzzy.cpp \
+	src/fuzzy_hasher.cpp \
+	src/fuzzy_matcher.cpp \
 	src/hasher.cpp \
 	src/matcher.cpp \
 	src/parser.cpp \
