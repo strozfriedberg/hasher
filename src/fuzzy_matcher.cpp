@@ -266,19 +266,21 @@ std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
 }
 
 std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end) {
+  LineIterator l(beg, end);
+  const LineIterator lend(end, end);
+  if (l == lend) {
+    return nullptr;
+  }
+  std::string firstLine(l->first, l->second - l->first);
+  if (firstLine!= "ssdeep,1.1--blocksize:hash:hash,filename") {
+    return nullptr;
+  }
+
   std::unique_ptr<FuzzyMatcher> matcher(new FuzzyMatcher);
   matcher->reserve_space(beg, end);
 
-  int lineno = 1;
-  const LineIterator lend(end, end);
-  for (LineIterator l(beg, end); l != lend; ++l, ++lineno) {
-    if (lineno == 1) {
-      std::string line(l->first, l->second - l->first);
-      if (line != "ssdeep,1.1--blocksize:hash:hash,filename") {
-        return nullptr;
-      }
-      continue;
-    }
+  int lineno = 2;
+  for (++l; l != lend; ++l, ++lineno) {
     // skip empty lines
     if (l->first == l->second) {
       continue;
