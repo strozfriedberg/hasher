@@ -92,12 +92,12 @@ SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* en
 int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
 
 SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
-const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult*);
-const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult*);
-int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult*);
-void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult*);
+const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result);
+const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result);
+int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result);
+void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult* result);
 
-void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher*);
+void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 
 #ifdef __cplusplus
 }
