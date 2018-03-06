@@ -202,31 +202,25 @@ void FuzzyMatcher::lookup_clusters(
   }
 }
 
-int validate_hash(const char* a, const char* b) {
+int validate_hash(const char* beg, const char* end) {
   // blocksize:hash1:hash2,"filename"
-  std::string h(a, b);
-
-  auto i = h.find_first_of(':', 0);
-  if (i == std::string::npos) {
+  const char* i = static_cast<const char*>(std::memchr(beg, ':', end-beg));
+  if (!i) {
     return 1;
   }
 
-  auto j = h.find_first_of(':', i + 1);
-  if (j == std::string::npos) {
+  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', end - (i+1)));
+  if (!j) {
     return 1;
   }
 
-  if (h.back() == '\x00') {
-    h.pop_back();
-  }
-
-  auto k = h.find_first_of(',', j + 1);
-  if (h[k+1] != '"' ||  h[h.size() -1] != '"') {
+  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', end - (j+1)));
+  if (!k || k[1] != '"' || end[-1] != '"') {
     return 1;
   }
 
   try {
-    boost::lexical_cast<uint64_t>(h.substr(0, i));
+    boost::lexical_cast<uint64_t>(std::string(beg, i-beg));
   } catch(boost::bad_lexical_cast) {
     return 1;
   }
