@@ -241,27 +241,25 @@ std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
   using base64_iterator = boost::archive::iterators::transform_width<
     boost::archive::iterators::binary_from_base64<std::string::const_iterator>, 8, 6
   >;
-  std::string block = s;
 
-  char buf[8] = {};
-  if (block.length() == 0) {
+  if (s.length() == 0) {
     return { 0 };
   }
-  if (block.length() < 7) {
+  uint64_t val = 0;
+  if (s.length() < 7) {
     // Pad to 6 characters
+    std::string block(s);
     block.append(6 - block.length(), '=');
     std::string decoded(base64_iterator(block.begin()), base64_iterator(block.end()));
-    memcpy(buf, decoded.c_str(), decoded.length());
-    uint64_t val = *reinterpret_cast<const uint64_t*>(buf);
+    std::memcpy(&val, decoded.c_str(), decoded.length());
     return {val};
   }
 
   std::unordered_set<uint64_t> results;
-  for (size_t i = 0; i + 7 <= block.length(); ++i) {
-    std::string sub = block.substr(i, 7);
+  for (size_t i = 0; i + 7 <= s.length(); ++i) {
+    std::string sub = s.substr(i, 7);
     std::string decoded(base64_iterator(sub.begin()), base64_iterator(sub.end()));
-    memcpy(buf, decoded.c_str(), decoded.length());
-    uint64_t val = *reinterpret_cast<const uint64_t*>(buf);
+    memcpy(&val, decoded.c_str(), decoded.length());
     results.insert(val);
   }
   return results;
