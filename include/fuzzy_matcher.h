@@ -17,7 +17,7 @@ public:
   FuzzyHash(const char* a, const char* b);
   std::string hash() const;
 
-  uint64_t blocksize()const;
+  uint64_t blocksize() const;
   std::string block() const;
   std::string double_block() const;
   std::string filename() const;
