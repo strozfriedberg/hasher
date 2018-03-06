@@ -103,5 +103,5 @@ SCOPE_TEST(alphabetHash) {
 }
 
 SCOPE_TEST(FUZZY_MAX_LEN_SIZE) {
-  SCOPE_ASSERT_EQUAL(FUZZY_MAX_RESULT, sizeof((static_cast<SFHASH_HashValues*>(0))->fuzzy) / sizeof((static_cast<SFHASH_HashValues*>(0)->fuzzy[0])));
+  SCOPE_ASSERT_EQUAL(FUZZY_MAX_RESULT, sizeof(SFHASH_HashValues::fuzzy));
 }
