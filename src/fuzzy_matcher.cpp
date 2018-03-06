@@ -116,14 +116,18 @@ inline size_t blocksize_index(uint64_t blocksize) {
 }
 
 void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
-
-  int lineno = 1;
+  LineIterator l(beg, end);
   const LineIterator lend(end, end);
+  if (l == lend) {
+    return;
+  }
+
   // Count lines, chunks per block
-  std::map<uint64_t, uint64_t> map;
+  std::unordered_map<uint64_t, uint64_t> map;
+  int lineno = 2;
   size_t max = 0;
-  for (LineIterator l(beg, end); l != lend; ++l, ++lineno) {
-    if (lineno == 1 || l->first == l->second) {
+  for (++l; l != lend; ++l, ++lineno) {
+    if (l->first == l->second) {
       continue;
     }
     FuzzyHash hash(l->first, l->second);
@@ -132,13 +136,13 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
       continue;
     }
     const auto idx = blocksize_index(hash.blocksize());
-    map[idx]++;
+    ++map[idx];
     max = std::max(max, idx);
   }
   // If blocksize B is present at index I,
   // Then we'll have an entry for blocksize 2*B at I+1
   // Hence we need an array of length I+2
-  size_t num_blocksizes = max + 2;
+  const size_t num_blocksizes = max + 2;
   hashes.reserve(lineno);
   db.resize(num_blocksizes);
 
