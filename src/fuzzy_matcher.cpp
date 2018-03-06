@@ -194,15 +194,15 @@ void FuzzyMatcher::lookup_clusters(
   }
 
   std::unordered_set<uint32_t> candidates;
-  auto& chunks = db[idx];
-  for (auto& cluster: it) {
-    auto search = chunks.find(cluster);
+  const auto& chunks = db[idx];
+  for (const auto& cluster: it) {
+    const auto search = chunks.find(cluster);
     if (search != chunks.end()) {
       candidates.insert(search->second.begin(), search->second.end());
     }
   }
   for (uint32_t hash_id: candidates) {
-    int score = fuzzy_compare(hashes[hash_id].hash().c_str(), query.hash().c_str());
+    const int score = fuzzy_compare(hashes[hash_id].hash().c_str(), query.hash().c_str());
     if (score > 0) {
       matches.push_back(std::make_pair(hash_id, score));
     }
