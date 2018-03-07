@@ -81,12 +81,12 @@ _sfhash_destroy_hasher.restype = None
 
 # SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
 _sfhash_create_fuzzy_matcher = _hasher.sfhash_create_fuzzy_matcher
-_sfhash_create_fuzzy_matcher.argtypes = [c_void_p, c_void_p]
+_sfhash_create_fuzzy_matcher.argtypes = [POINTER(c_char), POINTER(c_char)]
 _sfhash_create_fuzzy_matcher.restype = c_void_p
 
 # int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
 _sfhash_fuzzy_matcher_compare = _hasher.sfhash_fuzzy_matcher_compare
-_sfhash_fuzzy_matcher_compare.argtypes = [c_void_p, c_void_p, c_void_p]
+_sfhash_fuzzy_matcher_compare.argtypes = [c_void_p, POINTER(c_char), POINTER(c_char)]
 _sfhash_fuzzy_matcher_compare.restype = c_int
 
 # SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
@@ -151,10 +151,10 @@ def ptr_range(buf, pbuf, ptype):
 
     if isinstance(buf, bytes):
         # yay, we can get a pointer from a bytes
-        beg = cast(buf, POINTER(ptype * blen))[0]
+        beg = cast(buf, POINTER(ptype * 1))[0]
     elif blen >= 8 and (not isinstance(buf, memoryview) or not buf.readonly):
         # we have a writable buffer; from_buffer requires len >= 8
-        beg = (ptype * blen).from_buffer(buf)
+        beg = (ptype * 1).from_buffer(buf)
     else:
         # we have a read-only memoryview, so have to do some gymnastics
         obj = py_object(buf)
@@ -164,7 +164,7 @@ def ptr_range(buf, pbuf, ptype):
         finally:
             pythonapi.PyBuffer_Release(byref(pbuf))
 
-    end = byref(beg, blen)
+    end = cast(beg, POINTER(ptype * 1))[blen]
     return beg, end
 
 
