@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "fuzzy_impl.h"
+#include "fuzzy_hasher.h"
 
 #include <fuzzy.h>
 

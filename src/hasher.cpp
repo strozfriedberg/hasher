@@ -1,7 +1,7 @@
 #include "hasher.h"
 
 #include "entropy_impl.h"
-#include "fuzzy_impl.h"
+#include "fuzzy_hasher.h"
 #include "hasher_impl.h"
 #include "libcrypto_hasher.h"
 
