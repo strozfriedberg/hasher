@@ -3,6 +3,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+using value_type = std::pair<const char*, const char*>;
+
 const char* find_nonws(const char* beg, const char* end) {
   return std::find_if_not(beg, end, [](char c){ return c == ' '; });
 }
@@ -102,4 +104,41 @@ std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, c
   }
 
   return std::make_tuple( flags, std::move(name), size, std::move(hash) );
+}
+const value_type& LineIterator::operator*() const {
+  return pos;
+}
+
+const value_type* LineIterator::operator->() const {
+  return &pos;
+}
+
+LineIterator& LineIterator::operator++() {
+  if (pos.second == end) {
+    pos.first = end;
+  }
+  else {
+    pos.first = pos.second + (*pos.second == '\r' ? 2 : 1);
+    pos.second = find_next(pos.first, end);
+  }
+  return *this;
+}
+
+LineIterator LineIterator::operator++(int) {
+  LineIterator i(*this);
+  ++*this;
+  return i;
+}
+
+bool LineIterator::operator==(const LineIterator& o) const {
+  return pos == o.pos;
+}
+
+bool LineIterator::operator!=(const LineIterator& o) const {
+  return !(*this == o);
+}
+
+const char* LineIterator::find_next(const char* cur, const char* end) {
+  const char* i = std::find(cur, end, '\n');
+  return (i == end || *(i-1) != '\r') ? i : i-1;
 }

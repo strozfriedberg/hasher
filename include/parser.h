@@ -29,40 +29,20 @@ public:
 
   LineIterator& operator=(const LineIterator&) = default;
 
-  const value_type& operator*() const { return pos; }
+  const value_type& operator*() const;
 
-  const value_type* operator->() const { return &pos; }
+  const value_type* operator->() const;
 
-  LineIterator& operator++() {
-    if (pos.second == end) {
-      pos.first = end;
-    }
-    else {
-      pos.first = pos.second + (*pos.second == '\r' ? 2 : 1);
-      pos.second = find_next(pos.first, end);
-    }
-    return *this;
-  }
+  LineIterator& operator++();
 
-  LineIterator operator++(int) {
-    LineIterator i(*this);
-    ++*this;
-    return i;
-  }
+  LineIterator operator++(int);
 
-  bool operator==(const LineIterator& o) const {
-    return pos == o.pos;
-  }
+  bool operator==(const LineIterator& o) const;
 
-  bool operator!=(const LineIterator& o) const {
-    return !(*this == o);
-  }
+  bool operator!=(const LineIterator& o) const;
 
 private:
-  static const char* find_next(const char* cur, const char* end) {
-    const char* i = std::find(cur, end, '\n');
-    return (i == end || *(i-1) != '\r') ? i : i-1;
-  }
+  static const char* find_next(const char* cur, const char* end);
 
   value_type pos;
   const char* const end;
