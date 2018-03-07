@@ -116,8 +116,8 @@ _sfhash_fuzzy_destroy_match.restype = None
 
 # void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 _sfhash_destroy_fuzzy_matcher = _hasher.sfhash_destroy_fuzzy_matcher
-_sfhash_fuzzy_destroy_fuzzy_matcher.argtypes = [c_void_p]
-_sfhash_fuzzy_destroy_fuzzy_matcher.restype = None
+_sfhash_destroy_fuzzy_matcher.argtypes = [c_void_p]
+_sfhash_destroy_fuzzy_matcher.restype = None
 
 
 MD5     = 1 << 0
