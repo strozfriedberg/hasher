@@ -23,6 +23,7 @@ src_libhasherint_la_SOURCES = \
 	src/fuzzy_hasher.cpp \
 	src/fuzzy_matcher.cpp \
 	src/hasher.cpp \
+	src/libcrypto_hasher.cpp \
 	src/matcher.cpp \
 	src/parser.cpp \
 	src/util.cpp
