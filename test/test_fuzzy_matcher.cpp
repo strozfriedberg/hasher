@@ -113,13 +113,13 @@ SCOPE_TEST(test_load_fuzzy) {
 
 void check_max_score(const std::string& data, const std::string& sig, int expected_count, int expected_max) {
   auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
-  const int result_count = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str(), sig.c_str()+sig.length());
+  const auto result = sfhash_fuzzy_matcher_compare(matcher.get(), sig.c_str(), sig.c_str()+sig.length());
+  size_t result_count = sfhash_fuzzy_result_count(result);
   SCOPE_ASSERT_EQUAL(expected_count, result_count);
 
   int max = 0;
-  for (int i = 0; i < result_count; ++i) {
-    const auto& result = matcher->get_match(i);
-    max = std::max(max, result->Score);
+  for (size_t i = 0; i < result_count; ++i) {
+    max = std::max(max, sfhash_fuzzy_result_score(result, i));
   }
   SCOPE_ASSERT_EQUAL(expected_max, max);
 }

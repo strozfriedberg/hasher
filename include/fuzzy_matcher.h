@@ -33,8 +33,7 @@ class SFHASH_FuzzyMatcher {
 public:
   void reserve_space(const char* beg, const char* end);
   void add(FuzzyHash&& hash);
-  int match(const char* beg, const char* end);
-  std::unique_ptr<SFHASH_FuzzyResult> get_match(size_t i) const;
+  std::unique_ptr<SFHASH_FuzzyResult> match(const char* beg, const char* end);
 
 private:
   void add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id);
@@ -43,14 +42,22 @@ private:
   std::vector<FuzzyHash> Hashes;
   // blocksize -> (hash_substring_int -> hash_index)
   std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> ChunkMaps;
-  std::vector<std::pair<uint32_t, int>> Matches;
-  FuzzyHash Query = FuzzyHash(nullptr, nullptr);
 };
 
-struct SFHASH_FuzzyResult {
-  std::string Filename;
-  std::string QueryFilename;
-  int Score;
+class SFHASH_FuzzyResult {
+public:
+  SFHASH_FuzzyResult(FuzzyHash&& query, std::vector<FuzzyHash>* hashes);
+
+  size_t count() const;
+  const char* queryFilename() const;
+  const char* filename(size_t i) const;
+  int score(size_t i) const;
+
+  std::vector<std::pair<uint32_t, int>> Matches;
+  const FuzzyHash Query;
+
+private:
+  const std::vector<FuzzyHash>* Hashes;
 };
 
 int validate_hash(const char* a, const char* b);

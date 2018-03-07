@@ -1,6 +1,7 @@
 #ifndef HASHER_C_API_H_
 #define HASHER_C_API_H_
 
+#include <cstddef>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -88,14 +89,12 @@ void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 
 SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
 
-// Returns the number of matches
-int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
-
-SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
-const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result);
+const SFHASH_FuzzyResult* sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
+size_t sfhash_fuzzy_result_count(const SFHASH_FuzzyResult* result);
+const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result, size_t i);
 const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result);
-int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result);
-void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult* result);
+int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result, size_t i);
+void sfhash_fuzzy_destroy_match(const SFHASH_FuzzyResult* result);
 
 void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 

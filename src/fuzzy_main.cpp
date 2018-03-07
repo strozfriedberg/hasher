@@ -74,14 +74,13 @@ int main(int argc, char** argv) {
         if (l->first == l->second) {
           continue;
         }
-        int num_matches= sfhash_fuzzy_matcher_compare(matcher, l->first, l->second);
-        auto rptr = make_unique_del(nullptr, sfhash_fuzzy_destroy_match);
-
-        for (int i = 0; i < num_matches; ++i) {
-          rptr.reset(sfhash_fuzzy_get_match(matcher, i));
-          std::cout << "\"" << sfhash_fuzzy_result_query_filename(rptr.get()) << "\","
-                    << "\"" << sfhash_fuzzy_result_filename(rptr.get()) << "\","
-                    << sfhash_fuzzy_result_score(rptr.get())
+        auto rptr = make_unique_del(sfhash_fuzzy_matcher_compare(matcher, l->first, l->second),
+                                    sfhash_fuzzy_destroy_match);
+        const char* query_filename = sfhash_fuzzy_result_query_filename(rptr.get());
+        for (size_t i = 0; i < sfhash_fuzzy_result_count(rptr.get()); ++i) {
+          std::cout << "\"" << query_filename << "\","
+                    << "\"" << sfhash_fuzzy_result_filename(rptr.get(), i) << "\","
+                    << sfhash_fuzzy_result_score(rptr.get(), i)
                     << "\n";
         }
       }

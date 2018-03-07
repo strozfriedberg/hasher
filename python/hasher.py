@@ -84,19 +84,19 @@ _sfhash_create_fuzzy_matcher = _hasher.sfhash_create_fuzzy_matcher
 _sfhash_create_fuzzy_matcher.argtypes = [POINTER(c_char), POINTER(c_char)]
 _sfhash_create_fuzzy_matcher.restype = c_void_p
 
-# int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
+# const SFHASH_FuzzyResult* sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
 _sfhash_fuzzy_matcher_compare = _hasher.sfhash_fuzzy_matcher_compare
 _sfhash_fuzzy_matcher_compare.argtypes = [c_void_p, POINTER(c_char), POINTER(c_char)]
-_sfhash_fuzzy_matcher_compare.restype = c_int
+_sfhash_fuzzy_matcher_compare.restype = c_void_p
 
-# SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
-_sfhash_fuzzy_get_match = _hasher.sfhash_fuzzy_get_match
-_sfhash_fuzzy_get_match.argtypes = [c_void_p, c_int]
-_sfhash_fuzzy_get_match.restype = c_void_p
+# size_t sfhash_fuzzy_result_count(const SFHASH_FuzzyResult* result);
+_sfhash_fuzzy_result_count = _hasher.sfhash_fuzzy_result_count
+_sfhash_fuzzy_result_count.argtypes = [c_void_p]
+_sfhash_fuzzy_result_count.restype = c_size_t
 
-# const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result);
+# const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result, size_t i);
 _sfhash_fuzzy_result_filename = _hasher.sfhash_fuzzy_result_filename
-_sfhash_fuzzy_result_filename.argtypes = [c_void_p]
+_sfhash_fuzzy_result_filename.argtypes = [c_void_p, c_size_t]
 _sfhash_fuzzy_result_filename.restype = c_char_p
 
 # const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result);
@@ -104,9 +104,9 @@ _sfhash_fuzzy_result_query_filename = _hasher.sfhash_fuzzy_result_query_filename
 _sfhash_fuzzy_result_query_filename.argtypes = [c_void_p]
 _sfhash_fuzzy_result_query_filename.restype = c_char_p
 
-# int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result);
+# int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result, size_t i);
 _sfhash_fuzzy_result_score = _hasher.sfhash_fuzzy_result_score
-_sfhash_fuzzy_result_score.argtypes = [c_void_p]
+_sfhash_fuzzy_result_score.argtypes = [c_void_p, c_size_t]
 _sfhash_fuzzy_result_score.restype = c_int
 
 # void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult* result);
@@ -211,16 +211,18 @@ class FuzzyResult(object):
         self.destroy()
 
     @property
-    def filename(self):
-        return _sfhash_fuzzy_result_filename(self.ptr).decode('utf-8')
-
-    @property
     def query_filename(self):
         return _sfhash_fuzzy_result_query_filename(self.ptr).decode('utf-8')
 
     @property
-    def score(self):
-        return _sfhash_fuzzy_result_score(self.ptr)
+    def count(self):
+        return _sfhash_fuzzy_result_count(self.ptr)
+
+    def filename(self, i):
+        return _sfhash_fuzzy_result_filename(self.ptr, i).decode('utf-8')
+
+    def score(self, i):
+        return _sfhash_fuzzy_result_score(self.ptr, i)
 
     def destroy(self):
         _sfhash_fuzzy_destroy_match(self.ptr)
@@ -245,7 +247,6 @@ class FuzzyMatcher(object):
 
     def matches(self, sig):
         sig_bytes = sig.encode('utf-8')
-        matches = _sfhash_fuzzy_matcher_compare(self.ptr, *ptr_range(sig_bytes, self.pbuf, c_char))
-        for x in range(matches):
-            with FuzzyResult(_sfhash_fuzzy_get_match(self.ptr, x)) as result:
-                yield (result.filename, result.query_filename, result.score)
+        with FuzzyResult(_sfhash_fuzzy_matcher_compare(self.ptr, *ptr_range(sig_bytes, self.pbuf, c_char))) as result:
+            for i in range(result.count):
+                    yield (result.filename(i), result.query_filename, result.score(i))
