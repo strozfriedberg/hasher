@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
               << std::endl;
     return -1;
   }
-  
+
   try {
     auto mptr = make_unique_del(nullptr, sfhash_destroy_matcher);
 
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     char buf[1024*1024];
     SFHASH_HashValues hashes;
 
-    // walk the tree 
+    // walk the tree
     const fs::recursive_directory_iterator end;
     for (fs::recursive_directory_iterator d(argv[2]); d != end; ++d) {
       const fs::path p(d->path());
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
             } while (f);
 
             sfhash_get_hashes(hasher, &hashes);
-            hmatch = sfhash_matcher_has_hash(matcher, size, hashes.sha1);
+            hmatch = sfhash_matcher_has_hash(matcher, size, hashes.Sha1);
           }
 
           if (fmatch || hmatch) {
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
 
             std::cout << n << '\t'
                       << size << '\t'
-                      << to_hex(hashes.sha1, hashes.sha1+20) << '\t'
+                      << to_hex(hashes.Sha1, hashes.Sha1+20) << '\t'
 #if defined(_WIN32)
                       << s.st_atime << '\t'
                       << s.st_mtime << '\t'

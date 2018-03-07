@@ -117,10 +117,10 @@ Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err)
 
 int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
   const auto i = std::lower_bound(
-    matcher->table.begin(), matcher->table.end(),
+    matcher->Table.begin(), matcher->Table.end(),
     std::make_pair(size, sha1_t())
   );
-  return i == matcher->table.end() ? false : i->first == size;
+  return i == matcher->Table.end() ? false : i->first == size;
 }
 
 int sfhash_matcher_has_hash(const Matcher* matcher, uint64_t size, const uint8_t* sha1) {
@@ -128,7 +128,7 @@ int sfhash_matcher_has_hash(const Matcher* matcher, uint64_t size, const uint8_t
   std::memcpy(&hash[0], sha1, sizeof(sha1_t));
 
   return std::binary_search(
-    matcher->table.begin(), matcher->table.end(),
+    matcher->Table.begin(), matcher->Table.end(),
     std::make_pair(size, std::move(hash))
   );
 }
@@ -139,7 +139,7 @@ void cb(void *userData, const LG_SearchHit* const) {
 
 int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   bool hit = false;
-  auto prog = matcher->prog.get();
+  auto prog = matcher->Prog.get();
   if (prog) {
     const LG_ContextOptions copt{};
     auto ctx = make_unique_del(
@@ -154,22 +154,22 @@ int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
 }
 
 size_t table_size(const Matcher* matcher) {
-  return sizeof(decltype(Matcher::table)::value_type) * matcher->table.size();
+  return sizeof(decltype(Matcher::Table)::value_type) * matcher->Table.size();
 }
 
 int sfhash_matcher_size(const Matcher* matcher) {
   return sizeof(size_t) +
          table_size(matcher) +
-         lg_program_size(matcher->prog.get());
+         lg_program_size(matcher->Prog.get());
 }
 
 void sfhash_write_binary_matcher(const Matcher* matcher, void* buf) {
   const size_t tlen = table_size(matcher);
   *static_cast<size_t*>(buf) = tlen;
   buf = static_cast<void*>(static_cast<size_t*>(buf) + 1);
-  std::memcpy(buf, matcher->table.data(), tlen);
+  std::memcpy(buf, matcher->Table.data(), tlen);
   buf = static_cast<void*>(static_cast<uint8_t*>(buf) + tlen);
-  lg_write_program(matcher->prog.get(), buf);
+  lg_write_program(matcher->Prog.get(), buf);
 }
 
 Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {

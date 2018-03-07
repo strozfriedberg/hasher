@@ -26,7 +26,7 @@ public:
   std::unordered_set<uint64_t> double_chunks() const;
 
 private:
-  const char *beg, *end;
+  const char *Beg, *End;
 };
 
 class SFHASH_FuzzyMatcher {
@@ -40,17 +40,17 @@ private:
   void add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id);
   void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it, std::unordered_set<uint32_t>& candidates);
 
-  std::vector<FuzzyHash> hashes;
+  std::vector<FuzzyHash> Hashes;
   // blocksize -> (hash_substring_int -> hash_index)
-  std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> db;
-  std::vector<std::pair<uint32_t, int>> matches;
-  FuzzyHash query = FuzzyHash(nullptr, nullptr);
+  std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> ChunkMaps;
+  std::vector<std::pair<uint32_t, int>> Matches;
+  FuzzyHash Query = FuzzyHash(nullptr, nullptr);
 };
 
 struct SFHASH_FuzzyResult {
-  std::string filename;
-  std::string query_filename;
-  int score;
+  std::string Filename;
+  std::string QueryFilename;
+  int Score;
 };
 
 int validate_hash(const char* a, const char* b);

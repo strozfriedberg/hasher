@@ -23,7 +23,7 @@ public:
   using iterator_category = std::input_iterator_tag;
 
   LineIterator(const char* beg, const char* end):
-    pos(beg, find_next(beg, end)), end(end) {}
+    Pos(beg, find_next(beg, end)), End(end) {}
 
   LineIterator(const LineIterator&) = default;
 
@@ -44,6 +44,6 @@ public:
 private:
   static const char* find_next(const char* cur, const char* end);
 
-  value_type pos;
-  const char* const end;
+  value_type Pos;
+  const char* const End;
 };

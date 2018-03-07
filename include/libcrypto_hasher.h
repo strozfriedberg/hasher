@@ -31,8 +31,8 @@ public:
   virtual void reset();
 
 private:
-  EVP_MD_CTX* ctx;
-  const EVP_MD* hfunc;
+  EVP_MD_CTX* Ctx;
+  const EVP_MD* Hfunc;
 };
 
 std::unique_ptr<HasherImpl> make_md5_hasher();

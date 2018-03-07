@@ -1,30 +1,30 @@
 #include "libcrypto_hasher.h"
 
 LibcryptoHasher::LibcryptoHasher(const EVP_MD* hfunc):
-  ctx(EVP_MD_CTX_create()), hfunc(hfunc)
+  Ctx(EVP_MD_CTX_create()), Hfunc(hfunc)
 {
   reset();
 }
 
 LibcryptoHasher::LibcryptoHasher(const LibcryptoHasher& other):
-  ctx(EVP_MD_CTX_create()), hfunc(other.hfunc)
+  Ctx(EVP_MD_CTX_create()), Hfunc(other.Hfunc)
 {
-  if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
+  if (!EVP_MD_CTX_copy(Ctx, other.Ctx)) {
     // TODO: error!
   }
 }
 
 LibcryptoHasher& LibcryptoHasher::operator=(const LibcryptoHasher& other) {
-  if (!EVP_MD_CTX_copy(ctx, other.ctx)) {
+  if (!EVP_MD_CTX_copy(Ctx, other.Ctx)) {
     // TODO: error!
   }
 
-  hfunc = other.hfunc;
+  Hfunc = other.Hfunc;
   return *this;
 }
 
 LibcryptoHasher::~LibcryptoHasher() {
-  EVP_MD_CTX_destroy(ctx);
+  EVP_MD_CTX_destroy(Ctx);
 }
 
 LibcryptoHasher* LibcryptoHasher::clone() const {
@@ -32,19 +32,19 @@ LibcryptoHasher* LibcryptoHasher::clone() const {
 }
 
 void LibcryptoHasher::update(const uint8_t* beg, const uint8_t* end) {
-  if (!EVP_DigestUpdate(ctx, beg, end - beg)) {
+  if (!EVP_DigestUpdate(Ctx, beg, end - beg)) {
     // TODO: error!
   }
 }
 
 void LibcryptoHasher::get(void* val) {
-  if (!EVP_DigestFinal_ex(ctx, static_cast<uint8_t*>(val), nullptr)) {
+  if (!EVP_DigestFinal_ex(Ctx, static_cast<uint8_t*>(val), nullptr)) {
     // TODO: error!
   }
 }
 
 void LibcryptoHasher::reset() {
-  if (!EVP_DigestInit(ctx, hfunc)) {
+  if (!EVP_DigestInit(Ctx, Hfunc)) {
     // TODO: error!
   }
 }

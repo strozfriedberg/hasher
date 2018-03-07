@@ -106,20 +106,20 @@ std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, c
   return std::make_tuple( flags, std::move(name), size, std::move(hash) );
 }
 const value_type& LineIterator::operator*() const {
-  return pos;
+  return Pos;
 }
 
 const value_type* LineIterator::operator->() const {
-  return &pos;
+  return &Pos;
 }
 
 LineIterator& LineIterator::operator++() {
-  if (pos.second == end) {
-    pos.first = end;
+  if (Pos.second == End) {
+    Pos.first = End;
   }
   else {
-    pos.first = pos.second + (*pos.second == '\r' ? 2 : 1);
-    pos.second = find_next(pos.first, end);
+    Pos.first = Pos.second + (*Pos.second == '\r' ? 2 : 1);
+    Pos.second = find_next(Pos.first, End);
   }
   return *this;
 }
@@ -131,7 +131,7 @@ LineIterator LineIterator::operator++(int) {
 }
 
 bool LineIterator::operator==(const LineIterator& o) const {
-  return pos == o.pos;
+  return Pos == o.Pos;
 }
 
 bool LineIterator::operator!=(const LineIterator& o) const {

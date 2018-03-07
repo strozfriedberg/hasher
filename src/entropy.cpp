@@ -17,7 +17,7 @@ SFHASH_Entropy* sfhash_clone_entropy(const SFHASH_Entropy* entropy) {
 
 void sfhash_update_entropy(SFHASH_Entropy* entropy, const void* beg, const void* end) {
   for (const uint8_t* cur = static_cast<const uint8_t*>(beg); cur != static_cast<const uint8_t*>(end); ++cur) {
-    ++entropy->hist[*cur];
+    ++entropy->Hist[*cur];
   }
 }
 
@@ -43,16 +43,16 @@ double sfhash_get_entropy(SFHASH_Entropy* entropy) {
   */
 
   const uint64_t s = std::accumulate(
-    std::begin(entropy->hist),
-    std::end(entropy->hist),
+    std::begin(entropy->Hist),
+    std::end(entropy->Hist),
     UINT64_C(0)
   );
 
 /*
   // Direct computation from the definition
   return s ? -std::accumulate(
-    std::begin(entropy->hist),
-    std::end(entropy->hist),
+    std::begin(entropy->Hist),
+    std::end(entropy->Hist),
     0.0,
     [s](double a, double b) {
       const double p_i = b/s;
@@ -63,8 +63,8 @@ double sfhash_get_entropy(SFHASH_Entropy* entropy) {
 
   // Sligtly optimized computation
   return s ? std::log2(static_cast<double>(s)) - std::accumulate(
-    std::begin(entropy->hist),
-    std::end(entropy->hist),
+    std::begin(entropy->Hist),
+    std::end(entropy->Hist),
     0.0,
     [](double a, double b) {
       return a + (b ? b * std::log2(b) : 0.0);
@@ -74,15 +74,15 @@ double sfhash_get_entropy(SFHASH_Entropy* entropy) {
 
 void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend) {
   std::transform(
-    std::begin(sum->hist), std::end(sum->hist),
-    std::begin(addend->hist),
-    std::begin(sum->hist),
+    std::begin(sum->Hist), std::end(sum->Hist),
+    std::begin(addend->Hist),
+    std::begin(sum->Hist),
     [](uint64_t a, uint64_t b) { return a + b; }
   );
 }
 
 void sfhash_reset_entropy(SFHASH_Entropy* entropy) {
-  std::fill(std::begin(entropy->hist), std::end(entropy->hist), 0);
+  std::fill(std::begin(entropy->Hist), std::end(entropy->Hist), 0);
 }
 
 void sfhash_destroy_entropy(SFHASH_Entropy* entropy) {
@@ -91,7 +91,7 @@ void sfhash_destroy_entropy(SFHASH_Entropy* entropy) {
 
 void EntropyCalculator::update(const uint8_t* beg, const uint8_t* end) {
   for (const uint8_t* cur = beg; cur != end; ++cur) {
-    ++hist[*cur];
+    ++Hist[*cur];
   }
 }
 
@@ -121,16 +121,16 @@ double EntropyCalculator::entropy() const {
   */
 
   const uint64_t s = std::accumulate(
-    std::begin(hist),
-    std::end(hist),
+    std::begin(Hist),
+    std::end(Hist),
     UINT64_C(0)
   );
 
 /*
   // Direct computation from the definition
   return s ? -std::accumulate(
-    std::begin(entropy->hist),
-    std::end(entropy->hist),
+    std::begin(entropy->Hist),
+    std::end(entropy->Hist),
     0.0,
     [s](double a, double b) {
       const double p_i = b/s;
@@ -141,8 +141,8 @@ double EntropyCalculator::entropy() const {
 
   // Sligtly optimized computation
   return s ? std::log2(static_cast<double>(s)) - std::accumulate(
-    std::begin(hist),
-    std::end(hist),
+    std::begin(Hist),
+    std::end(Hist),
     0.0,
     [](double a, double b) {
       return a + (b ? b * std::log2(b) : 0.0);
@@ -151,7 +151,7 @@ double EntropyCalculator::entropy() const {
 }
 
 void EntropyCalculator::reset() {
-  std::fill(std::begin(hist), std::end(hist), 0);
+  std::fill(std::begin(Hist), std::end(Hist), 0);
 }
 
 EntropyCalculator* EntropyCalculator::clone() const {

@@ -16,11 +16,11 @@ enum SFHASH_HashAlgorithms {
 };
 
 typedef struct SFHASH_HashValues {
-  uint8_t md5[16],
-          sha1[20],
-          sha256[32],
-          fuzzy[148];
-  double  entropy;
+  uint8_t Md5[16],
+          Sha1[20],
+          Sha256[32],
+          Fuzzy[148];
+  double  Entropy;
 } SFHASH_HashValues;
 
 struct SFHASH_Hasher;

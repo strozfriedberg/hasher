@@ -27,7 +27,7 @@ public:
   virtual FuzzyHasher* clone() const;
 
 private:
-  std::unique_ptr<fuzzy_state, void (*)(fuzzy_state*)> ctx;
+  std::unique_ptr<fuzzy_state, void (*)(fuzzy_state*)> Ctx;
 };
 
 std::unique_ptr<HasherImpl> make_fuzzy_hasher();

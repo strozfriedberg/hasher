@@ -10,7 +10,7 @@
 #include "hasher_impl.h"
 
 struct SFHASH_Entropy {
-  uint64_t hist[256] = {0};
+  uint64_t Hist[256] = {0};
 };
 
 class EntropyCalculator: public HasherImpl {
@@ -30,7 +30,7 @@ public:
   virtual EntropyCalculator* clone() const;
 
 private:
-  uint64_t hist[256] = {0};
+  uint64_t Hist[256] = {0};
 };
 
 std::unique_ptr<HasherImpl> make_entropy_calculator();

@@ -119,7 +119,7 @@ void check_max_score(const std::string& data, const std::string& sig, int expect
   int max = 0;
   for (int i = 0; i < result_count; ++i) {
     const auto& result = matcher->get_match(i);
-    max = std::max(max, result->score);
+    max = std::max(max, result->Score);
   }
   SCOPE_ASSERT_EQUAL(expected_max, max);
 }
