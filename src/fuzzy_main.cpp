@@ -49,10 +49,9 @@ int main(int argc, char** argv) {
     SFHASH_FuzzyMatcher* matcher = mptr.get();
 
     // make a hasher
-    std::unique_ptr<SFHASH_Hasher, void(*)(SFHASH_Hasher*)> hptr{
-      sfhash_create_hasher(FUZZY),
-      sfhash_destroy_hasher
-    };
+    auto hptr = make_unique_del(
+      sfhash_create_hasher(FUZZY), sfhash_destroy_hasher
+    );
 
     {
       std::ifstream in(argv[2], std::ios::binary);
@@ -76,7 +75,7 @@ int main(int argc, char** argv) {
           continue;
         }
         int num_matches= sfhash_fuzzy_matcher_compare(matcher, l->first, l->second);
-        auto rptr = make_unique_del<SFHASH_FuzzyResult>(nullptr, sfhash_fuzzy_destroy_match);
+        auto rptr = make_unique_del(nullptr, sfhash_fuzzy_destroy_match);
 
         for (int i = 0; i < num_matches; ++i) {
           rptr.reset(sfhash_fuzzy_get_match(matcher, i));

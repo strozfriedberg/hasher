@@ -26,9 +26,7 @@ int main(int argc, char** argv) {
   }
   
   try {
-    std::unique_ptr<SFHASH_FileMatcher, void(*)(SFHASH_FileMatcher*)> mptr{
-      nullptr, sfhash_destroy_matcher
-    };
+    auto mptr = make_unique_del(nullptr, sfhash_destroy_matcher);
 
     // make a matcher
     {
@@ -41,19 +39,17 @@ int main(int argc, char** argv) {
 
       // create the matcher
       LG_Error* err = nullptr;
-      mptr = make_unique_del(
-        sfhash_create_matcher(hset.c_str(), hset.c_str() + hset.length(), &err),
-        sfhash_destroy_matcher
+      mptr.reset(
+        sfhash_create_matcher(hset.c_str(), hset.c_str() + hset.length(), &err)
       );
     }
 
     SFHASH_FileMatcher* matcher = mptr.get();
 
     // make a hasher
-    std::unique_ptr<SFHASH_Hasher, void(*)(SFHASH_Hasher*)> hptr{
-      sfhash_create_hasher(SHA1),
-      sfhash_destroy_hasher
-    };
+    auto hptr = make_unique_del(
+      sfhash_create_hasher(SHA1), sfhash_destroy_hasher
+    );
 
     SFHASH_Hasher* hasher = hptr.get();
     char buf[1024*1024];
