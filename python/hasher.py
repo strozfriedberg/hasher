@@ -54,13 +54,14 @@ _sfhash_clone_hasher = _hasher.sfhash_clone_hasher
 _sfhash_clone_hasher.argtypes = [c_void_p]
 _sfhash_clone_hasher.restype = c_void_p
 
-# void sfhash_update_hasher(SFHASH_Hasher* hasher, const void* beg, const void* end)
+# void sfhash_update_hasher(SFHASH_Hasher* hasher, const void* beg, const void* end);
 _sfhash_update_hasher = _hasher.sfhash_update_hasher
 _sfhash_update_hasher.argtypes = [c_void_p, c_void_p, c_void_p]
 _sfhash_update_hasher.restype = None
 
+# void sfhash_hasher_set_total_input_length(SFHASH_Hasher* hasher, uint64_t total_fixed_length);
 _sfhash_hasher_set_total_input_length = _hasher.sfhash_hasher_set_total_input_length
-_sfhash_hasher_set_total_input_length.argtype = [c_void_p, c_uint64]
+_sfhash_hasher_set_total_input_length.argtypes = [c_void_p, c_uint64]
 _sfhash_hasher_set_total_input_length.restype = None
 
 # void sfhash_get_hashes(SFHASH_Hasher* hasher, SFHASH_HashValues* out_hashes);
