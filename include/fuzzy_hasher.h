@@ -6,7 +6,7 @@
 
 class FuzzyHasher: public HasherImpl {
 public:
-  virtual ~FuzzyHasher();
+  virtual ~FuzzyHasher() {}
 
   FuzzyHasher();
 
@@ -27,7 +27,7 @@ public:
   virtual FuzzyHasher* clone() const;
 
 private:
-  fuzzy_state* ctx;
+  std::unique_ptr<fuzzy_state, void (*)(fuzzy_state*)> ctx;
 };
 
 std::unique_ptr<HasherImpl> make_fuzzy_hasher();
