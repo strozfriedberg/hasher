@@ -54,13 +54,14 @@ _sfhash_clone_hasher = _hasher.sfhash_clone_hasher
 _sfhash_clone_hasher.argtypes = [c_void_p]
 _sfhash_clone_hasher.restype = c_void_p
 
-# void sfhash_update_hasher(SFHASH_Hasher* hasher, const void* beg, const void* end)
+# void sfhash_update_hasher(SFHASH_Hasher* hasher, const void* beg, const void* end);
 _sfhash_update_hasher = _hasher.sfhash_update_hasher
 _sfhash_update_hasher.argtypes = [c_void_p, c_void_p, c_void_p]
 _sfhash_update_hasher.restype = None
 
+# void sfhash_hasher_set_total_input_length(SFHASH_Hasher* hasher, uint64_t total_fixed_length);
 _sfhash_hasher_set_total_input_length = _hasher.sfhash_hasher_set_total_input_length
-_sfhash_hasher_set_total_input_length.argtype = [c_void_p, c_uint64]
+_sfhash_hasher_set_total_input_length.argtypes = [c_void_p, c_uint64]
 _sfhash_hasher_set_total_input_length.restype = None
 
 # void sfhash_get_hashes(SFHASH_Hasher* hasher, SFHASH_HashValues* out_hashes);
@@ -94,27 +95,27 @@ _sfhash_fuzzy_get_match.argtypes = [c_void_p, c_int]
 _sfhash_fuzzy_get_match.restype = c_void_p
 
 #const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result);
-_sfhash_fuzzy_result_filename = hasher.sfhash_fuzzy_result_filename
+_sfhash_fuzzy_result_filename = _hasher.sfhash_fuzzy_result_filename
 _sfhash_fuzzy_result_filename.argtypes = [c_void_p]
 _sfhash_fuzzy_result_filename.restype = c_char_p
 
 #const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result);
-_sfhash_fuzzy_result_query_filename = hasher.sfhash_fuzzy_result_query_filename
+_sfhash_fuzzy_result_query_filename = _hasher.sfhash_fuzzy_result_query_filename
 _sfhash_fuzzy_result_query_filename.argtypes = [c_void_p]
 _sfhash_fuzzy_result_query_filename.restype = c_char_p
 
 #int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result);
-_sfhash_fuzzy_result_score = hasher.sfhash_fuzzy_result_score
+_sfhash_fuzzy_result_score = _hasher.sfhash_fuzzy_result_score
 _sfhash_fuzzy_result_score.argtypes = [c_void_p]
 _sfhash_fuzzy_result_score.restype = c_int
 
 #void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult* result);
-_sfhash_fuzzy_destroy_match = hasher.sfhash_fuzzy_destroy_match
+_sfhash_fuzzy_destroy_match = _hasher.sfhash_fuzzy_destroy_match
 _sfhash_fuzzy_destroy_match.argtypes = [c_void_p]
 _sfhash_fuzzy_destroy_match.restype = None
 
 #void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
-_sfhash_fuzzy_destroy_fuzzy_matcher = hasher.sfhash_fuzzy_destroy_fuzzy_matcher
+_sfhash_fuzzy_destroy_fuzzy_matcher = _hasher.sfhash_destroy_fuzzy_matcher
 _sfhash_fuzzy_destroy_fuzzy_matcher.argtypes = [c_void_p]
 _sfhash_fuzzy_destroy_fuzzy_matcher.restype = None
 
