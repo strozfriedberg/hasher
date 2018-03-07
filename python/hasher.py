@@ -198,3 +198,50 @@ class Hasher(object):
         h = HasherHashes()
         _sfhash_get_hashes(self.hasher, byref(h))
         return h
+
+class FuzzyResult(object):
+    def __init__(self, ptr):
+        self.ptr = ptr
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.destroy()
+
+    @property
+    def filename(self):
+        return _sfhash_fuzzy_result_filename(self.ptr)
+
+    @property
+    def query_filename(self):
+        return _sfhash_fuzzy_result_query_filename(self.ptr)
+
+    @property
+    def score(self):
+        return _sfhash_fuzzy_result_score(self.ptr)
+
+    def destroy(self):
+        _sfhash_fuzzy_destroy_match(self.ptr)
+
+
+class FuzzyMatcher(object):
+    def __init__(self, buf):
+        self.pbuf = Py_buffer()
+        self.matcher_buf = buf
+        self.ptr = sfhash_create_fuzzy_matcher(*ptr_range(self.matcher_buf, self.pbuf, c_uint8))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.destroy()
+
+    def destroy(self):
+        _sfhash_destroy_fuzzy_matcher(self.ptr)
+
+    def matches(self, sig):
+        matches = _sfhash_fuzzy_matcher_compare(self.ptr, *ptr_range(sig, self.pbuf, c_uint8))
+        for x in range(matches):
+            with FuzzyResult(_sfhash_fuzzy_get_match(self.ptr, x)) as result:
+                yield (result.filename, result.query_filename, result.score)
