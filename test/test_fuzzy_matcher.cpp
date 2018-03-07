@@ -1,7 +1,7 @@
 #include <scope/test.h>
 #include "fuzzy_matcher.h"
 
-void check_decode_chunks(const std::string& hash, const std::vector<uint64_t> e) {
+void check_decode_chunks(const std::string& hash, const std::vector<uint64_t>& e) {
   const auto a = decode_chunks(hash);
   SCOPE_ASSERT_EQUAL(e.size(), a.size());
 

@@ -224,39 +224,39 @@ int validate_hash(const char* beg, const char* end) {
   }
 
   try {
-    boost::lexical_cast<uint64_t>(std::string(beg, i-beg));
+    boost::lexical_cast<uint64_t>(beg, i-beg);
   } catch(boost::bad_lexical_cast) {
     return 1;
   }
   return 0;
 }
 
-std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
-  // Get all of the 7-grams from the hash string,
-  // base64 decode and reinterpret as (6-byte) integer
+uint64_t decode_base64(const std::string& s) {
   using base64_iterator = boost::archive::iterators::transform_width<
     boost::archive::iterators::binary_from_base64<std::string::const_iterator>, 8, 6
   >;
+  uint64_t val = 0;
+  const std::string decoded(base64_iterator(s.begin()), base64_iterator(s.end()));
+  memcpy(&val, decoded.c_str(), decoded.length());
+  return val;
+}
 
+std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
+  // Get all of the 7-grams from the hash string,
+  // base64 decode and reinterpret as (6-byte) integer
   if (s.length() == 0) {
     return { 0 };
   }
-  uint64_t val = 0;
   if (s.length() < 7) {
     // Pad to 6 characters
     std::string block(s);
     block.append(6 - block.length(), '=');
-    std::string decoded(base64_iterator(block.begin()), base64_iterator(block.end()));
-    std::memcpy(&val, decoded.c_str(), decoded.length());
-    return {val};
+    return { decode_base64(block) };
   }
 
   std::unordered_set<uint64_t> results;
   for (size_t i = 0; i + 7 <= s.length(); ++i) {
-    std::string sub = s.substr(i, 7);
-    std::string decoded(base64_iterator(sub.begin()), base64_iterator(sub.end()));
-    memcpy(&val, decoded.c_str(), decoded.length());
-    results.insert(val);
+    results.insert(decode_base64(s.substr(i, 7)));
   }
   return results;
 }
@@ -267,7 +267,7 @@ std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const c
   if (l == lend) {
     return nullptr;
   }
-  std::string firstLine(l->first, l->second - l->first);
+  const std::string firstLine(l->first, l->second - l->first);
   if (firstLine!= "ssdeep,1.1--blocksize:hash:hash,filename") {
     return nullptr;
   }
