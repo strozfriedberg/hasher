@@ -143,7 +143,7 @@ SCOPE_TEST(test_find_match) {
                            "6:SY5dFFwj+Q4HRhOhahxlA/FG65WOCWn90F9r9VO:r5Agxho/r5Wun9a9r98,\"a.txt\"\n";
   const std::string sig = "6:S8y5dFFwj+Q4HRhOhahxlA/FG65WOCWn9M9r9Rg:Ty5Agxho/r5Wun9M9r9Rg";
 
-  check_max_score(data, sig, 30, 80);
+  check_max_score(data, sig, 14, 80);
 }
 
 SCOPE_TEST(test_find_match_suffix) {

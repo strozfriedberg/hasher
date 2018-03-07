@@ -81,12 +81,12 @@ _sfhash_destroy_hasher.restype = None
 
 # SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
 _sfhash_create_fuzzy_matcher = _hasher.sfhash_create_fuzzy_matcher
-_sfhash_create_fuzzy_matcher.argtypes = [c_char_p, c_char_p]
+_sfhash_create_fuzzy_matcher.argtypes = [c_void_p, c_void_p]
 _sfhash_create_fuzzy_matcher.restype = c_void_p
 
 # int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
 _sfhash_fuzzy_matcher_compare = _hasher.sfhash_fuzzy_matcher_compare
-_sfhash_fuzzy_matcher_compare.argtypes = [c_void_p, c_char_p, c_char_p]
+_sfhash_fuzzy_matcher_compare.argtypes = [c_void_p, c_void_p, c_void_p]
 _sfhash_fuzzy_matcher_compare.restype = c_int
 
 # SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
@@ -115,7 +115,7 @@ _sfhash_fuzzy_destroy_match.argtypes = [c_void_p]
 _sfhash_fuzzy_destroy_match.restype = None
 
 # void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
-_sfhash_fuzzy_destroy_fuzzy_matcher = _hasher.sfhash_destroy_fuzzy_matcher
+_sfhash_destroy_fuzzy_matcher = _hasher.sfhash_destroy_fuzzy_matcher
 _sfhash_fuzzy_destroy_fuzzy_matcher.argtypes = [c_void_p]
 _sfhash_fuzzy_destroy_fuzzy_matcher.restype = None
 
@@ -212,11 +212,11 @@ class FuzzyResult(object):
 
     @property
     def filename(self):
-        return _sfhash_fuzzy_result_filename(self.ptr)
+        return _sfhash_fuzzy_result_filename(self.ptr).decode('utf-8')
 
     @property
     def query_filename(self):
-        return _sfhash_fuzzy_result_query_filename(self.ptr)
+        return _sfhash_fuzzy_result_query_filename(self.ptr).decode('utf-8')
 
     @property
     def score(self):
@@ -229,8 +229,10 @@ class FuzzyResult(object):
 class FuzzyMatcher(object):
     def __init__(self, buf):
         self.pbuf = Py_buffer()
-        self.matcher_buf = buf
-        self.ptr = sfhash_create_fuzzy_matcher(*ptr_range(self.matcher_buf, self.pbuf, c_uint8))
+        self.matcher_buf = buf.encode('utf-8')
+        self.ptr = _sfhash_create_fuzzy_matcher(*ptr_range(self.matcher_buf, self.pbuf, c_char))
+        if not self.ptr:
+            raise Exception("Invalid hashes file")
 
     def __enter__(self):
         return self
@@ -242,7 +244,8 @@ class FuzzyMatcher(object):
         _sfhash_destroy_fuzzy_matcher(self.ptr)
 
     def matches(self, sig):
-        matches = _sfhash_fuzzy_matcher_compare(self.ptr, *ptr_range(sig, self.pbuf, c_uint8))
+        sig_bytes = sig.encode('utf-8')
+        matches = _sfhash_fuzzy_matcher_compare(self.ptr, *ptr_range(sig_bytes, self.pbuf, c_char))
         for x in range(matches):
             with FuzzyResult(_sfhash_fuzzy_get_match(self.ptr, x)) as result:
                 yield (result.filename, result.query_filename, result.score)

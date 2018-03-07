@@ -189,5 +189,49 @@ class TestFuzzy(unittest.TestCase):
 
         self.assertEqual(exp, hashes.fuzzy)
 
+class TestFuzzyMatcher(unittest.TestCase):
+    def setUp(self):
+      self.data =  """ssdeep,1.1--blocksize:hash:hash,filename
+6:S+W9pdFFwj+Q4HRhOhahxlA/FG65WOCWn9Q6Wg9r939:TmAgxho/r5Wun9Q6p9r9t,\"a.txt\"
+6:S5O61sdFFwj+Q4HRhOhahxlA/FG65WOCWn9hy9r9eF:gmAgxho/r5Wun9o9r9a,\"b.txt\"
+6:STLdFFwj+Q4HRhOhahxlA/FG65WOCWn9kKF9r9TKO:wLAgxho/r5Wun9k89r9TJ,\"c.txt\"
+6:Sm5dFFwj+Q4HRhOhahxlA/FG65WOCWn9l2F9r9xI2O:T5Agxho/r5Wun9lI9r9xIl,\"d.txt\"
+6:SDssdFFwj+Q4HRhOhahxlA/FG65WOCWn9nRk89r9KRkJ:YAgxho/r5Wun9RR9r9KRa,\"e.txt\"
+6:SS7Lp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9nv7LZW9r9KzLZ3:T7LLAgxho/r5Wun9v7LZW9r9KzLZ3,\"f.txt\"
+6:S8QLdFFwj+Q4HRhOhahxlA/FG65WOCWn91KRu9r9YlIv:XKAgxho/r5Wun91K89r9j,\"g.txt\"
+6:SXp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9TF9r9a9O:m5Agxho/r5Wun9h9r9aU,\"h.txt\"
+6:Si65dFFwj+Q4HRhOhahxlA/FG65WOCWn9rTF9r9iTO:q5Agxho/r5Wun919r9v,\"i.txt\"
+6:SIJS5dFFwj+Q4HRhOhahxlA/FG65WOCWn9S6J7F9r9zBi7O:9JS5Agxho/r5Wun9H7F9r907O,\"j.txt\"
+6:Sdcp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9n89r9WJ:Dp5Agxho/r5Wun9n89r9WJ,\"k.txt\"
+6:SHHsdFFwj+Q4HRhOhahxlA/FG65WOCWn9oFF9r9HFO:SsAgxho/r5Wun9EF9r9lO,\"l.txt\"
+6:SIoFsdFFwj+Q4HRhOhahxlA/FG65WOCWn9Ng9r9I9:9Agxho/r5Wun9a9r9k,\"m.txt\"
+6:Scw/dFFwj+Q4HRhOhahxlA/FG65WOCWn9nhwg9r9K69:uAgxho/r5Wun999r9KG,\"n.txt\"
+6:SY5dFFwj+Q4HRhOhahxlA/FG65WOCWn90F9r9VO:r5Agxho/r5Wun9a9r98,\"o.txt\""""
+
+    def test_matches(self):
+        self.maxDiff = None
+        expected = {
+            ('a.txt', '', 78),
+            ('b.txt', '', 78),
+            ('c.txt', '', 78),
+            ('d.txt', '', 80),
+            ('e.txt', '', 78),
+            ('f.txt', '', 78),
+            ('g.txt', '', 78),
+            ('h.txt', '', 79),
+            ('i.txt', '', 78),
+            ('j.txt', '', 78),
+            ('k.txt', '', 78),
+            ('l.txt', '', 78),
+            ('m.txt', '', 78),
+            ('n.txt', '', 78),
+            ('o.txt', '', 78),
+        }
+        with hasher.FuzzyMatcher(self.data) as matcher:
+          hits = list(matcher.matches("6:S8y5dFFwj+Q4HRhOhahxlA/FG65WOCWn9M9r9Rg:Ty5Agxho/r5Wun9M9r9Rg"))
+          self.assertEqual(14, len(hits))
+          self.assertEqual(80, max(x[2] for x in hits))
+          self.assertEqual(expected, set(hits))
+
 if __name__ == "__main__":
     unittest.main()
