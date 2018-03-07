@@ -38,7 +38,7 @@ public:
 
 private:
   void add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id);
-  void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it);
+  void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it, std::unordered_set<uint32_t>& candidates);
 
   std::vector<FuzzyHash> hashes;
   // blocksize -> (hash_substring_int -> hash_index)

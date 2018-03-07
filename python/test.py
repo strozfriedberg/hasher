@@ -229,7 +229,7 @@ class TestFuzzyMatcher(unittest.TestCase):
         }
         with hasher.FuzzyMatcher(self.data) as matcher:
           hits = list(matcher.matches("6:S8y5dFFwj+Q4HRhOhahxlA/FG65WOCWn9M9r9Rg:Ty5Agxho/r5Wun9M9r9Rg"))
-          self.assertEqual(14, len(hits))
+          self.assertEqual(15, len(hits))
           self.assertEqual(80, max(x[2] for x in hits))
           self.assertEqual(expected, set(hits))
 

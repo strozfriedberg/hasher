@@ -160,8 +160,16 @@ int FuzzyMatcher::match(const char* beg, const char* end) {
 
   matches.clear();
 
-  lookup_clusters(blocksize, query.chunks());
-  lookup_clusters(2 * blocksize, query.double_chunks());
+  std::unordered_set<uint32_t> candidates;
+  lookup_clusters(blocksize, query.chunks(), candidates);
+  lookup_clusters(2 * blocksize, query.double_chunks(), candidates);
+
+  for (uint32_t hash_id: candidates) {
+    const int score = fuzzy_compare(hashes[hash_id].hash().c_str(), query.hash().c_str());
+    if (score > 0) {
+      matches.emplace_back(hash_id, score);
+    }
+  }
 
   return matches.size();
 }
@@ -183,25 +191,19 @@ void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t>&&
 
 void FuzzyMatcher::lookup_clusters(
                     uint64_t blocksize,
-                    const std::unordered_set<uint64_t>& it)
+                    const std::unordered_set<uint64_t>& it,
+                    std::unordered_set<uint32_t>& candidates)
 {
   const auto idx = blocksize_index(blocksize);
   if (blocksize_index(blocksize) >= db.size()) {
     return;
   }
 
-  std::unordered_set<uint32_t> candidates;
   const auto& chunks = db[idx];
   for (const auto& cluster: it) {
     const auto search = chunks.find(cluster);
     if (search != chunks.end()) {
       candidates.insert(search->second.begin(), search->second.end());
-    }
-  }
-  for (uint32_t hash_id: candidates) {
-    const int score = fuzzy_compare(hashes[hash_id].hash().c_str(), query.hash().c_str());
-    if (score > 0) {
-      matches.emplace_back(hash_id, score);
     }
   }
 }
