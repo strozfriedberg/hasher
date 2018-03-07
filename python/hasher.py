@@ -79,42 +79,42 @@ _sfhash_destroy_hasher = _hasher.sfhash_destroy_hasher
 _sfhash_destroy_hasher.argtypes = [c_void_p]
 _sfhash_destroy_hasher.restype = None
 
-#SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
+# SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
 _sfhash_create_fuzzy_matcher = _hasher.sfhash_create_fuzzy_matcher
 _sfhash_create_fuzzy_matcher.argtypes = [c_char_p, c_char_p]
 _sfhash_create_fuzzy_matcher.restype = c_void_p
 
-#int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
+# int sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
 _sfhash_fuzzy_matcher_compare = _hasher.sfhash_fuzzy_matcher_compare
 _sfhash_fuzzy_matcher_compare.argtypes = [c_void_p, c_char_p, c_char_p]
 _sfhash_fuzzy_matcher_compare.restype = c_int
 
-#SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
+# SFHASH_FuzzyResult* sfhash_fuzzy_get_match(SFHASH_FuzzyMatcher* matcher, int i);
 _sfhash_fuzzy_get_match = _hasher.sfhash_fuzzy_get_match
 _sfhash_fuzzy_get_match.argtypes = [c_void_p, c_int]
 _sfhash_fuzzy_get_match.restype = c_void_p
 
-#const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result);
+# const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result);
 _sfhash_fuzzy_result_filename = _hasher.sfhash_fuzzy_result_filename
 _sfhash_fuzzy_result_filename.argtypes = [c_void_p]
 _sfhash_fuzzy_result_filename.restype = c_char_p
 
-#const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result);
+# const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result);
 _sfhash_fuzzy_result_query_filename = _hasher.sfhash_fuzzy_result_query_filename
 _sfhash_fuzzy_result_query_filename.argtypes = [c_void_p]
 _sfhash_fuzzy_result_query_filename.restype = c_char_p
 
-#int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result);
+# int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result);
 _sfhash_fuzzy_result_score = _hasher.sfhash_fuzzy_result_score
 _sfhash_fuzzy_result_score.argtypes = [c_void_p]
 _sfhash_fuzzy_result_score.restype = c_int
 
-#void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult* result);
+# void sfhash_fuzzy_destroy_match(SFHASH_FuzzyResult* result);
 _sfhash_fuzzy_destroy_match = _hasher.sfhash_fuzzy_destroy_match
 _sfhash_fuzzy_destroy_match.argtypes = [c_void_p]
 _sfhash_fuzzy_destroy_match.restype = None
 
-#void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
+# void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 _sfhash_fuzzy_destroy_fuzzy_matcher = _hasher.sfhash_destroy_fuzzy_matcher
 _sfhash_fuzzy_destroy_fuzzy_matcher.argtypes = [c_void_p]
 _sfhash_fuzzy_destroy_fuzzy_matcher.restype = None
