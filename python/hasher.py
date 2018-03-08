@@ -200,6 +200,7 @@ class Hasher(object):
         _sfhash_get_hashes(self.hasher, byref(h))
         return h
 
+
 class FuzzyResult(object):
     def __init__(self, ptr):
         self.ptr = ptr
