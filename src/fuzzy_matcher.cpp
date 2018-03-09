@@ -125,7 +125,7 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
     if (validate_hash(l->first, l->second)) {
       continue;
     }
-    const auto idx = blocksize_index(hash.blocksize());
+    const size_t idx = blocksize_index(hash.blocksize());
     map[idx] += std::max((int)hash.block().length() - 6, 1);
     map[idx+1] += std::max((int)hash.double_block().length() - 6, 1);
     max = std::max(max, idx);
@@ -184,8 +184,8 @@ void FuzzyMatcher::lookup_clusters(
                     const std::unordered_set<uint64_t>& it,
                     std::unordered_set<uint32_t>& candidates)
 {
-  const auto idx = blocksize_index(blocksize);
-  if (blocksize_index(blocksize) >= ChunkMaps.size()) {
+  const size_t idx = blocksize_index(blocksize);
+  if (idx >= ChunkMaps.size()) {
     return;
   }
 
