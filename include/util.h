@@ -66,5 +66,5 @@ std::array<uint8_t, N> to_bytes(const char* c) {
     *out = (char_to_nibble(*c) << 4) | char_to_nibble(*(c+1));
   }
 
-  return std::move(buf);
+  return buf;
 }
