@@ -153,7 +153,7 @@ void SFHASH_FuzzyMatcher::add(FuzzyHash&& hash) {
   Hashes.push_back(hash);
 }
 
-std::unique_ptr<FuzzyResult> FuzzyMatcher::match(const char* beg, const char* end) {
+std::unique_ptr<FuzzyResult> FuzzyMatcher::match(const char* beg, const char* end) const {
 
   auto ptr = std::make_unique<FuzzyResult>(FuzzyHash(beg, end), &Hashes);
   const auto blocksize = ptr->Query.blocksize();
@@ -182,7 +182,7 @@ void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t>&&
 void FuzzyMatcher::lookup_clusters(
                     uint64_t blocksize,
                     const std::unordered_set<uint64_t>& it,
-                    std::unordered_set<uint32_t>& candidates)
+                    std::unordered_set<uint32_t>& candidates) const
 {
   const size_t idx = blocksize_index(blocksize);
   if (idx >= ChunkMaps.size()) {
@@ -198,7 +198,7 @@ void FuzzyMatcher::lookup_clusters(
   }
 }
 
-FuzzyResult::SFHASH_FuzzyResult(FuzzyHash&& query, std::vector<FuzzyHash>* hashes) :
+FuzzyResult::SFHASH_FuzzyResult(FuzzyHash&& query, const std::vector<FuzzyHash>* hashes) :
   Query(query),
   Hashes(hashes)
 {}

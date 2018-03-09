@@ -33,11 +33,11 @@ class SFHASH_FuzzyMatcher {
 public:
   void reserve_space(const char* beg, const char* end);
   void add(FuzzyHash&& hash);
-  std::unique_ptr<SFHASH_FuzzyResult> match(const char* beg, const char* end);
+  std::unique_ptr<SFHASH_FuzzyResult> match(const char* beg, const char* end) const;
 
 private:
   void add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id);
-  void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it, std::unordered_set<uint32_t>& candidates);
+  void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it, std::unordered_set<uint32_t>& candidates) const;
 
   std::vector<FuzzyHash> Hashes;
   // blocksize -> (hash_substring_int -> hash_index)
@@ -46,7 +46,7 @@ private:
 
 class SFHASH_FuzzyResult {
 public:
-  SFHASH_FuzzyResult(FuzzyHash&& query, std::vector<FuzzyHash>* hashes);
+  SFHASH_FuzzyResult(FuzzyHash&& query, const std::vector<FuzzyHash>* hashes);
 
   size_t count() const;
   const char* queryFilename() const;
