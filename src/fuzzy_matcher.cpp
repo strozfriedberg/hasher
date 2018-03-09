@@ -238,7 +238,7 @@ int validate_hash(const char* beg, const char* end) {
 
   try {
     boost::lexical_cast<uint64_t>(beg, i-beg);
-  } catch(boost::bad_lexical_cast) {
+  } catch (const boost::bad_lexical_cast&) {
     return 1;
   }
   return 0;
@@ -250,7 +250,7 @@ uint64_t decode_base64(const std::string& s) {
   >;
   uint64_t val = 0;
   const std::string decoded(base64_iterator(s.begin()), base64_iterator(s.end()));
-  memcpy(&val, decoded.c_str(), decoded.length());
+  std::memcpy(&val, decoded.c_str(), decoded.length());
   return val;
 }
 
