@@ -61,6 +61,8 @@ private:
 
 int validate_hash(const char* a, const char* b);
 
+std::string removeDuplicates(const std::string& s);
+
 std::unordered_set<uint64_t> decode_chunks(const std::string& s);
 
 std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end);

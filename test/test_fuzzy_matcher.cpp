@@ -14,6 +14,48 @@ void check_decode_chunks(const std::string& hash, const std::vector<uint64_t>& e
   }
 }
 
+SCOPE_TEST(test_remove_duplicates_empty) {
+  const std::string test =     "";
+  const std::string expected = "";
+
+  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+}
+
+SCOPE_TEST(test_remove_duplicates_none) {
+  const std::string test =     "abcdefghijkl";
+  const std::string expected = "abcdefghijkl";
+
+  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+}
+
+SCOPE_TEST(test_remove_duplicates_prefix) {
+  const std::string test =     "AAAAbbbcd";
+  const std::string expected = "AAAbbbcd";
+
+  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+}
+
+SCOPE_TEST(test_remove_duplicates_suffix) {
+  const std::string test =     "aaabbbcccdddd";
+  const std::string expected = "aaabbbcccddd";
+
+  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+}
+
+SCOPE_TEST(test_remove_duplicates) {
+  const std::string test =     "AAAbbbbbbbbbbbbccccccccccccdd";
+  const std::string expected = "AAAbbbcccdd";
+
+  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+}
+
+SCOPE_TEST(test_hash_filename) {
+  const std::string sig = "786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab";
+  const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
+  const FuzzyHash hash(beg, end);
+  SCOPE_ASSERT_EQUAL(":\\MSOCache\\All Users\\Access.en-us\\AccLR.ca", hash.filename());
+}
+
 SCOPE_TEST(test_parse_valid_sig) {
   const std::string sig = "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure\"\"\".ac\"";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();

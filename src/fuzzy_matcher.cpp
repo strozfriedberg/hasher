@@ -254,22 +254,33 @@ uint64_t decode_base64(const std::string& s) {
   return val;
 }
 
+std::string removeDuplicates(const std::string& s) {
+  std::string rtn = s.substr(0, 3);
+  for (size_t i = 3; i < s.length(); ++i) {
+    if (s[i] != s[i-1] || s[i] != s[i-2] || s[i] != s[i-3]) {
+      rtn.push_back(s[i]);
+    }
+  }
+  return rtn;
+}
+
 std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
   // Get all of the 7-grams from the hash string,
   // base64 decode and reinterpret as (6-byte) integer
   if (s.length() == 0) {
     return { 0 };
   }
-  if (s.length() < 7) {
+  std::string t(removeDuplicates(s));
+  if (t.length() < 7) {
     // Pad to 6 characters
-    std::string block(s);
+    std::string block(t);
     block.append(6 - block.length(), '=');
     return { decode_base64(block) };
   }
 
   std::unordered_set<uint64_t> results;
-  for (size_t i = 0; i + 7 <= s.length(); ++i) {
-    results.insert(decode_base64(s.substr(i, 7)));
+  for (size_t i = 0; i + 7 <= t.length(); ++i) {
+    results.insert(decode_base64(t.substr(i, 7)));
   }
   return results;
 }
