@@ -46,18 +46,17 @@ private:
 
 class SFHASH_FuzzyResult {
 public:
-  SFHASH_FuzzyResult(FuzzyHash&& query, const std::vector<FuzzyHash>* hashes);
+  SFHASH_FuzzyResult(const std::string&& queryFilename, const std::vector<std::pair<std::string, int>>&& matches);
 
   size_t count() const;
   const char* queryFilename() const;
   const char* filename(size_t i) const;
   int score(size_t i) const;
 
-  std::vector<std::pair<uint32_t, int>> Matches;
-  const FuzzyHash Query;
+  const std::vector<std::pair<std::string, int>> Matches;
 
 private:
-  const std::vector<FuzzyHash>* Hashes;
+  const std::string QueryFilename;
 };
 
 int validate_hash(const char* a, const char* b);

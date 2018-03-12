@@ -154,23 +154,23 @@ void SFHASH_FuzzyMatcher::add(FuzzyHash&& hash) {
 }
 
 std::unique_ptr<FuzzyResult> FuzzyMatcher::match(const char* beg, const char* end) const {
-
-  auto ptr = std::make_unique<FuzzyResult>(FuzzyHash(beg, end), &Hashes);
-  const auto blocksize = ptr->Query.blocksize();
+  FuzzyHash hash(beg, end);
+  const auto blocksize = hash.blocksize();
 
   std::unordered_set<uint32_t> candidates;
-  lookup_clusters(blocksize, ptr->Query.chunks(), candidates);
-  lookup_clusters(2 * blocksize, ptr->Query.double_chunks(), candidates);
+  lookup_clusters(blocksize, hash.chunks(), candidates);
+  lookup_clusters(2 * blocksize, hash.double_chunks(), candidates);
 
-  const std::string query_hash = ptr->Query.hash();
+  const std::string query_hash = hash.hash();
+  std::vector<std::pair<std::string, int>> matches;
 
   for (uint32_t hash_id: candidates) {
     const int score = fuzzy_compare(Hashes[hash_id].hash().c_str(), query_hash.c_str());
     if (score > 0) {
-      ptr->Matches.emplace_back(hash_id, score);
+      matches.emplace_back(Hashes[hash_id].filename(), score);
     }
   }
-  return ptr;
+  return  std::make_unique<FuzzyResult>(hash.filename(), std::move(matches));
 }
 
 void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id) {
@@ -198,9 +198,9 @@ void FuzzyMatcher::lookup_clusters(
   }
 }
 
-FuzzyResult::SFHASH_FuzzyResult(FuzzyHash&& query, const std::vector<FuzzyHash>* hashes) :
-  Query(query),
-  Hashes(hashes)
+FuzzyResult::SFHASH_FuzzyResult(const std::string&& queryFilename, const std::vector<std::pair<std::string, int>>&& matches) :
+  Matches(matches),
+  QueryFilename(queryFilename)
 {}
 
 size_t FuzzyResult::count() const {
@@ -208,11 +208,11 @@ size_t FuzzyResult::count() const {
 }
 
 const char* FuzzyResult::queryFilename() const {
-  return Query.filename().c_str();
+  return QueryFilename.c_str();
 }
 
 const char* FuzzyResult::filename(size_t i) const {
-  return (*Hashes)[Matches[i].first].filename().c_str();
+  return Matches[i].first.c_str();
 }
 
 int FuzzyResult::score(size_t i) const {
