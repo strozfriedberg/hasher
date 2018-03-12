@@ -190,8 +190,8 @@ class TestFuzzy(unittest.TestCase):
         self.assertEqual(exp, hashes.fuzzy)
 
 class TestFuzzyMatcher(unittest.TestCase):
-    def setUp(self):
-      self.data =  """ssdeep,1.1--blocksize:hash:hash,filename
+    def test_matches(self):
+        data =  """ssdeep,1.1--blocksize:hash:hash,filename
 6:S+W9pdFFwj+Q4HRhOhahxlA/FG65WOCWn9Q6Wg9r939:TmAgxho/r5Wun9Q6p9r9t,\"a.txt\"
 6:S5O61sdFFwj+Q4HRhOhahxlA/FG65WOCWn9hy9r9eF:gmAgxho/r5Wun9o9r9a,\"b.txt\"
 6:STLdFFwj+Q4HRhOhahxlA/FG65WOCWn9kKF9r9TKO:wLAgxho/r5Wun9k89r9TJ,\"c.txt\"
@@ -207,8 +207,6 @@ class TestFuzzyMatcher(unittest.TestCase):
 6:SIoFsdFFwj+Q4HRhOhahxlA/FG65WOCWn9Ng9r9I9:9Agxho/r5Wun9a9r9k,\"m.txt\"
 6:Scw/dFFwj+Q4HRhOhahxlA/FG65WOCWn9nhwg9r9K69:uAgxho/r5Wun999r9KG,\"n.txt\"
 6:SY5dFFwj+Q4HRhOhahxlA/FG65WOCWn90F9r9VO:r5Agxho/r5Wun9a9r98,\"o.txt\""""
-
-    def test_matches(self):
         self.maxDiff = None
         expected = {
             ('a.txt', '', 78),
@@ -227,11 +225,19 @@ class TestFuzzyMatcher(unittest.TestCase):
             ('n.txt', '', 78),
             ('o.txt', '', 78),
         }
-        with hasher.FuzzyMatcher(self.data) as matcher:
+        with hasher.FuzzyMatcher(data) as matcher:
           hits = list(matcher.matches("6:S8y5dFFwj+Q4HRhOhahxlA/FG65WOCWn9M9r9Rg:Ty5Agxho/r5Wun9M9r9Rg"))
           self.assertEqual(15, len(hits))
           self.assertEqual(80, max(x[2] for x in hits))
           self.assertEqual(expected, set(hits))
+
+    def test_match_filenames(self):
+        data =  """ssdeep,1.1--blocksize:hash:hash,filename
+786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c63e39ef408023b2aa0cee507f5f4e56\""""
+
+        with hasher.FuzzyMatcher(data) as matcher:
+            hits = list(matcher.matches('786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c:\MSOCache\All Users\Access.en-us\AccLR.cab"'))
+            self.assertEqual([('c63e39ef408023b2aa0cee507f5f4e56', r'c:\MSOCache\All Users\Access.en-us\AccLR.cab', 100)], hits)
 
 if __name__ == "__main__":
     unittest.main()
