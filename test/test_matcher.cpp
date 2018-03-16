@@ -30,7 +30,7 @@ SCOPE_TEST(loadHashset) {
 
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(m);
-  SCOPE_ASSERT_EQUAL(m->table, exp);
+  SCOPE_ASSERT_EQUAL(m->Table, exp);
 }
 
 SCOPE_TEST(has_size) {
@@ -109,5 +109,5 @@ SCOPE_TEST(binaryMatcherTableRoundTrip) {
   );
 
   SCOPE_ASSERT(m2);
-  SCOPE_ASSERT_EQUAL(m2->table, m1->table);
+  SCOPE_ASSERT_EQUAL(m2->Table, m1->Table);
 }

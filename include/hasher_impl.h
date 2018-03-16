@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 class HasherImpl {
 public:
 /*
@@ -25,6 +27,8 @@ public:
   virtual ~HasherImpl() {}
 
   virtual void update(const uint8_t* beg, const uint8_t* end) = 0;
+
+  virtual void set_total_input_length(uint64_t len) = 0;
 
   virtual void get(void* val) = 0;
 

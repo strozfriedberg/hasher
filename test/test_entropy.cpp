@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <numeric>
 
-
 SCOPE_TEST(entropyNoUpdate) {
   auto hasher = make_unique_del(
     sfhash_create_hasher(ENTROPY),
@@ -15,7 +14,7 @@ SCOPE_TEST(entropyNoUpdate) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.entropy);
+  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
 }
 
 SCOPE_TEST(entropyEmptyUpdate) {
@@ -28,7 +27,7 @@ SCOPE_TEST(entropyEmptyUpdate) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.entropy);
+  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
 }
 
 SCOPE_TEST(entropyAll00) {
@@ -43,7 +42,7 @@ SCOPE_TEST(entropyAll00) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.entropy);
+  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
 }
 
 SCOPE_TEST(entropyAllFF) {
@@ -59,7 +58,7 @@ SCOPE_TEST(entropyAllFF) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.entropy);
+  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
 }
 
 SCOPE_TEST(entropyEqual) {
@@ -77,5 +76,5 @@ SCOPE_TEST(entropyEqual) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(8.0, hashes.entropy);
+  SCOPE_ASSERT_EQUAL(8.0, hashes.Entropy);
 }

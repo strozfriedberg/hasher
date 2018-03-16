@@ -10,7 +10,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: hasher ALGS PATH\n"
@@ -48,21 +47,21 @@ int main(int argc, char** argv) {
     sfhash_get_hashes(hasher.get(), &hashes);
 
     if (algs & MD5) {
-      std::cout << to_hex(hashes.md5, hashes.md5+16) << '\n';
+      std::cout << to_hex(hashes.Md5, hashes.Md5+16) << '\n';
     }
 
     if (algs & SHA1) {
-      std::cout << to_hex(hashes.sha1, hashes.sha1+20) << '\n';
+      std::cout << to_hex(hashes.Sha1, hashes.Sha1+20) << '\n';
     }
 
     if (algs & SHA256) {
-      std::cout << to_hex(hashes.sha256, hashes.sha256+32) << '\n';
+      std::cout << to_hex(hashes.Sha256, hashes.Sha256+32) << '\n';
     }
 
     if (algs & ENTROPY) {
       std::cout << std::setprecision(std::numeric_limits<double>::digits10 + 1)
                 << std::fixed
-                << hashes.entropy << '\n';
+                << hashes.Entropy << '\n';
     }
   }
   catch (const std::exception& e) {

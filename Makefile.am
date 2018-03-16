@@ -20,9 +20,12 @@ noinst_LTLIBRARIES = $(HASHER_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
 	src/entropy.cpp \
+	src/fuzzy_hasher.cpp \
+	src/fuzzy_matcher.cpp \
 	src/hasher.cpp \
-	src/parser.cpp \
+	src/libcrypto_hasher.cpp \
 	src/matcher.cpp \
+	src/parser.cpp \
 	src/util.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
@@ -37,17 +40,22 @@ src_libhasher_ladir = $(includedir)
 src_libhasher_la_HEADERS = \
 	include/hasher.h
 
-src_matcher_SOURCES = \
-	src/matcher_main.cpp
+src_fuzzy_SOURCES = \
+        src/fuzzy_main.cpp
 
-src_matcher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
+src_fuzzy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
 
 src_hasher_SOURCES = \
 	src/hasher_main.cpp
 
 src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-noinst_PROGRAMS = src/hasher src/matcher
+src_matcher_SOURCES = \
+	src/matcher_main.cpp
+
+src_matcher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
+
+noinst_PROGRAMS = src/fuzzy src/hasher src/matcher
 
 check_PROGRAMS = test/test
 TESTS = \
@@ -57,6 +65,7 @@ TESTS = \
 test_test_SOURCES = \
 	test/test.cpp \
 	test/test_entropy.cpp \
+	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
 	test/test_matcher.cpp \
 	test/test_parser.cpp

@@ -1,7 +1,8 @@
 #include "hasher.h"
 
-#include "hasher_impl.h"
 #include "entropy_impl.h"
+#include "fuzzy_hasher.h"
+#include "hasher_impl.h"
 #include "libcrypto_hasher.h"
 
 #include <cstddef>
@@ -15,10 +16,11 @@ class SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
     const std::pair<std::unique_ptr<HasherImpl> (*)(void), off_t> init[] {
-      { make_md5_hasher,         offsetof(HashValues, md5)     },
-      { make_sha1_hasher,        offsetof(HashValues, sha1)    },
-      { make_sha256_hasher,      offsetof(HashValues, sha256)  },
-      { make_entropy_calculator, offsetof(HashValues, entropy) }
+      { make_md5_hasher,         offsetof(HashValues, Md5)     },
+      { make_sha1_hasher,        offsetof(HashValues, Sha1)    },
+      { make_sha256_hasher,      offsetof(HashValues, Sha256)  },
+      { make_fuzzy_hasher,       offsetof(HashValues, Fuzzy)   },
+      { make_entropy_calculator, offsetof(HashValues, Entropy) }
     };
 
     for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
@@ -45,6 +47,12 @@ public:
   void update(const uint8_t* beg, const uint8_t* end) {
     for (auto& h: hashers) {
       h.first->update(beg, end);
+    }
+  }
+
+  void set_total_input_length(uint64_t len) {
+    for (auto& h: hashers) {
+      h.first->set_total_input_length(len);
     }
   }
 
@@ -86,6 +94,10 @@ Hasher* sfhash_clone_hasher(const Hasher* hasher) {
 void sfhash_update_hasher(Hasher* hasher, const void* beg, const void* end) {
   hasher->update(static_cast<const uint8_t*>(beg),
                  static_cast<const uint8_t*>(end));
+}
+
+void sfhash_hasher_set_total_input_length(Hasher* hasher, uint64_t total_fixed_length) {
+  hasher->set_total_input_length(total_fixed_length);
 }
 
 void sfhash_get_hashes(Hasher* hasher, HashValues* hashes) {
