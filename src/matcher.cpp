@@ -57,8 +57,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
       auto t = parse_line(l->first, l->second);
 
       // turn the filename into a pattern
-      if (std::get<0>(t) & HAS_FILENAME) {
-        lg_parse_pattern(pat.get(), std::get<1>(t).c_str(), &kopts, &local_err);
+      if (t.flags & HAS_FILENAME) {
+        lg_parse_pattern(pat.get(), t.name.c_str(), &kopts, &local_err);
         THROW_IF(local_err, "");
 
         lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &local_err);
@@ -66,8 +66,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
       }
 
       // put the size and hash into the table
-      if (std::get<0>(t) & HAS_SIZE_AND_HASH) {
-        table.emplace_back(std::get<2>(t), std::get<3>(t));
+      if (t.flags & HAS_SIZE_AND_HASH) {
+        table.emplace_back(t.size, t.hash);
       }
     }
     catch (const std::runtime_error& e) {

@@ -9,7 +9,7 @@ const char* find_nonws(const char* beg, const char* end) {
   return std::find_if_not(beg, end, [](char c){ return c == ' '; });
 }
 
-std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, const char * const end) {
+ParsedLine parse_line(const char* beg, const char * const end) {
 
   bool have_name = false, have_size = false, have_hash = false;
   uint8_t flags = BLANK_LINE;
@@ -103,7 +103,7 @@ std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, c
     flags |= HAS_SIZE_AND_HASH;
   }
 
-  return std::make_tuple( flags, std::move(name), size, std::move(hash) );
+  return { flags, std::move(name), size, std::move(hash) };
 }
 const value_type& LineIterator::operator*() const {
   return Pos;

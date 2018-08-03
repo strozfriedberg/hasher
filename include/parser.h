@@ -13,7 +13,14 @@ enum {
   HAS_SIZE_AND_HASH = 2
 };
 
-std::tuple<uint8_t, std::string, uint64_t, sha1_t> parse_line(const char* beg, const char* const end);
+struct ParsedLine {
+  uint8_t flags;
+  std::string name;
+  uint64_t size;
+  sha1_t hash;
+};
+
+ParsedLine parse_line(const char* beg, const char* const end);
 
 class LineIterator {
 public:
