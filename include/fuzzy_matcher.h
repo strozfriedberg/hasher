@@ -11,6 +11,11 @@
 
 #include "hasher.h"
 
+struct FuzzyFileOffsets {
+  // Offsets of block, double_block, and filename in ssdeep format hash file
+  const char *i, *j, *k;
+};
+
 class FuzzyHash {
 public:
 
@@ -26,6 +31,7 @@ public:
   std::unordered_set<uint64_t> double_chunks() const;
 
 private:
+  FuzzyFileOffsets getOffsets() const;
   const char *Beg, *End;
 };
 

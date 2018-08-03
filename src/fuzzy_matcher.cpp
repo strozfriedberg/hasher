@@ -54,32 +54,34 @@ uint64_t FuzzyHash::blocksize() const {
   return std::strtoull(Beg, nullptr, 10);
 }
 
-std::string FuzzyHash::block() const {
+FuzzyFileOffsets FuzzyHash::getOffsets() const {
   const char* i = static_cast<const char*>(std::memchr(Beg, ':', End-Beg));
   const char* j = static_cast<const char*>(std::memchr(i + 1, ':', End - (i+1)));
-  return std::string(i+1, j - (i + 1));
+  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', End - (j+1)));
+  return {i, j, k};
+}
+
+std::string FuzzyHash::block() const {
+  auto o = getOffsets();
+  return std::string(o.i+1, o.j - (o.i + 1));
 }
 
 std::string FuzzyHash::double_block() const {
-  const char* i = static_cast<const char*>(std::memchr(Beg, ':', End-Beg));
-  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', End - (i+1)));
-  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', End - (j+1)));
-  if (!k) {
-    k = End;
+  auto o = getOffsets();
+  if (!o.k) {
+    o.k = End;
   }
-  return std::string(j + 1, k - (j + 1));
+  return std::string(o.j + 1, o.k - (o.j + 1));
 }
 
 std::string FuzzyHash::filename() const {
-  const char* i = static_cast<const char*>(std::memchr(Beg, ':', End-Beg));
-  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', End - (i+1)));
-  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', End - (j+1)));
+  auto o = getOffsets();
   std::string filename;
-  if (!k) {
+  if (!o.k) {
     filename = "";
   }
   else {
-    filename = std::string(k+2, End - (k+3));
+    filename = std::string(o.k+2, End - (o.k+3));
     while (filename.find("\\\"") != std::string::npos) {
       filename.replace(filename.find("\\\""), 2, "\"");
     }
