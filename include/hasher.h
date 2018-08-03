@@ -17,10 +17,10 @@ enum SFHASH_HashAlgorithms {
 };
 
 typedef struct SFHASH_HashValues {
-  uint8_t Md5[16],
-          Sha1[20],
-          Sha256[32],
-          Fuzzy[148];
+  uint8_t Md5[16];
+  uint8_t Sha1[20];
+  uint8_t Sha256[32];
+  uint8_t Fuzzy[148];
   double  Entropy;
 } SFHASH_HashValues;
 
@@ -103,4 +103,3 @@ void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 #endif
 
 #endif /* HASHER_C_API_H_ */
-
