@@ -194,6 +194,7 @@ Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
     lg_read_program(const_cast<uint8_t*>(buf), plen),
     lg_destroy_program
   );
+
   if (!prog) {
     return nullptr;
   }
