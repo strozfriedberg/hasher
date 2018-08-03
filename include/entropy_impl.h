@@ -9,13 +9,9 @@
 
 #include "hasher_impl.h"
 
-struct SFHASH_Entropy {
-  uint64_t Hist[256] = {0};
-};
-
-class EntropyCalculator: public HasherImpl {
+class SFHASH_Entropy: public HasherImpl {
 public:
-  virtual ~EntropyCalculator() {}
+  virtual ~SFHASH_Entropy() {}
 
   virtual void update(const uint8_t* beg, const uint8_t* end);
 
@@ -27,10 +23,11 @@ public:
 
   virtual void reset();
 
-  virtual EntropyCalculator* clone() const;
+  virtual SFHASH_Entropy* clone() const;
 
 private:
   uint64_t Hist[256] = {0};
+  friend void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend);
 };
 
 std::unique_ptr<HasherImpl> make_entropy_calculator();
