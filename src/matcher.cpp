@@ -188,6 +188,7 @@ Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
   buf += tlen;
 
   const size_t plen = static_cast<const uint8_t*>(end) - buf;
+
   auto prog = make_unique_del(
     // TODO: remove the const_cast after fixing the liblg API
     lg_read_program(const_cast<uint8_t*>(buf), plen),
