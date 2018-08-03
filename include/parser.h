@@ -7,6 +7,7 @@
 #include <utility>
 
 enum {
+  // anonymous enum
   BLANK_LINE = 0,
   HAS_FILENAME = 1,
   HAS_SIZE_AND_HASH = 2
