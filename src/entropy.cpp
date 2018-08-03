@@ -48,28 +48,17 @@ double sfhash_get_entropy(SFHASH_Entropy* entropy) {
     UINT64_C(0)
   );
 
-/*
-  // Direct computation from the definition
-  return s ? -std::accumulate(
-    std::begin(entropy->Hist),
-    std::end(entropy->Hist),
-    0.0,
-    [s](double a, double b) {
-      const double p_i = b/s;
-      return a + (p_i ? p_i * std::log2(p_i) : 0.0);
-    }
-  ) : 0.0;
-*/
-
   // Sligtly optimized computation
-  return s ? std::log2(static_cast<double>(s)) - std::accumulate(
-    std::begin(entropy->Hist),
-    std::end(entropy->Hist),
-    0.0,
-    [](double a, double b) {
-      return a + (b ? b * std::log2(b) : 0.0);
-    }
-  ) / s : 0.0;
+  if (s) {
+    double sum = std::accumulate(std::begin(entropy->Hist),
+                                 std::end(entropy->Hist),
+                                 0.0,
+                                 [](double a, double b) {
+                                   return a + (b ? b * std::log2(b) : 0.0);
+                                 });
+    return std::log2(static_cast<double>(s)) - (sum / s);
+  }
+  return 0.0;
 }
 
 void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend) {
@@ -126,28 +115,17 @@ double EntropyCalculator::entropy() const {
     UINT64_C(0)
   );
 
-/*
-  // Direct computation from the definition
-  return s ? -std::accumulate(
-    std::begin(entropy->Hist),
-    std::end(entropy->Hist),
-    0.0,
-    [s](double a, double b) {
-      const double p_i = b/s;
-      return a + (p_i ? p_i * std::log2(p_i) : 0.0);
-    }
-  ) : 0.0;
-*/
-
   // Sligtly optimized computation
-  return s ? std::log2(static_cast<double>(s)) - std::accumulate(
-    std::begin(Hist),
-    std::end(Hist),
-    0.0,
-    [](double a, double b) {
-      return a + (b ? b * std::log2(b) : 0.0);
-    }
-  ) / s : 0.0;
+  if (s) {
+    double sum = std::accumulate(std::begin(Hist),
+                                 std::end(Hist),
+                                 0.0,
+                                 [](double a, double b) {
+                                   return a + (b ? b * std::log2(b) : 0.0);
+                                 });
+    return std::log2(static_cast<double>(s)) - (sum / s);
+  }
+  return 0.0;
 }
 
 void EntropyCalculator::reset() {
