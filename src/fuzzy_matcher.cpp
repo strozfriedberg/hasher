@@ -186,6 +186,7 @@ void FuzzyMatcher::lookup_clusters(
                     const std::unordered_set<uint64_t>& it,
                     std::unordered_set<uint32_t>& candidates) const
 {
+
   const size_t idx = blocksize_index(blocksize);
   if (idx >= ChunkMaps.size()) {
     return;
