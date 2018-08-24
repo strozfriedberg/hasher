@@ -7,6 +7,7 @@ clean_it
 ./bootstrap.sh
 
 build_it
+install_it
 
 EXES="src/$EXE_DOT_LIBS/hasher$EXE_EXT \
 src/$EXE_DOT_LIBS/matcher$EXE_EXT"
