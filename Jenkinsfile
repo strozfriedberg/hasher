@@ -40,7 +40,7 @@ pipeline {
       }
     }
     stage('Trigger Downstream') {
-      agent any
+      agent BuildMinionInternal
       steps {
         script {
           sshagent(['jenkins_buildmaster']) {
