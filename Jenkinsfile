@@ -13,8 +13,8 @@ def BUILDS = [
 def BASE_URL = 'ssh://git@stash.strozfriedberg.com/asdf'
 def DOWNSTREAM_REPOS = ['asdf']
 def UPSTREAM_REPOS = [
-  ['liblightgrep', 'jenkins-aws-test'],
-  ['ssdeep', 'jenkins-aws-test']
+  ['liblightgrep', 'master'],
+  ['ssdeep', 'master']
 ]
 
 pipeline {
