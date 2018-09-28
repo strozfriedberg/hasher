@@ -9,6 +9,9 @@ clean_it
 build_it
 install_it
 
+mkdir -p $INST/lib/python
+cp python/hasher.py $INST/lib/python
+
 EXES="src/$EXE_DOT_LIBS/hasher$EXE_EXT \
 src/$EXE_DOT_LIBS/matcher$EXE_EXT"
 
