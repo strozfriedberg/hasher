@@ -55,7 +55,7 @@ src_matcher_SOURCES = \
 
 src_matcher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
 
-noinst_PROGRAMS = src/fuzzy src/hasher src/matcher
+bin_PROGRAMS = src/fuzzy src/hasher src/matcher
 
 check_PROGRAMS = test/test
 TESTS = \
