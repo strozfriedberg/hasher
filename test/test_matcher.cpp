@@ -1,17 +1,16 @@
-#include <scope/test.h>
-
 #include <cstring>
 
 #include "hasher.h"
 #include "matcher.h"
 #include "util.h"
 
-#include "pair_out.h"
-
 template <size_t N>
 std::ostream& operator<<(std::ostream& o, const hash_t<N>& h) {
   return o << to_hex(h);
 }
+
+#include "pair_out.h"
+#include <scope/test.h>
 
 const char HSET[] =
     "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
