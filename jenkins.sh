@@ -26,7 +26,7 @@ windows)
   case "$Linkage" in
   shared)
     DLL='src/.libs/libhasher.dll'
-    STAGE+=" $DLL $($VENDORS/gather.sh $DLL $EXES $MINGW_ROOT/bin $DEPS/bin | grep -v '/libhasher.dll$')"
+    STAGE+=" $DLL $($VENDORS/gather.sh $DLL $EXES $MINGW_ROOT/bin $DEPS/bin)"
     ;;
   shared-fat)
     STAGE+=' src/.libs/libhasher.dll'
