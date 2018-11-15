@@ -11,7 +11,7 @@ def BUILDS = [
 ]
 
 def BASE_URL = 'ssh://git@stash.strozfriedberg.com/asdf'
-def DOWNSTREAM_REPOS = ['asdf']
+def DOWNSTREAM_REPOS = [['asdf']]
 def UPSTREAM_REPOS = [
   ['liblightgrep', 'master'],
   ['ssdeep', 'master']
@@ -37,7 +37,7 @@ pipeline {
     stage('Trigger Downstream') {
       steps {
         script {
-          common.TriggerDownstream(env, BASE_URL, DOWNSTREAM_REPOS)
+          common.TriggerDownstream(env, DOWNSTREAM_REPOS)
         }
       }
     }
