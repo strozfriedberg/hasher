@@ -35,7 +35,7 @@ pipeline {
     stage('Build') {
       steps {
         script {
-          parallel common.makeConfigurations(scm, BUILDS, UPSTREAM_BUILDS)
+          parallel common.makeConfigurations(scm, BUILDS, UPSTREAM_REPOS)
         }
       }
     }
