@@ -1,4 +1,3 @@
-#include "entropy.h"
 #include "entropy_impl.h"
 
 #include <algorithm>
