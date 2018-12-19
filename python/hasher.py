@@ -210,6 +210,7 @@ class Hasher(object):
             'entropy': round(h.entropy, rounding) if rounding is not None else h.entropy
         }
 
+
 class FuzzyResult(object):
     def __init__(self, ptr):
         self.ptr = ptr
