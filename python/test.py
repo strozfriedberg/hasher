@@ -44,6 +44,8 @@ class TestHasher(unittest.TestCase):
             self.hash_it(h, bufs, exp)
 
     def hash_it(self, h, bufs, exp):
+        # NB: getting the crypto hashes clears the internal hashers, so
+        # to test both get_hashes() and get_hashes_dict() we must recompute
         for buf in bufs:
             h.update(buf)
 
@@ -52,6 +54,11 @@ class TestHasher(unittest.TestCase):
         self.assertEqual(exp[0], bytes(hashes.md5).hex())
         self.assertEqual(exp[1], bytes(hashes.sha1).hex())
         self.assertEqual(exp[2], bytes(hashes.sha256).hex())
+
+        h.reset()
+
+        for buf in bufs:
+            h.update(buf)
 
         hashes = h.get_hashes_dict()
 
