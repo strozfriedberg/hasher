@@ -53,6 +53,12 @@ class TestHasher(unittest.TestCase):
         self.assertEqual(exp[1], bytes(hashes.sha1).hex())
         self.assertEqual(exp[2], bytes(hashes.sha256).hex())
 
+        hashes = h.get_hashes_dict()
+
+        self.assertEqual(exp[0], hashes['md5'])
+        self.assertEqual(exp[1], hashes['sha1'])
+        self.assertEqual(exp[2], hashes['sha256'])
+
     def test_nothing(self):
         self.hash_this((), empty_hashes)
 
@@ -117,6 +123,9 @@ class TestEntropy(unittest.TestCase):
             h.update(buf)
 
         self.assertEqual(exp, h.get_hashes().entropy)
+        self.assertEqual(round(exp, 3), h.get_hashes_dict()['entropy'])
+        self.assertEqual(round(exp, 6), h.get_hashes_dict(rounding=6)['entropy'])
+        self.assertEqual(exp, h.get_hashes_dict(rounding=None)['entropy'])
 
     def test_entropy_nothing(self):
         self.process_this((), empty_entropy)
@@ -185,9 +194,9 @@ class TestFuzzy(unittest.TestCase):
         for buf in bufs:
             h.update(buf)
 
-        hashes = h.get_hashes()
+        self.assertEqual(exp, h.get_hashes().fuzzy)
+        self.assertEqual(exp, h.get_hashes_dict()['fuzzy'])
 
-        self.assertEqual(exp, hashes.fuzzy)
 
 class TestFuzzyMatcher(unittest.TestCase):
     def test_matches(self):
@@ -238,6 +247,7 @@ class TestFuzzyMatcher(unittest.TestCase):
         with hasher.FuzzyMatcher(data) as matcher:
             hits = list(matcher.matches('786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c:\MSOCache\All Users\Access.en-us\AccLR.cab"'))
             self.assertEqual([('c63e39ef408023b2aa0cee507f5f4e56', r'c:\MSOCache\All Users\Access.en-us\AccLR.cab', 100)], hits)
+
 
 if __name__ == "__main__":
     unittest.main()

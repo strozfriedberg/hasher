@@ -200,6 +200,15 @@ class Hasher(object):
         _sfhash_get_hashes(self.hasher, byref(h))
         return h
 
+    def get_hashes_dict(self, rounding=3):
+        h = self.get_hashes()
+        return {
+            'md5': bytes(h.md5).hex(),
+            'sha1': bytes(h.sha1).hex(),
+            'sha256': bytes(h.sha256).hex(),
+            'fuzzy': h.fuzzy,
+            'entropy': round(h.entropy, rounding) if rounding is not None else h.entropy
+        }
 
 class FuzzyResult(object):
     def __init__(self, ptr):
