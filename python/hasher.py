@@ -170,13 +170,8 @@ def ptr_range(buf, pbuf, ptype):
 
 class Hasher(object):
     def __init__(self, algs, clone=None):
-        if clone:
-            self.hasher = _sfhash_clone_hasher(clone)
-            self.algs = clone.algs
-        else:
-            self.hasher = _sfhash_create_hasher(algs)
-            self.algs = algs
-
+        self.hasher = _sfhash_clone_hasher(clone) if clone else _sfhash_create_hasher(algs)
+        self.algs = algs
         self.pbuf = Py_buffer()
 
     def __enter__(self):
@@ -190,7 +185,7 @@ class Hasher(object):
         self.hasher = None
 
     def clone(self):
-        return Hasher(0, clone=self.hasher)
+        return Hasher(self.algs, clone=self.hasher)
 
     def update(self, buf):
         _sfhash_update_hasher(self.hasher, *ptr_range(buf, self.pbuf, c_uint8))
