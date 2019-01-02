@@ -170,7 +170,13 @@ def ptr_range(buf, pbuf, ptype):
 
 class Hasher(object):
     def __init__(self, algs, clone=None):
-        self.hasher = _sfhash_clone_hasher(clone) if clone else _sfhash_create_hasher(algs)
+        if clone:
+            self.hasher = _sfhash_clone_hasher(clone)
+            self.algs = clone.algs
+        else:
+            self.hasher = _sfhash_create_hasher(algs)
+            self.algs = algs
+
         self.pbuf = Py_buffer()
 
     def __enter__(self):
@@ -202,13 +208,20 @@ class Hasher(object):
 
     def get_hashes_dict(self, rounding=3):
         h = self.get_hashes()
-        return {
-            'md5': bytes(h.md5).hex(),
-            'sha1': bytes(h.sha1).hex(),
-            'sha256': bytes(h.sha256).hex(),
-            'fuzzy': h.fuzzy,
-            'entropy': round(h.entropy, rounding) if rounding is not None else h.entropy
-        }
+        d = {}
+
+        if self.algs & MD5:
+            d['md5'] = bytes(h.md5).hex()
+        if self.algs & SHA1:
+            d['sha1'] = bytes(h.sha1).hex()
+        if self.algs & SHA256:
+            d['sha256'] = bytes(h.sha256).hex()
+        if self.algs & FUZZY:
+            d['fuzzy'] = h.fuzzy
+        if self.algs & ENTROPY:
+            d['entropy'] = round(h.entropy, rounding) if rounding is not None else h.entropy
+
+        return d
 
 
 class FuzzyResult(object):

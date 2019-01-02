@@ -60,11 +60,14 @@ class TestHasher(unittest.TestCase):
         for buf in bufs:
             h.update(buf)
 
-        hashes = h.get_hashes_dict()
+        hashes_dict = h.get_hashes_dict()
 
-        self.assertEqual(exp[0], hashes['md5'])
-        self.assertEqual(exp[1], hashes['sha1'])
-        self.assertEqual(exp[2], hashes['sha256'])
+        exp_dict = {
+            'md5': exp[0],
+            'sha1': exp[1],
+            'sha256': exp[2]
+        }
+        self.assertEqual(exp_dict, hashes_dict)
 
     def test_nothing(self):
         self.hash_this((), empty_hashes)
@@ -130,9 +133,10 @@ class TestEntropy(unittest.TestCase):
             h.update(buf)
 
         self.assertEqual(exp, h.get_hashes().entropy)
-        self.assertEqual(round(exp, 3), h.get_hashes_dict()['entropy'])
-        self.assertEqual(round(exp, 6), h.get_hashes_dict(rounding=6)['entropy'])
-        self.assertEqual(exp, h.get_hashes_dict(rounding=None)['entropy'])
+
+        self.assertEqual({'entropy': round(exp, 3)}, h.get_hashes_dict())
+        self.assertEqual({'entropy': round(exp, 6)}, h.get_hashes_dict(rounding=6))
+        self.assertEqual({'entropy': exp}, h.get_hashes_dict(rounding=None))
 
     def test_entropy_nothing(self):
         self.process_this((), empty_entropy)
@@ -202,7 +206,7 @@ class TestFuzzy(unittest.TestCase):
             h.update(buf)
 
         self.assertEqual(exp, h.get_hashes().fuzzy)
-        self.assertEqual(exp, h.get_hashes_dict()['fuzzy'])
+        self.assertEqual({'fuzzy': exp}, h.get_hashes_dict())
 
 
 class TestFuzzyMatcher(unittest.TestCase):
