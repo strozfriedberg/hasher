@@ -1,4 +1,3 @@
-#include "entropy.h"
 #include "entropy_impl.h"
 
 #include <algorithm>
@@ -6,40 +5,6 @@
 #include <iterator>
 #include <numeric>
 
-using EntropyCalculator = SFHASH_Entropy;
-
-SFHASH_Entropy* sfhash_create_entropy() {
-  return new SFHASH_Entropy();
-}
-
-SFHASH_Entropy* sfhash_clone_entropy(const SFHASH_Entropy* entropy) {
-  return new SFHASH_Entropy(*entropy);
-}
-
-void sfhash_update_entropy(SFHASH_Entropy* entropy, const void* beg, const void* end) {
-  entropy->update(static_cast<const uint8_t*>(beg), static_cast<const uint8_t*>(end));
-}
-
-double sfhash_get_entropy(SFHASH_Entropy* entropy) {
-  return entropy->entropy();
-}
-
-void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend) {
-  std::transform(
-    std::begin(sum->Hist), std::end(sum->Hist),
-    std::begin(addend->Hist),
-    std::begin(sum->Hist),
-    [](uint64_t a, uint64_t b) { return a + b; }
-  );
-}
-
-void sfhash_reset_entropy(SFHASH_Entropy* entropy) {
-  entropy->reset();
-}
-
-void sfhash_destroy_entropy(SFHASH_Entropy* entropy) {
-  delete entropy;
-}
 
 void EntropyCalculator::update(const uint8_t* beg, const uint8_t* end) {
   for (const uint8_t* cur = beg; cur != end; ++cur) {

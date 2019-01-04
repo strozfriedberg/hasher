@@ -1,17 +1,13 @@
 #pragma once
 
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
-#include <iterator>
 #include <memory>
-#include <numeric>
 
 #include "hasher_impl.h"
 
-class SFHASH_Entropy: public HasherImpl {
+class EntropyCalculator: public HasherImpl {
 public:
-  virtual ~SFHASH_Entropy() {}
+  virtual ~EntropyCalculator() {}
 
   virtual void update(const uint8_t* beg, const uint8_t* end);
 
@@ -23,11 +19,11 @@ public:
 
   virtual void reset();
 
-  virtual SFHASH_Entropy* clone() const;
+  virtual EntropyCalculator* clone() const;
 
 private:
   uint64_t Hist[256] = {0};
-  friend void sfhash_accumulate_entropy(SFHASH_Entropy* sum, const SFHASH_Entropy* addend);
+  friend void sfhash_accumulate_entropy(EntropyCalculator* sum, const EntropyCalculator* addend);
 };
 
 std::unique_ptr<HasherImpl> make_entropy_calculator();
