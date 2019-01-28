@@ -9,8 +9,8 @@ unpack_deps
 build_it
 install_it
 
-mkdir -p $INST/lib/python
-cp python/hasher.py $INST/lib/python
+mkdir -p $INSTALL/lib/python
+cp python/hasher.py $INSTALL/lib/python
 
 gather_deps
 archive_it_ex
