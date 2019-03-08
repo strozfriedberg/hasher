@@ -136,6 +136,7 @@ SCOPE_TEST(iterateHashset1) {
     "extra column!\t8675309\t561b0fb9acc2dbb5edaf595558a1e6112a1f24a0\textra column!\n";
 
   ParsedLine exp[] = {
+    // clang-format off
     { HAS_FILENAME | HAS_SIZE_AND_HASH, "a", 123, to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2") },
     { HAS_FILENAME | HAS_SIZE_AND_HASH, "b", 456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3") },
     { HAS_FILENAME | HAS_SIZE_AND_HASH, "c", 456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3") },
@@ -153,6 +154,7 @@ SCOPE_TEST(iterateHashset1) {
     { BLANK_LINE, "", 0, sha1_t() },
     { HAS_SIZE_AND_HASH, "", 8675309, to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0") },
     { HAS_FILENAME | HAS_SIZE_AND_HASH, "extra column!", 8675309, to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0") }
+    // clang-format on
   };
 
   LineIterator l(HSET, HSET + std::strlen(HSET));
@@ -198,8 +200,10 @@ SCOPE_TEST(iterateHashset2) {
     "filename êèðèëëèöà\t1\t7f8fc202eb553370d4a05b446e57fef1734eca8f\r\n";
 
   ParsedLine exp[] = {
+    // clang-format off
     { HAS_FILENAME | HAS_SIZE_AND_HASH, "filename with spaces", 0, to_bytes<20>("da39a3ee5e6b4b0d3255bfef95601890afd80709") },
     { HAS_FILENAME | HAS_SIZE_AND_HASH, "filename êèðèëëèöà", 1, to_bytes<20>("7f8fc202eb553370d4a05b446e57fef1734eca8f") }
+    // clang-format on
   };
 
   LineIterator l(HSET, HSET + std::strlen(HSET));
