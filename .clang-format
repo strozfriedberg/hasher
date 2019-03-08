@@ -44,7 +44,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: AfterColon
 BreakConstructorInitializersBeforeComma: false
 BreakAfterJavaFieldAnnotations: false
-BreakStringLiterals: true
+BreakStringLiterals: false
 ColumnLimit:     100
 CommentPragmas:  '^ IWYU pragma:'
 CompactNamespaces: false
@@ -92,7 +92,7 @@ PenaltyBreakAssignment: 1000000
 PenaltyBreakBeforeFirstCallParameter: 1000
 PenaltyBreakComment: 300
 PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 900000
+PenaltyBreakString: 1000
 PenaltyExcessCharacter: 200
 PenaltyReturnTypeOnItsOwnLine: 1000000
 PointerAlignment: Left
