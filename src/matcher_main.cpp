@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
                       << s.st_mtimespec.tv_sec << '\t'
                       << s.st_ctimespec.tv_sec << '\t'
 #else
-#error  Please, define one of the platform.
+#error  Please, define one of the platforms.
 #endif
                       << fmatch << '\t'
                       << hmatch << '\t'
