@@ -1,17 +1,9 @@
 #pragma once
 
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
-#include <iterator>
 #include <memory>
-#include <numeric>
 
 #include "hasher_impl.h"
-
-struct SFHASH_Entropy {
-  uint64_t Hist[256] = {0};
-};
 
 class EntropyCalculator: public HasherImpl {
 public:
