@@ -34,6 +34,7 @@ public:
 
 private:
   FuzzyFileOffsets getOffsets() const;
+
   const char *Beg, *End;
 };
 
