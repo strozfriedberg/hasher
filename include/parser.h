@@ -14,10 +14,10 @@ enum {
 };
 
 struct ParsedLine {
-  uint8_t flags;
   std::string name;
-  uint64_t size;
   sha1_t hash;
+  uint64_t size;
+  uint8_t flags;
 };
 
 ParsedLine parse_line(const char* beg, const char* const end);

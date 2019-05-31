@@ -103,7 +103,7 @@ ParsedLine parse_line(const char* beg, const char * const end) {
     flags |= HAS_SIZE_AND_HASH;
   }
 
-  return { flags, std::move(name), size, std::move(hash) };
+  return { std::move(name), std::move(hash), size, flags };
 }
 const value_type& LineIterator::operator*() const {
   return Pos;
