@@ -23,7 +23,6 @@ public:
 
 private:
   uint64_t Hist[256] = {0};
-  friend void sfhash_accumulate_entropy(EntropyCalculator* sum, const EntropyCalculator* addend);
 };
 
 std::unique_ptr<HasherImpl> make_entropy_calculator();
