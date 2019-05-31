@@ -166,6 +166,7 @@ int sfhash_matcher_size(const Matcher* matcher) {
 void sfhash_write_binary_matcher(const Matcher* matcher, void* buf) {
   const size_t tlen = table_size(matcher);
   *static_cast<size_t*>(buf) = tlen;
+
   buf = static_cast<void*>(static_cast<size_t*>(buf) + 1);
   std::memcpy(buf, matcher->Table.data(), tlen);
   buf = static_cast<void*>(static_cast<uint8_t*>(buf) + tlen);
