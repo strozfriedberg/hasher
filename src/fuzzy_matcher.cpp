@@ -15,7 +15,9 @@ FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end) {
   return load_fuzzy_hashset(beg, end).release();
 }
 
-const FuzzyResult* sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher, const char* beg, const char* end) {
+const FuzzyResult* sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher,
+                                                const char* beg,
+                                                const char* end) {
   return matcher->match(beg, end).release();
 }
 
@@ -42,12 +44,13 @@ void sfhash_destroy_fuzzy_matcher(FuzzyMatcher* matcher) {
   delete matcher;
 }
 
-FuzzyHash::FuzzyHash(const char* a, const char* b) :
-  Beg(a), End(b)
+FuzzyHash::FuzzyHash(const char* a, const char* b):
+  Beg(a),
+  End(b)
 {}
 
 std::string FuzzyHash::hash() const {
-  return std::string(Beg, End-Beg);
+  return std::string(Beg, End - Beg);
 }
 
 uint64_t FuzzyHash::blocksize() const {
@@ -55,15 +58,15 @@ uint64_t FuzzyHash::blocksize() const {
 }
 
 FuzzyFileOffsets FuzzyHash::getOffsets() const {
-  const char* i = static_cast<const char*>(std::memchr(Beg, ':', End-Beg));
-  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', End - (i+1)));
-  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', End - (j+1)));
+  const char* i = static_cast<const char*>(std::memchr(Beg, ':', End - Beg));
+  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', End - (i + 1)));
+  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', End - (j + 1)));
   return {i, j, k};
 }
 
 std::string FuzzyHash::block() const {
   auto o = getOffsets();
-  return std::string(o.i+1, o.j - (o.i + 1));
+  return std::string(o.i + 1, o.j - (o.i + 1));
 }
 
 std::string FuzzyHash::double_block() const {
@@ -81,7 +84,7 @@ std::string FuzzyHash::filename() const {
     filename = "";
   }
   else {
-    filename = std::string(o.k+2, End - (o.k+3));
+    filename = std::string(o.k + 2, End - (o.k + 3));
     while (filename.find("\\\"") != std::string::npos) {
       filename.replace(filename.find("\\\""), 2, "\"");
     }
@@ -129,7 +132,7 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
     }
     const size_t idx = blocksize_index(hash.blocksize());
     map[idx] += std::max((int)hash.block().length() - 6, 1);
-    map[idx+1] += std::max((int)hash.double_block().length() - 6, 1);
+    map[idx + 1] += std::max((int)hash.double_block().length() - 6, 1);
     max = std::max(max, idx);
   }
   // If blocksize B is present at index I,
@@ -142,8 +145,8 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
   for (size_t i = 0; i < num_blocksizes; ++i) {
     // map[i] is the total number of chunks for this blocksize,
     // but not necessarily the number of distinct chunks
-    // A factor of 2 is probably on the conservative side (i.e., will underestimate the amount of space needed)
-    // for a typical (?) data set
+    // A factor of 2 is probably on the conservative side (i.e., will underestimate the amount of
+    // space needed) for a typical (?) data set
     // TODO: can we be more scientific about this?
     ChunkMaps[i].reserve(map[i] / 2);
   }
@@ -172,20 +175,20 @@ std::unique_ptr<FuzzyResult> FuzzyMatcher::match(const char* beg, const char* en
       matches.emplace_back(Hashes[hash_id].filename(), score);
     }
   }
-  return  std::make_unique<FuzzyResult>(hash.filename(), std::move(matches));
+  return std::make_unique<FuzzyResult>(hash.filename(), std::move(matches));
 }
 
-void SFHASH_FuzzyMatcher::add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id) {
-  for(uint64_t chunk: chunks) {
+void SFHASH_FuzzyMatcher::add(uint64_t blocksize,
+                              std::unordered_set<uint64_t>&& chunks,
+                              uint32_t hash_id) {
+  for (uint64_t chunk: chunks) {
     ChunkMaps[blocksize_index(blocksize)][chunk].push_back(hash_id);
   }
 }
 
-void FuzzyMatcher::lookup_clusters(
-                    uint64_t blocksize,
-                    const std::unordered_set<uint64_t>& it,
-                    std::unordered_set<uint32_t>& candidates) const
-{
+void FuzzyMatcher::lookup_clusters(uint64_t blocksize,
+                                   const std::unordered_set<uint64_t>& it,
+                                   std::unordered_set<uint32_t>& candidates) const {
 
   const size_t idx = blocksize_index(blocksize);
   if (idx >= ChunkMaps.size()) {
@@ -201,7 +204,8 @@ void FuzzyMatcher::lookup_clusters(
   }
 }
 
-FuzzyResult::SFHASH_FuzzyResult(const std::string&& queryFilename, const std::vector<std::pair<std::string, int>>&& matches) :
+FuzzyResult::SFHASH_FuzzyResult(const std::string&& queryFilename,
+                                const std::vector<std::pair<std::string, int>>&& matches):
   Matches(matches),
   QueryFilename(queryFilename)
 {}
@@ -224,24 +228,25 @@ int FuzzyResult::score(size_t i) const {
 
 int validate_hash(const char* beg, const char* end) {
   // blocksize:hash1:hash2,"filename"
-  const char* i = static_cast<const char*>(std::memchr(beg, ':', end-beg));
+  const char* i = static_cast<const char*>(std::memchr(beg, ':', end - beg));
   if (!i) {
     return 1;
   }
 
-  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', end - (i+1)));
+  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', end - (i + 1)));
   if (!j) {
     return 1;
   }
 
-  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', end - (j+1)));
+  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', end - (j + 1)));
   if (!k || k[1] != '"' || end[-1] != '"') {
     return 1;
   }
 
   try {
-    boost::lexical_cast<uint64_t>(beg, i-beg);
-  } catch (const boost::bad_lexical_cast&) {
+    boost::lexical_cast<uint64_t>(beg, i - beg);
+  }
+  catch (const boost::bad_lexical_cast&) {
     return 1;
   }
   return 0;
@@ -249,8 +254,9 @@ int validate_hash(const char* beg, const char* end) {
 
 uint64_t decode_base64(const std::string& s) {
   using base64_iterator = boost::archive::iterators::transform_width<
-    boost::archive::iterators::binary_from_base64<std::string::const_iterator>, 8, 6
-  >;
+    boost::archive::iterators::binary_from_base64<std::string::const_iterator>,
+    8,
+    6>;
   uint64_t val = 0;
   const std::string decoded(base64_iterator(s.begin()), base64_iterator(s.end()));
   std::memcpy(&val, decoded.c_str(), decoded.length());
@@ -260,7 +266,7 @@ uint64_t decode_base64(const std::string& s) {
 std::string removeDuplicates(const std::string& s) {
   std::string rtn = s.substr(0, 3);
   for (size_t i = 3; i < s.length(); ++i) {
-    if (s[i] != s[i-1] || s[i] != s[i-2] || s[i] != s[i-3]) {
+    if (s[i] != s[i - 1] || s[i] != s[i - 2] || s[i] != s[i - 3]) {
       rtn.push_back(s[i]);
     }
   }
@@ -271,14 +277,14 @@ std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
   // Get all of the 7-grams from the hash string,
   // base64 decode and reinterpret as (6-byte) integer
   if (s.length() == 0) {
-    return { 0 };
+    return {0};
   }
   std::string t(removeDuplicates(s));
   if (t.length() < 7) {
     // Pad to 6 characters
     std::string block(t);
     block.append(6 - block.length(), '=');
-    return { decode_base64(block) };
+    return {decode_base64(block)};
   }
 
   std::unordered_set<uint64_t> results;
@@ -295,7 +301,7 @@ std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const c
     return nullptr;
   }
   const std::string firstLine(l->first, l->second - l->first);
-  if (firstLine!= "ssdeep,1.1--blocksize:hash:hash,filename") {
+  if (firstLine != "ssdeep,1.1--blocksize:hash:hash,filename") {
     return nullptr;
   }
 

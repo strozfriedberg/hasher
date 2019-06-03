@@ -8,8 +8,8 @@
 
 enum {
   // anonymous enum
-  BLANK_LINE = 0,
-  HAS_FILENAME = 1,
+  BLANK_LINE        = 0,
+  HAS_FILENAME      = 1,
   HAS_SIZE_AND_HASH = 2
 };
 
@@ -24,14 +24,16 @@ ParsedLine parse_line(const char* beg, const char* const end);
 
 class LineIterator {
 public:
-  using difference_type = std::ptrdiff_t;
-  using value_type = std::pair<const char*, const char*>;
-  using pointer = value_type*;
-  using reference = value_type&;
+  using difference_type   = std::ptrdiff_t;
+  using value_type        = std::pair<const char*, const char*>;
+  using pointer           = value_type*;
+  using reference         = value_type&;
   using iterator_category = std::input_iterator_tag;
 
   LineIterator(const char* beg, const char* end):
-    Pos(beg, find_next(beg, end)), End(end) {}
+    Pos(beg, find_next(beg, end)),
+    End(end)
+  {}
 
   LineIterator(const LineIterator&) = default;
 

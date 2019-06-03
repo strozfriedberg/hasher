@@ -21,7 +21,7 @@ typedef struct SFHASH_HashValues {
   uint8_t Sha1[20];
   uint8_t Sha256[32];
   uint8_t Fuzzy[148];
-  double  Entropy;
+  double Entropy;
 } SFHASH_HashValues;
 
 struct SFHASH_Hasher;
@@ -89,7 +89,9 @@ void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 
 SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end);
 
-const SFHASH_FuzzyResult* sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher, const char* beg, const char* end);
+const SFHASH_FuzzyResult* sfhash_fuzzy_matcher_compare(SFHASH_FuzzyMatcher* matcher,
+                                                       const char* beg,
+                                                       const char* end);
 size_t sfhash_fuzzy_result_count(const SFHASH_FuzzyResult* result);
 const char* sfhash_fuzzy_result_filename(const SFHASH_FuzzyResult* result, size_t i);
 const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result);

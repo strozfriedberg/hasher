@@ -5,7 +5,6 @@
 #include <iterator>
 #include <numeric>
 
-
 void EntropyCalculator::update(const uint8_t* beg, const uint8_t* end) {
   for (const uint8_t* cur = beg; cur != end; ++cur) {
     ++Hist[*cur];
@@ -37,20 +36,13 @@ double EntropyCalculator::entropy() const {
     less error than direct computation from the definition.
   */
 
-  const uint64_t s = std::accumulate(
-    std::begin(Hist),
-    std::end(Hist),
-    UINT64_C(0)
-  );
+  const uint64_t s = std::accumulate(std::begin(Hist), std::end(Hist), UINT64_C(0));
 
   // Sligtly optimized computation
   if (s) {
-    double sum = std::accumulate(std::begin(Hist),
-                                 std::end(Hist),
-                                 0.0,
-                                 [](double a, double b) {
-                                   return a + (b ? b * std::log2(b) : 0.0);
-                                 });
+    double sum = std::accumulate(std::begin(Hist), std::end(Hist), 0.0, [](double a, double b) {
+      return a + (b ? b * std::log2(b) : 0.0);
+    });
     return std::log2(static_cast<double>(s)) - (sum / s);
   }
   return 0.0;
