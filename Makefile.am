@@ -74,6 +74,12 @@ test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
 
 test_test_LDADD = $(HASHER_LIB) $(TEST_LIBS)
 
+FORMAT_COMMAND := tools/git-clang-format -f --style=file
+
+format:
+	@echo "[+] clang-format (`which clang-format`) version: `clang-format --version`"
+	@$(FORMAT_COMMAND)
+
 pkgconfigdir = $(libdir)/pkgconfig
 nodist_pkgconfig_DATA = src/hasher.pc
 

@@ -1,8 +1,8 @@
-#include "throw.h"
 #include "util.h"
+#include "throw.h"
 
 uint8_t char_to_nibble(char c) {
-//  return 9*(c >> 6) + (c & 0x0F);
+  //  return 9*(c >> 6) + (c & 0x0F);
   if ('0' <= c && c <= '9') {
     return c - '0';
   }

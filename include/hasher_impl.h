@@ -4,25 +4,25 @@
 
 class HasherImpl {
 public:
-/*
-  HasherImpl(const HasherImpl& other)
-  {
-// clone
-  }
+  /*
+    HasherImpl(const HasherImpl& other)
+    {
+  // clone
+    }
 
-  HasherImpl(HasherImpl&& other)
-  {
-// clone
-  }
+    HasherImpl(HasherImpl&& other)
+    {
+  // clone
+    }
 
-  HasherImpl& operator=(const HasherImpl& other) {
-//    return *this;
-  }
+    HasherImpl& operator=(const HasherImpl& other) {
+  //    return *this;
+    }
 
-  HasherImpl& operator=(HasherImpl&& other) {
-//    return *this;
-  }
-*/
+    HasherImpl& operator=(HasherImpl&& other) {
+  //    return *this;
+    }
+  */
 
   virtual ~HasherImpl() {}
 
