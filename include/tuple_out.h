@@ -25,8 +25,8 @@ namespace detail {
   template <class T, std::size_t N>
   struct tuple_printer {
     static void print(std::ostream& o, const T& t) {
-      tuple_printer<T, N-1>::print(o, t);
-      o << ", " << std::get<N-1>(t);
+      tuple_printer<T, N - 1>::print(o, t);
+      o << ", " << std::get<N - 1>(t);
     }
   };
 
@@ -42,7 +42,7 @@ namespace detail {
   struct tuple_printer<T, 0> {
     static void print(std::ostream&, const T&) {}
   };
-}
+} // namespace detail
 
 template <class... Args>
 std::ostream& operator<<(std::ostream& o, const std::tuple<Args...>& t) {

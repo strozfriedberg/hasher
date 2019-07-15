@@ -1,4 +1,4 @@
-# pragma once
+#pragma once
 
 #include <map>
 #include <memory>
@@ -11,9 +11,15 @@
 
 #include "hasher.h"
 
+struct FuzzyFileOffsets {
+  // Offsets of block, double_block, and filename in ssdeep format hash file
+  const char* i;
+  const char* j;
+  const char* k;
+};
+
 class FuzzyHash {
 public:
-
   FuzzyHash(const char* a, const char* b);
   std::string hash() const;
 
@@ -26,6 +32,8 @@ public:
   std::unordered_set<uint64_t> double_chunks() const;
 
 private:
+  FuzzyFileOffsets getOffsets() const;
+
   const char *Beg, *End;
 };
 
@@ -37,7 +45,9 @@ public:
 
 private:
   void add(uint64_t blocksize, std::unordered_set<uint64_t>&& chunks, uint32_t hash_id);
-  void lookup_clusters(uint64_t blocksize, const std::unordered_set<uint64_t>& it, std::unordered_set<uint32_t>& candidates) const;
+  void lookup_clusters(uint64_t blocksize,
+                       const std::unordered_set<uint64_t>& it,
+                       std::unordered_set<uint32_t>& candidates) const;
 
   std::vector<FuzzyHash> Hashes;
   // blocksize -> (hash_substring_int -> hash_index)
@@ -46,7 +56,8 @@ private:
 
 class SFHASH_FuzzyResult {
 public:
-  SFHASH_FuzzyResult(const std::string&& queryFilename, const std::vector<std::pair<std::string, int>>&& matches);
+  SFHASH_FuzzyResult(const std::string&& queryFilename,
+                     const std::vector<std::pair<std::string, int>>&& matches);
 
   size_t count() const;
   const char* queryFilename() const;

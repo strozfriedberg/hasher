@@ -10,8 +10,8 @@
 #include <boost/filesystem.hpp>
 
 #include "config.h"
-#include "parser.h"
 #include "hasher.h"
+#include "parser.h"
 #include "throw.h"
 #include "util.h"
 
@@ -25,9 +25,8 @@ int main(int argc, char** argv) {
   }
 
   try {
-    std::unique_ptr<SFHASH_FuzzyMatcher, void(*)(SFHASH_FuzzyMatcher*)> mptr{
-      nullptr, sfhash_destroy_fuzzy_matcher
-    };
+    std::unique_ptr<SFHASH_FuzzyMatcher, void (*)(SFHASH_FuzzyMatcher*)>
+      mptr{nullptr, sfhash_destroy_fuzzy_matcher};
 
     // make a matcher
     std::string hset;
@@ -35,23 +34,19 @@ int main(int argc, char** argv) {
       // read the hashset file
       std::ifstream in(argv[1], std::ios::binary);
       in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      hset = std::string((std::istreambuf_iterator<char>(in)),
-                         (std::istreambuf_iterator<char>()));
+      hset = std::string((std::istreambuf_iterator<char>(in)), (std::istreambuf_iterator<char>()));
       in.close();
 
       // create the matcher
-      mptr = make_unique_del(
-        sfhash_create_fuzzy_matcher(hset.c_str(), hset.c_str() + hset.length()),
-        sfhash_destroy_fuzzy_matcher
-      );
+      mptr = make_unique_del(sfhash_create_fuzzy_matcher(hset.c_str(),
+                                                         hset.c_str() + hset.length()),
+                             sfhash_destroy_fuzzy_matcher);
     }
 
     SFHASH_FuzzyMatcher* matcher = mptr.get();
 
     // make a hasher
-    auto hptr = make_unique_del(
-      sfhash_create_hasher(FUZZY), sfhash_destroy_hasher
-    );
+    auto hptr = make_unique_del(sfhash_create_hasher(FUZZY), sfhash_destroy_hasher);
 
     {
       std::ifstream in(argv[2], std::ios::binary);
@@ -60,7 +55,7 @@ int main(int argc, char** argv) {
                              (std::istreambuf_iterator<char>()));
       in.close();
       int lineno = 1;
-      const LineIterator lend(tset.c_str()+tset.length(), tset.c_str()+tset.length());
+      const LineIterator lend(tset.c_str() + tset.length(), tset.c_str() + tset.length());
       for (LineIterator l(tset.c_str(), tset.c_str() + tset.length()); l != lend; ++l, ++lineno) {
         std::string line(l->first, l->second - l->first);
         if (lineno == 1) {

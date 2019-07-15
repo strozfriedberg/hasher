@@ -16,7 +16,6 @@
 
 namespace fs = boost::filesystem;
 
-
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: matcher HASHSET TARGETDIR\n"
@@ -39,20 +38,16 @@ int main(int argc, char** argv) {
 
       // create the matcher
       LG_Error* err = nullptr;
-      mptr.reset(
-        sfhash_create_matcher(hset.c_str(), hset.c_str() + hset.length(), &err)
-      );
+      mptr.reset(sfhash_create_matcher(hset.c_str(), hset.c_str() + hset.length(), &err));
     }
 
     SFHASH_FileMatcher* matcher = mptr.get();
 
     // make a hasher
-    auto hptr = make_unique_del(
-      sfhash_create_hasher(SHA1), sfhash_destroy_hasher
-    );
+    auto hptr = make_unique_del(sfhash_create_hasher(SHA1), sfhash_destroy_hasher);
 
     SFHASH_Hasher* hasher = hptr.get();
-    char buf[1024*1024];
+    char buf[1024 * 1024];
     SFHASH_HashValues hashes;
 
     // walk the tree
@@ -68,7 +63,7 @@ int main(int argc, char** argv) {
 
           // check the file size in the hash set
           const uint64_t size = fs::file_size(p);
-          const bool smatch = sfhash_matcher_has_size(matcher, size);
+          const bool smatch   = sfhash_matcher_has_size(matcher, size);
 
           bool hmatch = false;
           if (fmatch || smatch) {
@@ -93,28 +88,25 @@ int main(int argc, char** argv) {
             // we had a match, print something
 
             struct stat s;
-            THROW_IF(
-              stat(n.c_str(), &s) == -1,
-              "stat failed: " << std::strerror(errno)
-            );
+            THROW_IF(stat(n.c_str(), &s) == -1, "stat failed: " << std::strerror(errno));
 
             std::cout << n << '\t'
                       << size << '\t'
-                      << to_hex(hashes.Sha1, hashes.Sha1+20) << '\t'
+                      << to_hex(hashes.Sha1, hashes.Sha1 + 20) << '\t'
 #if defined(_WIN32)
                       << s.st_atime << '\t'
                       << s.st_mtime << '\t'
                       << s.st_ctime << '\t'
-#elif defined (_LINUX)
+#elif defined(_LINUX)
                       << s.st_atim.tv_sec << '\t'
                       << s.st_mtim.tv_sec << '\t'
                       << s.st_ctim.tv_sec << '\t'
-#elif defined (_MACOSX)
+#elif defined(_MACOSX)
                       << s.st_atimespec.tv_sec << '\t'
                       << s.st_mtimespec.tv_sec << '\t'
                       << s.st_ctimespec.tv_sec << '\t'
 #else
-#error  Please, define one of the platform.
+#error Please, define one of the platforms.
 #endif
                       << fmatch << '\t'
                       << hmatch << '\t'

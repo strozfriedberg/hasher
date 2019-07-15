@@ -14,9 +14,9 @@ int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: hasher ALGS PATH\n"
               << "ALGS values:\n"
-              << "  " << MD5     << " MD5\n"
-              << "  " << SHA1    << " SHA1\n"
-              << "  " << SHA256  << " SHA256\n"
+              << "  " << MD5 << " MD5\n"
+              << "  " << SHA1 << " SHA1\n"
+              << "  " << SHA256 << " SHA256\n"
               << "  " << ENTROPY << " ENTROPY\n"
               << "Bitwise-OR them for multihashing."
               << std::endl;
@@ -26,10 +26,7 @@ int main(int argc, char** argv) {
   try {
     const int algs = boost::lexical_cast<int>(argv[1]);
 
-    auto hasher = make_unique_del(
-      sfhash_create_hasher(algs),
-      sfhash_destroy_hasher
-    );
+    auto hasher = make_unique_del(sfhash_create_hasher(algs), sfhash_destroy_hasher);
 
     char buf[4096];
 
@@ -47,15 +44,15 @@ int main(int argc, char** argv) {
     sfhash_get_hashes(hasher.get(), &hashes);
 
     if (algs & MD5) {
-      std::cout << to_hex(hashes.Md5, hashes.Md5+16) << '\n';
+      std::cout << to_hex(hashes.Md5, hashes.Md5 + 16) << '\n';
     }
 
     if (algs & SHA1) {
-      std::cout << to_hex(hashes.Sha1, hashes.Sha1+20) << '\n';
+      std::cout << to_hex(hashes.Sha1, hashes.Sha1 + 20) << '\n';
     }
 
     if (algs & SHA256) {
-      std::cout << to_hex(hashes.Sha256, hashes.Sha256+32) << '\n';
+      std::cout << to_hex(hashes.Sha256, hashes.Sha256 + 32) << '\n';
     }
 
     if (algs & ENTROPY) {

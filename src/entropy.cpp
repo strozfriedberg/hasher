@@ -5,8 +5,6 @@
 #include <iterator>
 #include <numeric>
 
-
-
 void EntropyCalculator::update(const uint8_t* beg, const uint8_t* end) {
   for (const uint8_t* cur = beg; cur != end; ++cur) {
     ++Hist[*cur];
@@ -38,34 +36,16 @@ double EntropyCalculator::entropy() const {
     less error than direct computation from the definition.
   */
 
-  const uint64_t s = std::accumulate(
-    std::begin(Hist),
-    std::end(Hist),
-    UINT64_C(0)
-  );
-
-/*
-  // Direct computation from the definition
-  return s ? -std::accumulate(
-    std::begin(entropy->Hist),
-    std::end(entropy->Hist),
-    0.0,
-    [s](double a, double b) {
-      const double p_i = b/s;
-      return a + (p_i ? p_i * std::log2(p_i) : 0.0);
-    }
-  ) : 0.0;
-*/
+  const uint64_t s = std::accumulate(std::begin(Hist), std::end(Hist), UINT64_C(0));
 
   // Sligtly optimized computation
-  return s ? std::log2(static_cast<double>(s)) - std::accumulate(
-    std::begin(Hist),
-    std::end(Hist),
-    0.0,
-    [](double a, double b) {
+  if (s) {
+    double sum = std::accumulate(std::begin(Hist), std::end(Hist), 0.0, [](double a, double b) {
       return a + (b ? b * std::log2(b) : 0.0);
-    }
-  ) / s : 0.0;
+    });
+    return std::log2(static_cast<double>(s)) - (sum / s);
+  }
+  return 0.0;
 }
 
 void EntropyCalculator::reset() {

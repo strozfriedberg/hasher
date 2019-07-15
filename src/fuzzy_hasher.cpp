@@ -5,16 +5,16 @@
 
 #include <fuzzy.h>
 
-FuzzyHasher::FuzzyHasher() :
+FuzzyHasher::FuzzyHasher():
   Ctx(make_unique_del(fuzzy_new(), fuzzy_free))
 {}
 
-FuzzyHasher::FuzzyHasher(const FuzzyHasher& other) :
+FuzzyHasher::FuzzyHasher(const FuzzyHasher& other):
   Ctx(make_unique_del(fuzzy_clone(other.Ctx.get()), fuzzy_free))
 {}
 
 void FuzzyHasher::update(const uint8_t* beg, const uint8_t* end) {
-  if (!fuzzy_update(Ctx.get(), beg, end-beg)) {
+  if (!fuzzy_update(Ctx.get(), beg, end - beg)) {
     // TODO: error!
   }
 }

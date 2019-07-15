@@ -1,13 +1,15 @@
 #include "libcrypto_hasher.h"
 
 LibcryptoHasher::LibcryptoHasher(const EVP_MD* hfunc):
-  Ctx(EVP_MD_CTX_create()), Hfunc(hfunc)
+  Ctx(EVP_MD_CTX_create()),
+  Hfunc(hfunc)
 {
   reset();
 }
 
 LibcryptoHasher::LibcryptoHasher(const LibcryptoHasher& other):
-  Ctx(EVP_MD_CTX_create()), Hfunc(other.Hfunc)
+  Ctx(EVP_MD_CTX_create()),
+  Hfunc(other.Hfunc)
 {
   if (!EVP_MD_CTX_copy(Ctx, other.Ctx)) {
     // TODO: error!

@@ -15,13 +15,12 @@ using HashValues = SFHASH_HashValues;
 class SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
-    const std::pair<std::unique_ptr<HasherImpl> (*)(void), off_t> init[] {
-      { make_md5_hasher,         offsetof(HashValues, Md5)     },
-      { make_sha1_hasher,        offsetof(HashValues, Sha1)    },
-      { make_sha256_hasher,      offsetof(HashValues, Sha256)  },
-      { make_fuzzy_hasher,       offsetof(HashValues, Fuzzy)   },
-      { make_entropy_calculator, offsetof(HashValues, Entropy) }
-    };
+    const std::pair<std::unique_ptr<HasherImpl> (*)(void), off_t>
+      init[]{{make_md5_hasher, offsetof(HashValues, Md5)},
+             {make_sha1_hasher, offsetof(HashValues, Sha1)},
+             {make_sha256_hasher, offsetof(HashValues, Sha256)},
+             {make_fuzzy_hasher, offsetof(HashValues, Fuzzy)},
+             {make_entropy_calculator, offsetof(HashValues, Entropy)}};
 
     for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
       if (algs & 1) {
@@ -71,10 +70,7 @@ public:
 private:
   void copy_members(const SFHASH_Hasher& other) {
     for (const auto& h: other.hashers) {
-      hashers.emplace_back(
-        std::unique_ptr<HasherImpl>(h.first->clone()),
-        h.second
-      );
+      hashers.emplace_back(std::unique_ptr<HasherImpl>(h.first->clone()), h.second);
     }
   }
 
@@ -92,8 +88,7 @@ Hasher* sfhash_clone_hasher(const Hasher* hasher) {
 }
 
 void sfhash_update_hasher(Hasher* hasher, const void* beg, const void* end) {
-  hasher->update(static_cast<const uint8_t*>(beg),
-                 static_cast<const uint8_t*>(end));
+  hasher->update(static_cast<const uint8_t*>(beg), static_cast<const uint8_t*>(end));
 }
 
 void sfhash_hasher_set_total_input_length(Hasher* hasher, uint64_t total_fixed_length) {
