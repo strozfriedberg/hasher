@@ -4,6 +4,7 @@
 #include "fuzzy_hasher.h"
 #include "hasher_impl.h"
 #include "libcrypto_hasher.h"
+#include "quick_hasher.h"
 
 #include <cstddef>
 #include <vector>
@@ -20,7 +21,8 @@ public:
              {make_sha1_hasher, offsetof(HashValues, Sha1)},
              {make_sha256_hasher, offsetof(HashValues, Sha256)},
              {make_fuzzy_hasher, offsetof(HashValues, Fuzzy)},
-             {make_entropy_calculator, offsetof(HashValues, Entropy)}};
+             {make_entropy_calculator, offsetof(HashValues, Entropy)},
+             {make_quick_md5_hasher, offsetof(HashValues, QuickMd5)}};
 
     for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
       if (algs & 1) {
