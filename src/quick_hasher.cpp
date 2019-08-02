@@ -1,5 +1,9 @@
 #include "quick_hasher.h"
 
+QuickHasher::QuickHasher(const EVP_MD* hfunc):
+  LibcryptoHasher(hfunc)
+{}
+
 QuickHasher::QuickHasher(const QuickHasher& other):
   LibcryptoHasher(other),
   Offset(other.Offset)
@@ -22,5 +26,5 @@ void QuickHasher::update(const uint8_t* beg, const uint8_t* end) {
 }
 
 std::unique_ptr<HasherImpl> make_quick_md5_hasher() {
-  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_md5()));
+  return std::make_unique<QuickHasher>(EVP_md5());
 }
