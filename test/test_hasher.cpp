@@ -82,11 +82,10 @@ SCOPE_TEST(FUZZY_MAX_LEN_SIZE) {
 
 SCOPE_TEST(QUICK_HASH_STOPS_UPDATING) {
   size_t len = 300;
-  auto a = std::make_unique<char[]>(len);
+  auto a     = std::make_unique<char[]>(len);
   std::memset(a.get(), 'z', len);
 
-  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | QUICK_MD5),
-                                sfhash_destroy_hasher);
+  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | QUICK_MD5), sfhash_destroy_hasher);
 
   sfhash_update_hasher(hasher.get(), a.get(), a.get() + len);
 
