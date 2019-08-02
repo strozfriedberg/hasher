@@ -97,3 +97,38 @@ SCOPE_TEST(QUICK_HASH_STOPS_UPDATING) {
   SCOPE_ASSERT_EQUAL("422e2b4e027b430225b3cff67247be64",
                      to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 }
+
+void check_quick_hash_runs(const std::string& exp, size_t len, const std::vector<int>& offsets) {
+  auto a = std::make_unique<char[]>(len);
+  std::memset(a.get(), 'z', len);
+
+  auto hasher = make_unique_del(sfhash_create_hasher(QUICK_MD5), sfhash_destroy_hasher);
+
+  int offset = 0;
+  for (auto x: offsets) {
+    sfhash_update_hasher(hasher.get(), a.get() + offset, a.get() + x);
+    offset = x;
+  }
+
+  SFHASH_HashValues hashes;
+  sfhash_get_hashes(hasher.get(), &hashes);
+
+  SCOPE_ASSERT_EQUAL(exp, to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
+}
+
+struct QuickHashTest {
+  std::string exp;
+  size_t len;
+  std::vector<int> offsets;
+};
+
+SCOPE_TEST(QUICK_HASH_PARTIAL) {
+  std::vector<QuickHashTest> tests = {
+    {"4cdf55bf6999fc0711ed06c5edea4231", 50, {10, 20, 30, 40, 50}},
+    {"422e2b4e027b430225b3cff67247be64", 300, {150, 300}},
+    {"422e2b4e027b430225b3cff67247be64", 256, {128, 256}},
+  };
+  for (const auto& test: tests) {
+    check_quick_hash_runs(test.exp, test.len, test.offsets);
+  }
+}

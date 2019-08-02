@@ -20,8 +20,9 @@ void QuickHasher::update(const uint8_t* beg, const uint8_t* end) {
   if (Offset < MAX_QUICK_HASH_BYTES) {
     LibcryptoHasher::update(beg,
                             beg
-                              + std::min(static_cast<decltype(end - beg)>(MAX_QUICK_HASH_BYTES),
+                              + std::min(static_cast<ptrdiff_t>(MAX_QUICK_HASH_BYTES - Offset),
                                          end - beg));
+    Offset += end - beg;
   }
 }
 
