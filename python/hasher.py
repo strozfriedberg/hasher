@@ -38,12 +38,12 @@ class HasherHashes(Structure):
                     self.sha256[:] == other.sha256[:] and
                     self.fuzzy == other.fuzzy and
                     self.entropy == other.entropy and
-                    self.quick_md5 == other.quick_md5)
+                    self.quick_md5[:] == other.quick_md5[:])
         return NotImplemented
 
     @property
     def fuzzy(self):
-      return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
+        return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
 
 
 # SFHASH_Hasher* sfhash_create_hasher(uint32_t hashAlgs);
@@ -122,11 +122,11 @@ _sfhash_destroy_fuzzy_matcher.argtypes = [c_void_p]
 _sfhash_destroy_fuzzy_matcher.restype = None
 
 
-MD5     = 1 << 0
-SHA1    = 1 << 1
-SHA256  = 1 << 2
-FUZZY   = 1 << 3
-ENTROPY = 1 << 4
+MD5       = 1 << 0
+SHA1      = 1 << 1
+SHA256    = 1 << 2
+FUZZY     = 1 << 3
+ENTROPY   = 1 << 4
 QUICK_MD5 = 1 << 5
 
 

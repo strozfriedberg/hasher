@@ -8,7 +8,7 @@
 #include "util.h"
 
 SCOPE_TEST(emptyHashNoUpdate) {
-  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY),
+  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY | QUICK_MD5),
                                 sfhash_destroy_hasher);
 
   SFHASH_HashValues hashes;
@@ -16,6 +16,8 @@ SCOPE_TEST(emptyHashNoUpdate) {
 
   SCOPE_ASSERT_EQUAL("d41d8cd98f00b204e9800998ecf8427e",
                      to_hex(std::begin(hashes.Md5), std::end(hashes.Md5)));
+  SCOPE_ASSERT_EQUAL("d41d8cd98f00b204e9800998ecf8427e",
+                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 
   SCOPE_ASSERT_EQUAL("da39a3ee5e6b4b0d3255bfef95601890afd80709",
                      to_hex(std::begin(hashes.Sha1), std::end(hashes.Sha1)));
@@ -27,7 +29,7 @@ SCOPE_TEST(emptyHashNoUpdate) {
 }
 
 SCOPE_TEST(emptyHashEmptyUpdate) {
-  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY),
+  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY | QUICK_MD5),
                                 sfhash_destroy_hasher);
 
   sfhash_update_hasher(hasher.get(), nullptr, nullptr);
@@ -37,6 +39,8 @@ SCOPE_TEST(emptyHashEmptyUpdate) {
 
   SCOPE_ASSERT_EQUAL("d41d8cd98f00b204e9800998ecf8427e",
                      to_hex(std::begin(hashes.Md5), std::end(hashes.Md5)));
+  SCOPE_ASSERT_EQUAL("d41d8cd98f00b204e9800998ecf8427e",
+                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 
   SCOPE_ASSERT_EQUAL("da39a3ee5e6b4b0d3255bfef95601890afd80709",
                      to_hex(std::begin(hashes.Sha1), std::end(hashes.Sha1)));
@@ -50,7 +54,7 @@ SCOPE_TEST(emptyHashEmptyUpdate) {
 SCOPE_TEST(alphabetHash) {
   const char a[] = "abcdefghijklmnopqrstuvwxyz";
 
-  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY),
+  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | SHA1 | SHA256 | FUZZY | QUICK_MD5),
                                 sfhash_destroy_hasher);
 
   sfhash_update_hasher(hasher.get(), a, a + std::strlen(a));
@@ -60,6 +64,8 @@ SCOPE_TEST(alphabetHash) {
 
   SCOPE_ASSERT_EQUAL("c3fcd3d76192e4007dfb496cca67e13b",
                      to_hex(std::begin(hashes.Md5), std::end(hashes.Md5)));
+  SCOPE_ASSERT_EQUAL("c3fcd3d76192e4007dfb496cca67e13b",
+                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 
   SCOPE_ASSERT_EQUAL("32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
                      to_hex(std::begin(hashes.Sha1), std::end(hashes.Sha1)));
@@ -72,4 +78,23 @@ SCOPE_TEST(alphabetHash) {
 
 SCOPE_TEST(FUZZY_MAX_LEN_SIZE) {
   SCOPE_ASSERT_EQUAL(FUZZY_MAX_RESULT, sizeof(SFHASH_HashValues::Fuzzy));
+}
+
+SCOPE_TEST(QUICK_HASH_STOPS_UPDATING) {
+  size_t len = 300;
+  auto a = std::make_unique<char[]>(len);
+  std::memset(a.get(), 'z', len);
+
+  auto hasher = make_unique_del(sfhash_create_hasher(MD5 | QUICK_MD5),
+                                sfhash_destroy_hasher);
+
+  sfhash_update_hasher(hasher.get(), a.get(), a.get() + len);
+
+  SFHASH_HashValues hashes;
+  sfhash_get_hashes(hasher.get(), &hashes);
+
+  SCOPE_ASSERT_EQUAL("62a457719101124d52a9c4fe5211f52a",
+                     to_hex(std::begin(hashes.Md5), std::end(hashes.Md5)));
+  SCOPE_ASSERT_EQUAL("422e2b4e027b430225b3cff67247be64",
+                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 }
