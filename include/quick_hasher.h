@@ -11,6 +11,7 @@ public:
   QuickHasher& operator=(const QuickHasher& other);
 
   virtual void update(const uint8_t* beg, const uint8_t* end) override;
+  virtual void reset() override;
 
 private:
   uint64_t Offset = 0;

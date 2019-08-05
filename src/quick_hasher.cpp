@@ -26,6 +26,11 @@ void QuickHasher::update(const uint8_t* beg, const uint8_t* end) {
   }
 }
 
+void QuickHasher::reset() {
+  LibcryptoHasher::reset();
+  Offset = 0;
+}
+
 std::unique_ptr<HasherImpl> make_quick_md5_hasher() {
   return std::make_unique<QuickHasher>(EVP_md5());
 }
