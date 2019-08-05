@@ -135,7 +135,7 @@ SCOPE_TEST(QUICK_HASH_PARTIAL) {
 
 SCOPE_TEST(QUICK_HASH_RESET) {
   size_t len = 1000;
-  auto a = std::make_unique<char[]>(len);
+  auto a     = std::make_unique<char[]>(len);
 
   SFHASH_HashValues hashes;
   auto hasher = make_unique_del(sfhash_create_hasher(QUICK_MD5), sfhash_destroy_hasher);
@@ -143,12 +143,13 @@ SCOPE_TEST(QUICK_HASH_RESET) {
   std::memset(a.get(), 'z', len);
   sfhash_update_hasher(hasher.get(), a.get(), a.get() + len);
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL("422e2b4e027b430225b3cff67247be64", to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
+  SCOPE_ASSERT_EQUAL("422e2b4e027b430225b3cff67247be64",
+                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 
   sfhash_reset_hasher(hasher.get());
   std::memset(a.get(), 'x', len);
   sfhash_update_hasher(hasher.get(), a.get(), a.get() + len);
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL("c7a139a2b8e92164276f778917ba10b9", to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
-
+  SCOPE_ASSERT_EQUAL("c7a139a2b8e92164276f778917ba10b9",
+                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 }
