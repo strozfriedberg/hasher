@@ -1,5 +1,7 @@
 #include "quick_hasher.h"
 
+#include <algorithm>
+
 QuickHasher::QuickHasher(const EVP_MD* hfunc):
   LibcryptoHasher(hfunc)
 {}
