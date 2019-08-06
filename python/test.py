@@ -9,41 +9,41 @@ import hasher
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
-empty_hashes = (
-    "d41d8cd98f00b204e9800998ecf8427e",
-    "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "d41d8cd98f00b204e9800998ecf8427e",
-)
+empty_hashes = {
+    "md5": "d41d8cd98f00b204e9800998ecf8427e",
+    "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "quick_md5": "d41d8cd98f00b204e9800998ecf8427e",
+}
 
 empty_entropy = 0.0
 
 lc_alphabet = b'abcdefghijklmnopqrstuvwxyz'
 
-lc_alphabet_hashes = (
-    "c3fcd3d76192e4007dfb496cca67e13b",
-    "32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
-    "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
-    "c3fcd3d76192e4007dfb496cca67e13b",
-    "32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
-)
+lc_alphabet_hashes = {
+    "md5": "c3fcd3d76192e4007dfb496cca67e13b",
+    "sha1": "32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
+    "sha256": "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
+    "quick_md5": "c3fcd3d76192e4007dfb496cca67e13b",
+}
 
 lc_alphabet_entropy = 4.700439718141092
 
 abc = b'abc'
 
-abc_hashes = (
-    '900150983cd24fb0d6963f7d28e17f72',
-    'a9993e364706816aba3e25717850c26c9cd0d89d',
-    'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
-    '900150983cd24fb0d6963f7d28e17f72',
-)
+abc_hashes = {
+    "md5": "900150983cd24fb0d6963f7d28e17f72",
+    "sha1": "a9993e364706816aba3e25717850c26c9cd0d89d",
+    "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "quick_md5": "900150983cd24fb0d6963f7d28e17f72",
+}
 
 abc_entropy = 1.584962500721156
 
 
-class TestHasher(unittest.TestCase):
-    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA256 | hasher.QUICK_MD5
+class HasherTestUtils(unittest.TestCase):
+    ALGS = None
+
     def hash_this(self, bufs, exp):
         with hasher.Hasher(self.ALGS) as h:
             self.hash_it(h, bufs, exp)
@@ -56,10 +56,7 @@ class TestHasher(unittest.TestCase):
 
         hashes = h.get_hashes()
 
-        self.assertEqual(exp[0], bytes(hashes.md5).hex())
-        self.assertEqual(exp[1], bytes(hashes.sha1).hex())
-        self.assertEqual(exp[2], bytes(hashes.sha256).hex())
-        self.assertEqual(exp[3], bytes(hashes.quick_md5).hex())
+        self.assertEqual(exp, {k: bytes(getattr(hashes, k)).hex() for k in exp.keys()})
 
         h.reset()
 
@@ -68,14 +65,11 @@ class TestHasher(unittest.TestCase):
 
         hashes_dict = h.get_hashes_dict()
 
-        exp_dict = {
-            'md5': exp[0],
-            'sha1': exp[1],
-            'sha256': exp[2],
-            'quick_md5': exp[3],
-        }
-        self.assertEqual(exp_dict, hashes_dict)
+        self.assertEqual(exp, hashes_dict)
 
+
+class TestHasher(HasherTestUtils):
+    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA256 | hasher.QUICK_MD5
     def test_nothing(self):
         self.hash_this((), empty_hashes)
 
@@ -129,30 +123,23 @@ class TestHasher(unittest.TestCase):
             with h1.clone() as h2:
                 self.assertEqual(h1.get_hashes(), h2.get_hashes())
 
-class TestQuickHasher(unittest.TestCase):
-    def hash_this(self, bufs, exp):
-        with hasher.Hasher(hasher.MD5 | hasher.QUICK_MD5) as h:
-            self.hash_it(h, bufs, exp)
-
-    def hash_it(self, h, bufs, exp):
-        # NB: getting the crypto hashes clears the internal hashers, so
-        # to test both get_hashes() and get_hashes_dict() we must recompute
-        for buf in bufs:
-            h.update(buf)
-
-        hashes = h.get_hashes()
-
-        self.assertEqual(exp[0], bytes(hashes.md5).hex())
-        self.assertEqual(exp[1], bytes(hashes.quick_md5).hex())
+class TestQuickHasher(HasherTestUtils):
+    ALGS = hasher.MD5 | hasher.QUICK_MD5
 
     def test_quick_md5_long(self):
         buf = b'1234567890' * 100
-        exp = 'f1257a8659eb92d36fe14c6bf3852a6a', '9684119054ad908143a677b4db00495f'
+        exp = {
+            'md5': 'f1257a8659eb92d36fe14c6bf3852a6a',
+            'quick_md5': '9684119054ad908143a677b4db00495f',
+        }
         self.hash_this([buf], exp)
 
     def test_quick_md5_short(self):
         buf = b'a' * 256
-        exp = '81109eec5aa1a284fb5327b10e9c16b9', '81109eec5aa1a284fb5327b10e9c16b9'
+        exp = {
+            'md5': '81109eec5aa1a284fb5327b10e9c16b9',
+            'quick_md5': '81109eec5aa1a284fb5327b10e9c16b9',
+        }
         self.hash_this([buf], exp)
 
 
