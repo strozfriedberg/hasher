@@ -16,15 +16,15 @@ using HashValues = SFHASH_HashValues;
 class SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
-    const std::pair<std::unique_ptr<HasherImpl> (*)(void), off_t>
-      init[]{{make_md5_hasher, offsetof(HashValues, Md5)},
-             {make_sha1_hasher, offsetof(HashValues, Sha1)},
-             {make_sha256_hasher, offsetof(HashValues, Sha256)},
-             {make_fuzzy_hasher, offsetof(HashValues, Fuzzy)},
-             {make_entropy_calculator, offsetof(HashValues, Entropy)},
-             {make_quick_md5_hasher, offsetof(HashValues, QuickMd5)}};
+    const std::vector<std::pair<std::unique_ptr<HasherImpl> (*)(void), off_t>>
+      init{{make_md5_hasher, offsetof(HashValues, Md5)},
+           {make_sha1_hasher, offsetof(HashValues, Sha1)},
+           {make_sha256_hasher, offsetof(HashValues, Sha256)},
+           {make_fuzzy_hasher, offsetof(HashValues, Fuzzy)},
+           {make_entropy_calculator, offsetof(HashValues, Entropy)},
+           {make_quick_md5_hasher, offsetof(HashValues, QuickMd5)}};
 
-    for (uint32_t i = 0; i < sizeof(init) && algs; algs >>= 1, ++i) {
+    for (uint32_t i = 0; i < init.size() && algs; algs >>= 1, ++i) {
       if (algs & 1) {
         hashers.emplace_back(init[i].first(), init[i].second);
       }
