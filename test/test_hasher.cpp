@@ -153,3 +153,23 @@ SCOPE_TEST(QUICK_HASH_RESET) {
   SCOPE_ASSERT_EQUAL("c7a139a2b8e92164276f778917ba10b9",
                      to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 }
+
+SCOPE_TEST(INVALID_FLAGS_VALUE) {
+  auto hasher = make_unique_del(sfhash_create_hasher(0xFFFFFFFF), sfhash_destroy_hasher);
+
+  SFHASH_HashValues hashes;
+  sfhash_get_hashes(hasher.get(), &hashes);
+
+  SCOPE_ASSERT_EQUAL("d41d8cd98f00b204e9800998ecf8427e",
+                     to_hex(std::begin(hashes.Md5), std::end(hashes.Md5)));
+  SCOPE_ASSERT_EQUAL("d41d8cd98f00b204e9800998ecf8427e",
+                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
+
+  SCOPE_ASSERT_EQUAL("da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                     to_hex(std::begin(hashes.Sha1), std::end(hashes.Sha1)));
+
+  SCOPE_ASSERT_EQUAL("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                     to_hex(std::begin(hashes.Sha256), std::end(hashes.Sha256)));
+
+  SCOPE_ASSERT_EQUAL("3::", std::string((const char*)hashes.Fuzzy));
+}
