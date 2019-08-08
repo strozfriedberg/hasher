@@ -28,6 +28,7 @@ class HasherHashes(Structure):
                 ('sha1', c_uint8 * 20),
                 ('sha256', c_uint8 * 32),
                 ('_fuzzy', c_uint8 * 148),
+                ('quick_md5', c_uint8 * 16),
                 ('entropy', c_double)]
 
     def __eq__(self, other):
@@ -36,12 +37,13 @@ class HasherHashes(Structure):
                     self.sha1[:] == other.sha1[:] and
                     self.sha256[:] == other.sha256[:] and
                     self.fuzzy == other.fuzzy and
-                    self.entropy == other.entropy)
+                    self.entropy == other.entropy and
+                    self.quick_md5[:] == other.quick_md5[:])
         return NotImplemented
 
     @property
     def fuzzy(self):
-      return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
+        return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
 
 
 # SFHASH_Hasher* sfhash_create_hasher(uint32_t hashAlgs);
@@ -120,11 +122,12 @@ _sfhash_destroy_fuzzy_matcher.argtypes = [c_void_p]
 _sfhash_destroy_fuzzy_matcher.restype = None
 
 
-MD5     = 1 << 0
-SHA1    = 1 << 1
-SHA256  = 1 << 2
-FUZZY   = 1 << 3
-ENTROPY = 1 << 4
+MD5       = 1 << 0
+SHA1      = 1 << 1
+SHA256    = 1 << 2
+FUZZY     = 1 << 3
+ENTROPY   = 1 << 4
+QUICK_MD5 = 1 << 5
 
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -215,6 +218,8 @@ class Hasher(object):
             d['fuzzy'] = h.fuzzy
         if self.algs & ENTROPY:
             d['entropy'] = round(h.entropy, rounding) if rounding is not None else h.entropy
+        if self.algs & QUICK_MD5:
+            d['quick_md5'] = bytes(h.quick_md5).hex()
 
         return d
 
