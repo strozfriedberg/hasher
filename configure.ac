@@ -3,12 +3,12 @@
 
 AC_PREREQ([2.69])
 AC_INIT([hasher], [0.3.0], [juckelman@strozfriedberg.co.uk])
- 
+
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/hasher.cpp])
 AC_CONFIG_HEADERS([config.h])
- 
+
 AM_INIT_AUTOMAKE([1.12 subdir-objects foreign])
 LT_INIT
 
@@ -47,22 +47,8 @@ esac
 # Dependencies
 #
 
-# pkg-config doesn't look in /usr/local/lib on some systems
-case "$host" in
-*-*-mingw*)
-  if test "x$enable_shared" != "xyes" -o "x$enable_shared_fat" = "xyes"; then
-    PKG_CONFIG="$PKG_CONFIG --static"
-  fi
-  ;;
-*)
-  if test -z "$PKG_CONFIG_PATH"; then
-    PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-  else
-    PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
-  fi
-  export PKG_CONFIG_PATH
-  ;;
-esac
+PKG_PROG_PKG_CONFIG
+AS_IF([test "x$enable_shared" != "xyes"], [PKG_CONFIG="$PKG_CONFIG --static"])
 
 AX_PKG_CHECK_MODULES([CRYPTO], [], [libcrypto])
 AX_PKG_CHECK_MODULES([LIGHTGREP], [], [lightgrep])

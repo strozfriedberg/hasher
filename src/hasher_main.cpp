@@ -17,7 +17,9 @@ int main(int argc, char** argv) {
               << "  " << MD5 << " MD5\n"
               << "  " << SHA1 << " SHA1\n"
               << "  " << SHA256 << " SHA256\n"
+              << "  " << FUZZY  << " FUZZY\n"
               << "  " << ENTROPY << " ENTROPY\n"
+              << "  " << QUICK_MD5  << " QUICK_MD5\n"
               << "Bitwise-OR them for multihashing."
               << std::endl;
     return -1;

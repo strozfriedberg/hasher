@@ -26,6 +26,7 @@ src_libhasherint_la_SOURCES = \
 	src/libcrypto_hasher.cpp \
 	src/matcher.cpp \
 	src/parser.cpp \
+	src/quick_hasher.cpp \
 	src/util.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
