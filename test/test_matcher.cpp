@@ -1,16 +1,25 @@
+#include <scope/test.h>
+
 #include <cstring>
 
 #include "hasher.h"
 #include "matcher.h"
 #include "util.h"
 
-template <size_t N>
-std::ostream& operator<<(std::ostream& o, const hash_t<N>& h) {
-  return o << to_hex(h);
-}
+using matcher_table_t = std::vector<std::pair<uint64_t, sha1_t>>;
 
-#include "pair_out.h"
-#include <scope/test.h>
+void assert_matcher_tables_equal(const matcher_table_t& actual, const matcher_table_t& expected) {
+  SCOPE_ASSERT_EQUAL(actual.size(), expected.size());
+  for (uint i = 0; i < actual.size(); ++i) {
+    uint64_t act_file_size = actual[i].first;
+    uint64_t exp_file_size = expected[i].first;
+    SCOPE_ASSERT_EQUAL(act_file_size, exp_file_size);
+
+    std::string act_hash = to_hex(actual[i].second);
+    std::string exp_hash = to_hex(expected[i].second);
+    SCOPE_ASSERT_EQUAL(act_hash, exp_hash);
+  }
+}
 
 const char HSET[] = "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
                     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
@@ -27,7 +36,8 @@ SCOPE_TEST(loadHashset) {
 
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(m);
-  SCOPE_ASSERT_EQUAL(m->Table, exp);
+
+  assert_matcher_tables_equal(m->Table, exp);
 }
 
 SCOPE_TEST(has_size) {
@@ -94,5 +104,5 @@ SCOPE_TEST(binaryMatcherTableRoundTrip) {
                             sfhash_destroy_matcher);
 
   SCOPE_ASSERT(m2);
-  SCOPE_ASSERT_EQUAL(m2->Table, m1->Table);
+  assert_matcher_tables_equal(m1->Table, m2->Table);
 }

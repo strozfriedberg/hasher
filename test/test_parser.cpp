@@ -1,3 +1,5 @@
+#include <scope/test.h>
+
 #include <ostream>
 #include <stdexcept>
 #include <tuple>
@@ -10,10 +12,6 @@ template <size_t N>
 std::ostream& operator<<(std::ostream& o, const hash_t<N>& h) {
   return o << to_hex(h);
 }
-
-#include "pair_out.h"
-#include "tuple_out.h"
-#include <scope/test.h>
 
 std::ostream& operator<<(std::ostream& o, const ParsedLine a) {
   return o << "(" << a.flags << ", " << a.name << ", " << a.size << ", " << a.hash << ")";
