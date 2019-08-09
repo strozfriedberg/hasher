@@ -10,7 +10,7 @@ using matcher_table_t = std::vector<std::pair<uint64_t, sha1_t>>;
 
 void assert_matcher_tables_equal(const matcher_table_t& actual, const matcher_table_t& expected) {
   SCOPE_ASSERT_EQUAL(actual.size(), expected.size());
-  for (uint i = 0; i < actual.size(); ++i) {
+  for (uint8_t i = 0; i < actual.size(); ++i) {
     uint64_t act_file_size = actual[i].first;
     uint64_t exp_file_size = expected[i].first;
     SCOPE_ASSERT_EQUAL(act_file_size, exp_file_size);
