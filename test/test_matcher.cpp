@@ -37,7 +37,7 @@ SCOPE_TEST(loadHashset) {
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(m);
 
-  assert_matcher_tables_equal(m->Table, exp);
+  assert_matcher_tables_equal(exp, m->Table);
 }
 
 SCOPE_TEST(has_size) {
