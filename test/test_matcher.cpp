@@ -1,3 +1,4 @@
+#include <iostream>
 #include <scope/test.h>
 
 #include <cstring>
@@ -90,6 +91,9 @@ SCOPE_TEST(has_filename) {
 SCOPE_TEST(binaryMatcherTableRoundTrip) {
   LG_Error* err = nullptr;
 
+  auto exp = make_unique_del(sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
+                             sfhash_destroy_matcher);
+
   auto m1 = make_unique_del(sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
                             sfhash_destroy_matcher);
 
@@ -104,5 +108,6 @@ SCOPE_TEST(binaryMatcherTableRoundTrip) {
                             sfhash_destroy_matcher);
 
   SCOPE_ASSERT(m2);
-  assert_matcher_tables_equal(m2->Table, m1->Table);
+  assert_matcher_tables_equal(exp->Table, m1->Table);
+  assert_matcher_tables_equal(exp->Table, m2->Table);
 }
