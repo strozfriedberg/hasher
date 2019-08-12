@@ -9,15 +9,15 @@
 using matcher_table_t = std::vector<std::pair<uint64_t, sha1_t>>;
 
 void assert_matcher_tables_equal(const matcher_table_t& actual, const matcher_table_t& expected) {
-  SCOPE_ASSERT_EQUAL(actual.size(), expected.size());
+  SCOPE_ASSERT_EQUAL(expected.size(), actual.size());
   for (uint8_t i = 0; i < actual.size(); ++i) {
-    uint64_t act_file_size = actual[i].first;
     uint64_t exp_file_size = expected[i].first;
-    SCOPE_ASSERT_EQUAL(act_file_size, exp_file_size);
+    uint64_t act_file_size = actual[i].first;
+    SCOPE_ASSERT_EQUAL(exp_file_size, act_file_size);
 
-    std::string act_hash = to_hex(actual[i].second);
-    std::string exp_hash = to_hex(expected[i].second);
-    SCOPE_ASSERT_EQUAL(act_hash, exp_hash);
+    const std::string exp_hash = to_hex(expected[i].second);
+    const std::string act_hash = to_hex(actual[i].second);
+    SCOPE_ASSERT_EQUAL(exp_hash, act_hash);
   }
 }
 
@@ -104,5 +104,5 @@ SCOPE_TEST(binaryMatcherTableRoundTrip) {
                             sfhash_destroy_matcher);
 
   SCOPE_ASSERT(m2);
-  assert_matcher_tables_equal(m1->Table, m2->Table);
+  assert_matcher_tables_equal(m2->Table, m1->Table);
 }
