@@ -26,19 +26,19 @@ const char HSET[] = "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
                     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
                     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";
 
-SCOPE_TEST(loadHashset) {
-  const std::vector<std::pair<uint64_t, sha1_t>> exp =
-    {{0, to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160")},
-     {123, to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2")},
-     {456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3")}};
+const std::vector<std::pair<uint64_t, sha1_t>> EXP_TABLE =
+  {{0, to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160")},
+   {123, to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2")},
+   {456789, to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3")}};
 
+SCOPE_TEST(loadHashset) {
   LG_Error* err = nullptr;
   auto m{load_hashset(HSET, HSET + std::strlen(HSET), &err)};
 
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(m);
 
-  assert_matcher_tables_equal(exp, m->Table);
+  assert_matcher_tables_equal(EXP_TABLE, m->Table);
 }
 
 SCOPE_TEST(has_size) {
@@ -91,9 +91,6 @@ SCOPE_TEST(has_filename) {
 SCOPE_TEST(binaryMatcherTableRoundTrip) {
   LG_Error* err = nullptr;
 
-  auto exp = make_unique_del(sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
-                             sfhash_destroy_matcher);
-
   auto m1 = make_unique_del(sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
                             sfhash_destroy_matcher);
 
@@ -108,6 +105,6 @@ SCOPE_TEST(binaryMatcherTableRoundTrip) {
                             sfhash_destroy_matcher);
 
   SCOPE_ASSERT(m2);
-  assert_matcher_tables_equal(exp->Table, m1->Table);
-  assert_matcher_tables_equal(exp->Table, m2->Table);
+  assert_matcher_tables_equal(EXP_TABLE, m1->Table);
+  assert_matcher_tables_equal(EXP_TABLE, m2->Table);
 }
