@@ -14,7 +14,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 lib_base = 'libhasher'
-lib_name = lib_base + ('.dll' if sys.platform == 'win32' else '.so')
+
+exts = {'win32': '.dll', 'darwin': '.dylib'}
+
+lib_name = lib_base + exts.get(sys.platform, '.so')
 
 try:
     _hasher = CDLL(lib_name)
