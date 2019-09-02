@@ -20,8 +20,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
     return nullptr;
   }
 
-  auto pmap = make_unique_del(lg_create_pattern_map(0), lg_destroy_pattern_map);
-  if (!pmap) {
+  auto prog = make_unique_del(lg_create_program(0), lg_destroy_program);
+  if (!prog) {
     return nullptr;
   }
 
@@ -39,7 +39,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
   const LG_KeyOptions kopts{1, 0};
 
-  auto err_chain      = make_unique_del(static_cast<LG_Error*>(nullptr), lg_free_error);
+  auto err_chain = make_unique_del(static_cast<LG_Error*>(nullptr), lg_free_error);
   LG_Error* tail_err  = nullptr;
   LG_Error* local_err = nullptr;
 
@@ -59,7 +59,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
         lg_parse_pattern(pat.get(), t.name.c_str(), &kopts, &local_err);
         THROW_IF(local_err, "");
 
-        lg_add_pattern(fsm.get(), pmap.get(), pat.get(), "UTF-8", &local_err);
+        lg_add_pattern(fsm.get(), prog.get(), pat.get(), "UTF-8", 0, &local_err);
         THROW_IF(local_err, "");
       }
 
@@ -96,7 +96,9 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   }
 
   const LG_ProgramOptions popts{0};
-  auto prog = make_unique_del(lg_create_program(fsm.get(), &popts), lg_destroy_program);
+  if (!lg_compile_program(fsm.get(), prog.get(), &popts)) {
+    return nullptr;
+  }
 
   std::sort(table.begin(), table.end());
 
