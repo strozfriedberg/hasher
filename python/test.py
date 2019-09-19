@@ -41,7 +41,7 @@ abc_hashes = {
 abc_entropy = 1.584962500721156
 
 
-class HasherTestUtils(unittest.TestCase):
+class HasherTestCase(unittest.TestCase):
     ALGS = None
 
     def hash_this(self, bufs, exp):
@@ -68,7 +68,7 @@ class HasherTestUtils(unittest.TestCase):
         self.assertEqual(exp, hashes_dict)
 
 
-class TestHasher(HasherTestUtils):
+class TestHasher(HasherTestCase):
     ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA256 | hasher.QUICK_MD5
     def test_nothing(self):
         self.hash_this((), empty_hashes)
@@ -123,7 +123,7 @@ class TestHasher(HasherTestUtils):
             with h1.clone() as h2:
                 self.assertEqual(h1.get_hashes(), h2.get_hashes())
 
-class TestQuickHasher(HasherTestUtils):
+class TestQuickHasher(HasherTestCase):
     ALGS = hasher.MD5 | hasher.QUICK_MD5
 
     def test_quick_md5_long(self):

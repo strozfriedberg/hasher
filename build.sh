@@ -4,6 +4,7 @@
 
 ./bootstrap.sh
 
+CONFIGURE="$CONFIGURE --with-boost=$DEPS"
 build_it
 install_it
 
