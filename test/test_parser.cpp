@@ -8,9 +8,6 @@
 #include "parser.h"
 #include "util.h"
 
-#include "pair_out.h"
-#include "tuple_out.h"
-
 template <size_t N>
 std::ostream& operator<<(std::ostream& o, const hash_t<N>& h) {
   return o << to_hex(h);
