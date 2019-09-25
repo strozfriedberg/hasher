@@ -74,6 +74,11 @@ else
   AX_BOOST_BASE([1.49.0],
     [],
     [AC_MSG_ERROR([Failed to find usable Boost headers.])])
+
+  # Treat manually specified boost as a system lib, to  ignore warnings
+  if test "x$with_boost" != "x"; then
+    BOOST_CPPFLAGS="-isystem $with_boost/include"
+  fi
 fi
 
 AX_BOOST_SYSTEM
