@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
             } while (f);
 
             sfhash_get_hashes(hasher, &hashes);
-            hmatch = sfhash_matcher_has_hash(matcher, size, hashes.Sha1);
+            hmatch = sfhash_matcher_has_hash(matcher, hashes.Sha1);
           }
 
           if (fmatch || hmatch) {

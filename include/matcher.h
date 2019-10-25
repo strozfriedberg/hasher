@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <utility>
+#include <unordered_set>
 #include <vector>
 
 #include <lightgrep/api.h>
@@ -9,7 +10,8 @@
 #include "util.h"
 
 struct SFHASH_FileMatcher {
-  std::vector<std::pair<uint64_t, sha1_t>> Table;
+  std::unordered_set<uint64_t> Sizes;
+  std::vector<sha1_t> Hashes;
   std::unique_ptr<ProgramHandle, decltype(lg_destroy_program)&> Prog;
 };
 

@@ -34,8 +34,10 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   // person has a file which doesn't end with EOL, count it as 1 either way.
   const size_t lines = std::count(beg, end - 1, '\n') + 1;
 
-  std::vector<std::pair<uint64_t, sha1_t>> table;
-  table.reserve(lines);
+  std::unordered_set<uint64_t> sizes;
+  std::vector<sha1_t> hashes;
+  sizes.reserve(lines);
+  hashes.reserve(lines);
 
   const LG_KeyOptions kopts{1, 0};
 
@@ -64,8 +66,12 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
       }
 
       // put the size and hash into the table
-      if (t.flags & HAS_SIZE_AND_HASH) {
-        table.emplace_back(t.size, t.hash);
+      if (t.flags & HAS_SIZE) {
+        sizes.insert(t.size);
+      }
+
+      if (t.flags & HAS_HASH) {
+        hashes.push_back(t.hash);
       }
     }
     catch (const std::runtime_error& e) {
@@ -100,9 +106,11 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
     return nullptr;
   }
 
-  std::sort(table.begin(), table.end());
+  std::sort(hashes.begin(), hashes.end());
 
-  return std::unique_ptr<Matcher>(new Matcher{std::move(table), std::move(prog)});
+  return std::unique_ptr<Matcher>(
+    new Matcher{std::move(sizes), std::move(hashes), std::move(prog)}
+  );
 }
 
 Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err) {
@@ -110,19 +118,16 @@ Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err)
 }
 
 int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
-  const auto i = std::lower_bound(matcher->Table.begin(),
-                                  matcher->Table.end(),
-                                  std::make_pair(size, sha1_t()));
-  return i == matcher->Table.end() ? false : i->first == size;
+  return matcher->Sizes.find(size) != matcher->Sizes.cend();
 }
 
-int sfhash_matcher_has_hash(const Matcher* matcher, uint64_t size, const uint8_t* sha1) {
+int sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
   sha1_t hash;
   std::memcpy(&hash[0], sha1, sizeof(sha1_t));
 
-  return std::binary_search(matcher->Table.begin(),
-                            matcher->Table.end(),
-                            std::make_pair(size, std::move(hash)));
+  return std::binary_search(matcher->Hashes.begin(),
+                            matcher->Hashes.end(),
+                            hash);
 }
 
 void cb(void* userData, const LG_SearchHit* const) {
@@ -143,12 +148,17 @@ int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   return hit;
 }
 
-size_t table_size(const Matcher* matcher) {
-  return sizeof(decltype(Matcher::Table)::value_type) * matcher->Table.size();
+/*
+size_t sizes_size(const Matcher* matcher) {
+  return sizeof(decltype(Matcher::Sizes)::value_type) * matcher->Sizes.size();
+}
+
+size_t hashes_size(const Matcher* matcher) {
+  return sizeof(decltype(Matcher::Hashes)::value_type) * matcher->Hashes.size();
 }
 
 int sfhash_matcher_size(const Matcher* matcher) {
-  return sizeof(size_t) + table_size(matcher) + lg_program_size(matcher->Prog.get());
+  return sizeof(size_t) + sizes_size(matcher) + + lg_program_size(matcher->Prog.get());
 }
 
 void sfhash_write_binary_matcher(const Matcher* matcher, void* buf) {
@@ -187,6 +197,7 @@ Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
 
   return new Matcher{std::move(table), std::move(prog)};
 }
+*/
 
 void sfhash_destroy_matcher(Matcher* matcher) {
   delete matcher;

@@ -96,11 +96,16 @@ ParsedLine parse_line(const char* beg, const char* const end) {
   }
 
   if (have_size) {
-    flags |= HAS_SIZE_AND_HASH;
+    flags |= HAS_SIZE;
+  }
+
+  if (have_hash) {
+    flags |= HAS_HASH;
   }
 
   return {std::move(name), std::move(hash), size, flags};
 }
+
 const value_type& LineIterator::operator*() const {
   return Pos;
 }

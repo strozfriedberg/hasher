@@ -63,8 +63,8 @@ SFHASH_FileMatcher* sfhash_create_matcher(const char* beg, const char* end, LG_E
 // returns nonzero if the given file size occurs in the hash set
 int sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
 
-// returns nonzero if the given file size and hash occur in the hash set
-int sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, uint64_t size, const uint8_t* sha1);
+// returns nonzero if the given file hash occurrs in the hash set
+int sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, const uint8_t* sha1);
 
 // returns nonzero if the given filename (in UTF-8) matches the hash set
 int sfhash_matcher_has_filename(const SFHASH_FileMatcher* matcher, const char* filename);
