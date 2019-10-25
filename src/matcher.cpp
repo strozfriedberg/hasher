@@ -9,6 +9,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -151,21 +152,27 @@ int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
   return matcher->Sizes.find(size) != matcher->Sizes.cend();
 }
 
-/*
 size_t expected_sha1_idx(const sha1_t& h, size_t set_size) {
-  // ( h / max sha1 ) * set_size
-  return set_size / 2;
+  // This approximates (h / 2^160) * set_size
+  const uint64_t high64 = ((uint64_t) h[0] << 56) |
+                          ((uint64_t) h[1] << 48) |
+                          ((uint64_t) h[2] << 40) |
+                          ((uint64_t) h[3] << 32) |
+                          ((uint64_t) h[4] << 24) |
+                          ((uint64_t) h[5] << 16) |
+                          ((uint64_t) h[6] <<  8) |
+                          ((uint64_t) h[7] <<  0);
+  return (high64 / (std::numeric_limits<uint64_t>::max() + 1.0)) * set_size;
 }
-*/
 
 int sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
   sha1_t hash;
   std::memcpy(&hash[0], sha1, sizeof(sha1_t));
 
-  const size_t exp = 0;
+  const size_t exp = expected_sha1_idx(hash, matcher->Hashes.size());
 
   const size_t left = exp < matcher->HashRadius ? 0 : exp - matcher->HashRadius;
-  const size_t right = std::min(exp + matcher->HashRadius, matcher->Hashes.size());
+  const size_t right = std::min(exp + matcher->HashRadius, matcher->Hashes.size()) + 1;
 
   std::cerr << '[' << left << ',' << right << ')' << std::endl;
 
