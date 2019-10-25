@@ -60,6 +60,8 @@ struct LG_Error;
 //
 SFHASH_FileMatcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err);
 
+SFHASH_FileMatcher* sfhash_create_matcher_binary(const char* beg, const char* end);
+
 // returns nonzero if the given file size occurs in the hash set
 int sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
 

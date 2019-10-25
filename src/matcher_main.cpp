@@ -36,9 +36,12 @@ int main(int argc, char** argv) {
                              (std::istreambuf_iterator<char>()));
       in.close();
 
+      std::cerr << "hset.length() == " << hset.length() << std::endl;
+
       // create the matcher
       LG_Error* err = nullptr;
-      mptr.reset(sfhash_create_matcher(hset.c_str(), hset.c_str() + hset.length(), &err));
+//      mptr.reset(sfhash_create_matcher(hset.c_str(), hset.c_str() + hset.length(), &err));
+      mptr.reset(sfhash_create_matcher_binary(hset.c_str(), hset.c_str() + hset.length()));
     }
 
     SFHASH_FileMatcher* matcher = mptr.get();
@@ -59,14 +62,15 @@ int main(int argc, char** argv) {
 
         try {
           // check the filename for a match
-          const bool fmatch = sfhash_matcher_has_filename(matcher, n.c_str());
+//          const bool fmatch = sfhash_matcher_has_filename(matcher, n.c_str());
 
           // check the file size in the hash set
           const uint64_t size = fs::file_size(p);
-          const bool smatch   = sfhash_matcher_has_size(matcher, size);
+//          const bool smatch   = sfhash_matcher_has_size(matcher, size);
 
           bool hmatch = false;
-          if (fmatch || smatch) {
+//          if (fmatch || smatch) {
+
             // we matched the filename or size, so hash the file
             sfhash_reset_hasher(hasher);
 
@@ -82,9 +86,11 @@ int main(int argc, char** argv) {
 
             sfhash_get_hashes(hasher, &hashes);
             hmatch = sfhash_matcher_has_hash(matcher, hashes.Sha1);
+/*
           }
 
           if (fmatch || hmatch) {
+*/
             // we had a match, print something
 
             struct stat s;
@@ -93,6 +99,7 @@ int main(int argc, char** argv) {
             std::cout << n << '\t'
                       << size << '\t'
                       << to_hex(hashes.Sha1, hashes.Sha1 + 20) << '\t'
+/*
 #if defined(_WIN32)
                       << s.st_atime << '\t'
                       << s.st_mtime << '\t'
@@ -109,9 +116,10 @@ int main(int argc, char** argv) {
 #error Please, define one of the platforms.
 #endif
                       << fmatch << '\t'
+*/
                       << hmatch << '\t'
                       << '\n';
-          }
+//          }
         }
         catch (const fs::filesystem_error& e) {
           std::cerr << "Error: " << p << ": " << e.what() << std::endl;

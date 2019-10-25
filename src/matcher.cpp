@@ -109,7 +109,33 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   std::sort(hashes.begin(), hashes.end());
 
   return std::unique_ptr<Matcher>(
-    new Matcher{std::move(sizes), std::move(hashes), std::move(prog)}
+    new Matcher{std::move(sizes), std::move(hashes), std::move(prog), (hashes.size() + 1)/2}
+  );
+}
+
+std::unique_ptr<SFHASH_FileMatcher> load_hashset_binary(const char* beg, const char* end) {
+  const char* cur = beg;
+
+  const size_t radius = (cur[0] << 24) | (cur[1] << 16) | (cur[2] << 8) | cur[3];
+  cur += 4;
+  const size_t record_size = (cur[0] << 24) | (cur[1] << 16) | (cur[2] << 8) | cur[3];
+  cur += 4;
+
+  std::cerr << "radius == " << radius << '\n'
+            << "records == " << (end - cur)/record_size << std::endl;
+
+  std::vector<sha1_t> hashes;
+  hashes.reserve((end - cur)/record_size);
+
+  while (cur < end) {
+    hashes.push_back(*reinterpret_cast<const sha1_t*>(cur));
+    cur += sizeof(sha1_t);
+  }
+
+  auto prog = make_unique_del(nullptr, lg_destroy_program);
+
+  return std::unique_ptr<Matcher>(
+    new Matcher{{}, std::move(hashes), std::move(prog), radius}
   );
 }
 
@@ -117,17 +143,37 @@ Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err)
   return load_hashset(beg, end, err).release();
 }
 
+Matcher* sfhash_create_matcher_binary(const char* beg, const char* end) {
+  return load_hashset_binary(beg, end).release();
+}
+
 int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
   return matcher->Sizes.find(size) != matcher->Sizes.cend();
 }
+
+/*
+size_t expected_sha1_idx(const sha1_t& h, size_t set_size) {
+  // ( h / max sha1 ) * set_size
+  return set_size / 2;
+}
+*/
 
 int sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
   sha1_t hash;
   std::memcpy(&hash[0], sha1, sizeof(sha1_t));
 
-  return std::binary_search(matcher->Hashes.begin(),
-                            matcher->Hashes.end(),
-                            hash);
+  const size_t exp = 0;
+
+  const size_t left = exp < matcher->HashRadius ? 0 : exp - matcher->HashRadius;
+  const size_t right = std::min(exp + matcher->HashRadius, matcher->Hashes.size());
+
+  std::cerr << '[' << left << ',' << right << ')' << std::endl;
+
+  return std::binary_search(
+    matcher->Hashes.cbegin() + left,
+    matcher->Hashes.cbegin() + right,
+    hash
+  );
 }
 
 void cb(void* userData, const LG_SearchHit* const) {
