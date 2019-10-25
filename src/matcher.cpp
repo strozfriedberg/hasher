@@ -109,8 +109,10 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
   std::sort(hashes.begin(), hashes.end());
 
+  const size_t hsize = hashes.size();
+
   return std::unique_ptr<Matcher>(
-    new Matcher{std::move(sizes), std::move(hashes), std::move(prog), (hashes.size() + 1)/2}
+    new Matcher{std::move(sizes), std::move(hashes), std::move(prog), hsize}
   );
 }
 
@@ -122,8 +124,8 @@ std::unique_ptr<SFHASH_FileMatcher> load_hashset_binary(const char* beg, const c
   const size_t record_size = (cur[0] << 24) | (cur[1] << 16) | (cur[2] << 8) | cur[3];
   cur += 4;
 
-  std::cerr << "radius == " << radius << '\n'
-            << "records == " << (end - cur)/record_size << std::endl;
+  // std::cerr << "radius == " << radius << '\n'
+  //           << "records == " << (end - cur)/record_size << std::endl;
 
   std::vector<sha1_t> hashes;
   hashes.reserve((end - cur)/record_size);
@@ -174,7 +176,8 @@ int sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
   const size_t left = exp < matcher->HashRadius ? 0 : exp - matcher->HashRadius;
   const size_t right = std::min(exp + matcher->HashRadius + 1, matcher->Hashes.size());
 
-  std::cerr << '[' << left << ',' << right << ')' << std::endl;
+  // std::cerr << '[' << left << ',' << right << ')' << std::endl;
+  // std::cerr << "exp: " << exp << ", matcher->HashRadius: " << matcher->HashRadius << ", matcher->Hashers.size(): " << matcher->Hashes.size() << std::endl;
 
   return std::binary_search(
     matcher->Hashes.cbegin() + left,
