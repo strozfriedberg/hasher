@@ -1,5 +1,4 @@
 #include <iostream>
-#include <scope/test.h>
 
 #include <cstring>
 
@@ -37,6 +36,9 @@ std::ostream& operator<<(std::ostream& o, const std::unordered_set<T>& s) {
 std::ostream& operator<<(std::ostream& o, const sha1_t& h) {
   return o << to_hex(h);
 }
+
+#include <scope/test.h>
+
 
 const char HSET[] = "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
                     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
