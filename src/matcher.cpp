@@ -172,7 +172,7 @@ int sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
   const size_t exp = expected_sha1_idx(hash, matcher->Hashes.size());
 
   const size_t left = exp < matcher->HashRadius ? 0 : exp - matcher->HashRadius;
-  const size_t right = std::min(exp + matcher->HashRadius, matcher->Hashes.size()) + 1;
+  const size_t right = std::min(exp + matcher->HashRadius + 1, matcher->Hashes.size());
 
   std::cerr << '[' << left << ',' << right << ')' << std::endl;
 
