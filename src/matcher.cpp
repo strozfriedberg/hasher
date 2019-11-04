@@ -37,7 +37,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   std::vector<std::pair<uint64_t, sha1_t>> table;
   table.reserve(lines);
 
-  const LG_KeyOptions kopts{1, 0, 1};
+  const LG_KeyOptions kopts{1, 0, 0};
 
   auto err_chain = make_unique_del(static_cast<LG_Error*>(nullptr), lg_free_error);
   LG_Error* tail_err  = nullptr;
