@@ -23,6 +23,7 @@ src_libhasherint_la_SOURCES = \
 	src/fuzzy_hasher.cpp \
 	src/fuzzy_matcher.cpp \
 	src/hasher.cpp \
+	src/hashset.cpp \
 	src/libcrypto_hasher.cpp \
 	src/matcher.cpp \
 	src/parser.cpp \
@@ -68,6 +69,7 @@ test_test_SOURCES = \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
+	test/test_hashset.cpp \
 	test/test_matcher.cpp \
 	test/test_parser.cpp
 

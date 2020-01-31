@@ -56,7 +56,7 @@ struct LG_Error;
 // Input is a three-column tab-separated UTF-8 text file, where each line
 // is of the form:
 //
-//  Filename\tFilesize\tSHA1\n
+//  Filename\tFilesize\tHash\n
 //
 SFHASH_FileMatcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err);
 
