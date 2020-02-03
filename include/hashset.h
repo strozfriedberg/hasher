@@ -102,6 +102,7 @@ uint32_t compute_radius(
   return max_delta;
 }
 
+// TODO: compute a radius if there's not one; collapse this into the default impl
 template <size_t HashLength>
 class HashSetRadiusImpl: public HashSetImpl<HashLength> {
 public:

@@ -5,7 +5,6 @@
 #include "hashset.h"
 #include "throw.h"
 
-// TODO: line reader for hashes
 
 uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
   /*
@@ -73,11 +72,12 @@ uint64_t read_uint64_le(const char* beg, const char*& i, const char* end) {
   return r;
 }
 
-std::string read_cstring(const char* beg, const char*& i, const char* end) {
-  const char* j = std::find(i, end, '\0');
-  THROW_IF(j == end, "unterminated cstring at " << (i-beg));
+std::string read_cstring(const char* beg, const char*& i, const char* end, size_t field_width) {
+  THROW_IF(i + field_width > end, "out of data reading string at " << (i-beg));
+  const char* j = std::find(i, i + field_width, '\0');
+  THROW_IF(j == i + field_width, "unterminated cstring at " << (i-beg));
   std::string r(i, j);
-  i = j + 1;
+  i += field_width;
   return r;
 }
 
@@ -100,15 +100,15 @@ void check_magic(const char*& i, const char* end) {
 
 magic: 8 bytes
 format version: 8 bytes
-hash type: cstring
-hash length: 8 bytes
 flags: 8 bytes
-hash set name: cstring
+hash type: cstring, 32 byte fixed length field
+hash length: 8 bytes
+hash set name: cstring, 128 byte fixed length field
 hash set size: 8 bytes
 search radius: 8 bytes
-hash set description: cstring
-hash set hash: ... 
-hashes: however many there are, sorted 
+hash set description: cstring, 512 byte fixed length field
+hash set hash: SHA265, 32 bytes
+hashes: however many there are, sorted, starting at offset 4096
 
 */
 
@@ -124,14 +124,14 @@ Header parse_header(const char* beg, const char* end) {
   THROW_IF(h.version != 1, "unsupported format version " << h.version);
 
   // read the rest of the header
-  h.hash_type = read_cstring(beg, cur, end);
+  h.flags = read_uint64_le(beg, cur, end);
+  h.hash_type = read_cstring(beg, cur, end, 32);
   h.hash_length = read_uint64_le(beg, cur, end);
   // TODO: check known length of hash type with hash length? 
-  h.flags = read_uint64_le(beg, cur, end);
-  h.hashset_name = read_cstring(beg, cur, end);
+  h.hashset_name = read_cstring(beg, cur, end, 128);
   h.hashset_size = read_uint64_le(beg, cur, end);
   h.radius = read_uint64_le(beg, cur, end);
-  h.hashset_desc = read_cstring(beg, cur, end);
+  h.hashset_desc = read_cstring(beg, cur, end, 512);
   read_bytes(h.hashset_sha256.data(), sizeof(h.hashset_sha256), beg, cur, end);
 
   return h;
