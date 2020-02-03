@@ -1,7 +1,16 @@
 #!/usr/bin/python3
 
+#
+# Make a hashset from a list of filenames:
+#
 # find | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py SHA1 'Some test hashes' 'These are test hashes.' >sha1.hset
+#
+
+#
+# Make a hashset from the NSRL:
+#
 # for i in NSRLFile.*.txt.gz ; do zcat $i | awk -F',' '{print $1}' | tail -n +2 ; done | cut -b 2-41 | ./mkhashset.py SHA1 'NSRL' 'The NSRL!' >nsrl.hset
+#
 
 import hashlib
 import sys
