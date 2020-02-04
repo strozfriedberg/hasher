@@ -20,7 +20,7 @@ uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
   const uint64_t high32 = (static_cast<uint32_t>(h[0]) << 24) |
                           (static_cast<uint32_t>(h[1]) << 16) |
                           (static_cast<uint32_t>(h[2]) <<  8) |
-                          (static_cast<uint32_t>(h[3]) <<  0);
+                           static_cast<uint32_t>(h[3]);
   return static_cast<uint32_t>((high32 * set_size) >> 32);
 }
 
