@@ -62,3 +62,8 @@ std::unique_ptr<HasherImpl> make_sha1_hasher() {
 std::unique_ptr<HasherImpl> make_sha256_hasher() {
   return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha256()));
 }
+
+std::unique_ptr<HasherImpl> make_sha3_256_hasher() {
+  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha3_256()));
+}
+

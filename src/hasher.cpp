@@ -20,6 +20,7 @@ public:
       init{{make_md5_hasher, offsetof(HashValues, Md5)},
            {make_sha1_hasher, offsetof(HashValues, Sha1)},
            {make_sha256_hasher, offsetof(HashValues, Sha256)},
+           {make_sha3_256_hasher, offsetof(HashValues, Sha3_256)},
            {make_fuzzy_hasher, offsetof(HashValues, Fuzzy)},
            {make_entropy_calculator, offsetof(HashValues, Entropy)},
            {make_quick_md5_hasher, offsetof(HashValues, QuickMd5)}};
