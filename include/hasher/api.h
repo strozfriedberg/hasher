@@ -2,6 +2,7 @@
 #define HASHER_C_API_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,6 +13,20 @@ extern "C" {
  */
 
 struct HashSet;
+
+typedef enum {
+  SF_HASH_OTHER     =  0,
+  SF_HASH_MD5       =  1,
+  SF_HASH_SHA_1     =  2,
+  SF_HASH_SHA_2_224 =  3,
+  SF_HASH_SHA_2_256 =  4,
+  SF_HASH_SHA_2_384 =  5,
+  SF_HASH_SHA_2_512 =  6,
+  SF_HASH_SHA_3_224 =  7,
+  SF_HASH_SHA_3_256 =  8,
+  SF_HASH_SHA_3_384 =  9,
+  SF_HASH_SHA_3_512 = 10
+} SF_HASH_TYPE_ENUM;
 
 struct HasherError {
   char* message;
@@ -50,7 +65,9 @@ const char* sf_hashset_description(const HashSet* hset);
 
 size_t sf_hashset_size(const HashSet* hset);
 
-const char* sf_hash_type(const HashSet* hset);
+SF_HASH_TYPE_ENUM sf_hash_type(const HashSet* hset);
+
+const char* sf_hash_type_name(SF_HASH_TYPE_ENUM hash_type);
 
 size_t sf_hash_length(const HashSet* hset);
 

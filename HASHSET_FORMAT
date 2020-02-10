@@ -1,0 +1,19 @@
+All numbers little endian
+
+  0 magic: SetOHash
+  8 version: uint64_t
+ 16 flags: 8 bytes
+ 24 hash type: uint64_t enum
+ 32 hash length: uint64_t
+ 40 hash count: uint64_t
+ 48 search radius: uint64_t (index)
+ 56 hashes offset: uint64_t (absolute offset of start of hashes)
+ 64 sizes offset: uint64_t (absolute offset of start of sizes, 0 for none)
+ 72 hash set hash: 32 bytes (SHA-256, hash of hashes only)
+104 hash set name: char[96]
+200 created timestamp: char[40]
+240 hash set description: char[512]
+752 reserved through 4095
+
+    hashes, sorted, starting at hashes offset
+    sizes: uint64_t, in order of hashes, starting at sizes offset

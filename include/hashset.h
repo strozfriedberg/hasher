@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hasher/api.h"
+
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -9,12 +11,15 @@
 
 struct Header {
   uint64_t version;
-  std::string hash_type;
+  SF_HASH_TYPE_ENUM hash_type;
   uint64_t hash_length;
   uint64_t flags;
-  std::string hashset_name;
   uint64_t hashset_size;
+  uint64_t hashset_off;
+  uint64_t sizes_off;
   uint64_t radius;
+  std::string hashset_name;
+  std::string hashset_time;
   std::string hashset_desc;
   std::array<uint8_t, 32> hashset_sha256;
 };

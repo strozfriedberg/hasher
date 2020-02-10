@@ -96,21 +96,39 @@ void check_magic(const char*& i, const char* end) {
   i += sizeof(magic);
 }
 
-/*
+const char* hash_type_name(uint64_t hash_type) {
+  switch (hash_type) {
+  case SF_HASH_OTHER:     return "Other";
+  case SF_HASH_MD5:       return "MD5";
+  case SF_HASH_SHA_1:     return "SHA-1";
+  case SF_HASH_SHA_2_224: return "SHA-2-224";
+  case SF_HASH_SHA_2_256: return "SHA-2-256";
+  case SF_HASH_SHA_2_384: return "SHA-2-384";
+  case SF_HASH_SHA_2_512: return "SHA-2-512";
+  case SF_HASH_SHA_3_224: return "SHA-3-224";
+  case SF_HASH_SHA_3_256: return "SHA-3-256";
+  case SF_HASH_SHA_3_384: return "SHA-3-384";
+  case SF_HASH_SHA_3_512: return "SHA-3-512";
+  default:                return nullptr;
+  }
+}
 
-magic: 8 bytes
-format version: 8 bytes
-flags: 8 bytes
-hash type: cstring, 32 byte fixed length field
-hash length: 8 bytes
-hash set name: cstring, 128 byte fixed length field
-hash set size: 8 bytes
-search radius: 8 bytes
-hash set description: cstring, 512 byte fixed length field
-hash set hash: SHA265, 32 bytes
-hashes: however many there are, sorted, starting at offset 4096
-
-*/
+uint64_t hash_type_length(SF_HASH_TYPE_ENUM hash_type) {
+  switch (hash_type) {
+  case SF_HASH_OTHER:     return  0;
+  case SF_HASH_MD5:       return 16;
+  case SF_HASH_SHA_1:     return 20;
+  case SF_HASH_SHA_2_224: return 28;
+  case SF_HASH_SHA_2_256: return 32;
+  case SF_HASH_SHA_2_384: return 48;
+  case SF_HASH_SHA_2_512: return 64;
+  case SF_HASH_SHA_3_224: return 28;
+  case SF_HASH_SHA_3_256: return 32;
+  case SF_HASH_SHA_3_384: return 48;
+  case SF_HASH_SHA_3_512: return 64;
+  default:                return  0;
+  }
+}
 
 Header parse_header(const char* beg, const char* end) {
   // check file magic
@@ -125,14 +143,27 @@ Header parse_header(const char* beg, const char* end) {
 
   // read the rest of the header
   h.flags = read_uint64_le(beg, cur, end);
-  h.hash_type = read_cstring(beg, cur, end, 32);
+
+  const uint64_t htype = read_uint64_le(beg, cur, end);
+  THROW_IF(!hash_type_name(htype), "unknown hash type " << htype);
+  h.hash_type = static_cast<SF_HASH_TYPE_ENUM>(htype);
+
   h.hash_length = read_uint64_le(beg, cur, end);
-  // TODO: check known length of hash type with hash length? 
-  h.hashset_name = read_cstring(beg, cur, end, 128);
+  const uint64_t exp_hash_length = hash_type_length(h.hash_type);
+  THROW_IF(
+    exp_hash_length && exp_hash_length != h.hash_length,
+    "expected hash length " << exp_hash_length <<
+    ", actual hash length " << h.hash_length
+  );
+
   h.hashset_size = read_uint64_le(beg, cur, end);
+  h.hashset_off = read_uint64_le(beg, cur, end);
+  h.sizes_off = read_uint64_le(beg, cur, end);
   h.radius = read_uint64_le(beg, cur, end);
-  h.hashset_desc = read_cstring(beg, cur, end, 512);
   read_bytes(h.hashset_sha256.data(), sizeof(h.hashset_sha256), beg, cur, end);
+  h.hashset_name = read_cstring(beg, cur, end, 96);
+  h.hashset_time = read_cstring(beg, cur, end, 40);
+  h.hashset_desc = read_cstring(beg, cur, end, 512);
 
   return h;
 }
@@ -145,9 +176,6 @@ HashSet* make_hashset(Header&& hdr) {
 }
 
 HashSet* make_hashset(Header&& hdr) {
-  // MD5:     16
-  // SHA-1:   20
-  // SHA-256: 32
   switch (hdr.hash_length) {
   case 16:
     return make_hashset<16>(std::move(hdr));
@@ -168,7 +196,7 @@ void fill_error(HasherError** err, const std::string& msg) {
 
 HashSet* read_header(const char* beg, const char* end) {
   THROW_IF(beg > end, "beg > end!");
-  // read 4kb header
+  // read 4KB header
   THROW_IF(beg + 4096 > end, "out of data reading header");
   return make_hashset(parse_header(beg, beg + 4096));
 }
@@ -235,8 +263,12 @@ size_t sf_hashset_size(const HashSet* hset) {
   return hset->header().hashset_size;
 }
 
-const char* sf_hash_type(const HashSet* hset) {
-  return hset->header().hash_type.c_str();
+SF_HASH_TYPE_ENUM sf_hash_type(const HashSet* hset) {
+  return hset->header().hash_type;
+}
+
+const char* sf_hash_type_name(SF_HASH_TYPE_ENUM hash_type) {
+  return hash_type_name(hash_type);
 }
 
 size_t sf_hash_length(const HashSet* hset) {

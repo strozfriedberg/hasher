@@ -12,8 +12,24 @@
 # for i in NSRLFile.*.txt.gz ; do zcat $i | awk -F',' '{print $1}' | tail -n +2 ; done | cut -b 2-41 | ./mkhashset.py SHA1 'NSRL' 'The NSRL!' >nsrl.hset
 #
 
+import datetime
 import hashlib
 import sys
+
+
+HASH_TYPE = {
+    'Other':      0,
+    'MD5':        1,
+    'SHA-1':      2,
+    'SHA-2-224':  3,
+    'SHA-2-256':  4,
+    'SHA-2-384':  5,
+    'SHA-2-512':  6,
+    'SHA-3-224':  7,
+    'SHA-3-256':  8,
+    'SHA-3-384':  9,
+    'SHA-3-512': 10
+}
 
 
 def nonempty_lines(src):
@@ -35,18 +51,15 @@ def write_cstring(b, field_width, buf):
 
 
 def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
-    # reject overlong strings before we do any work
-    hash_type = hash_type.encode('UTF-8')
+    hash_type = HASH_TYPE[hash_type]
+
     hashset_name = hashset_name.encode('UTF-8')
     hashset_desc = hashset_desc.encode('UTF-8')
 
-    hash_type_field_len = 32
-    hashset_name_field_len = 128
+    hashset_name_field_len = 96
     hashset_desc_field_len = 512
 
-    if len(hash_type) + 1 > hash_type_field_len:
-        raise RuntimeError('hash type too long')
-
+    # reject overlong strings before we do any work
     if len(hashset_name) + 1 > hashset_name_field_len:
         raise RuntimeError('hashset name too long')
 
@@ -68,17 +81,23 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     hasher = hashlib.sha256()
     hasher.update(hashset)
 
+    timestamp = datetime.datetime.now().isoformat(timespec='microseconds').encode('UTF-8')
+    timestamp_field_len = 40
+
     pos = 0
     pos += outbuf.write(b'SetOHash')
     pos += outbuf.write(version.to_bytes(8, 'little', signed=False))
     pos += outbuf.write(flags.to_bytes(8, 'little', signed=False))
-    pos += write_cstring(hash_type, hash_type_field_len, outbuf)
+    pos += outbuf.write(hash_type.to_bytes(8, 'little', signed=False))
     pos += outbuf.write(hash_length.to_bytes(8, 'little', signed=False))
-    pos += write_cstring(hashset_name, hashset_name_field_len, outbuf)
     pos += outbuf.write(len(hashes).to_bytes(8, 'little', signed=False))
+    pos += outbuf.write(int(4096).to_bytes(8, 'little', signed=False))
+    pos += outbuf.write(int(0).to_bytes(8, 'little', signed=False))
     pos += outbuf.write(max_delta.to_bytes(8, 'little', signed=False))
-    pos += write_cstring(hashset_desc, hashset_desc_field_len, outbuf)
     pos += outbuf.write(hasher.digest())
+    pos += write_cstring(hashset_name, hashset_name_field_len, outbuf)
+    pos += write_cstring(timestamp, timestamp_field_len, outbuf)
+    pos += write_cstring(hashset_desc, hashset_desc_field_len, outbuf)
     pos += outbuf.write(b'\0' * (4096-pos))
     pos += outbuf.write(hashset)
 
