@@ -201,8 +201,8 @@ void sf_destroy_hashset_info(HashSetInfo* hsinfo) {
     delete[] hsinfo->hashset_name;
     delete[] hsinfo->hashset_time;
     delete[] hsinfo->hashset_desc;
+    delete hsinfo;
   }
-  delete hsinfo;
 }
 
 template <size_t N>
@@ -307,7 +307,7 @@ void sf_destroy_sizeset(SizeSet* sset) {
 
 void sf_free_hashset_error(HasherError* err) {
   if (err) {
-    delete err->message;
+    delete[] err->message;
     delete err;
   }
 }
