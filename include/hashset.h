@@ -9,72 +9,43 @@
 #include <numeric>
 #include <string>
 
-struct Header {
-  uint64_t version;
-  SF_HASH_TYPE_ENUM hash_type;
-  uint64_t hash_length;
-  uint64_t flags;
-  uint64_t hashset_size;
-  uint64_t hashset_off;
-  uint64_t sizes_off;
-  uint64_t radius;
-  std::string hashset_name;
-  std::string hashset_time;
-  std::string hashset_desc;
-  std::array<uint8_t, 32> hashset_sha256;
-};
-
-Header parse_header(const char* beg, const char* end);
-
 class HashSet {
 public:
   virtual ~HashSet() {}
- 
-  virtual const Header& header() const = 0;
- 
-  virtual void set_data(const void* beg, const void* end, bool shared) = 0;
 
   virtual bool contains(const uint8_t* hash) const = 0;
 };
 
 template <size_t HashLength>
+std::array<uint8_t, HashLength>* hash_ptr_cast(const void* ptr) {
+  return static_cast<std::array<uint8_t, HashLength>*>(const_cast<void*>(ptr));
+}
+
+template <size_t HashLength>
 class HashSetImpl: public HashSet {
 public:
-/*
-  HashSetImpl(const Header& header):
-    HashesBeg(nullptr, nullptr),
-    HashesEnd(nullptr),
-    Hdr(header)
-  {}
-*/
-
-  HashSetImpl(Header&& header):
-    HashesBeg(nullptr, nullptr),
-    HashesEnd(nullptr),
-    Hdr(header)
-  {}
-
-  virtual ~HashSetImpl() {}
-
-  void set_data(const void* beg, const void* end, bool shared) {
-    auto b = static_cast<std::array<uint8_t, HashLength>*>(const_cast<void*>(beg));
-    auto e = static_cast<std::array<uint8_t, HashLength>*>(const_cast<void*>(end));
+  HashSetImpl(const void* beg, const void* end, bool shared):
+    HashesBeg(nullptr, nullptr)
+  {
+    auto b = hash_ptr_cast<HashLength>(beg);
+    auto e = hash_ptr_cast<HashLength>(end);
 
     if (shared) {
       HashesBeg = {b, [](std::array<uint8_t, HashLength>*){}};
+      HashesEnd = e;
     }
     else {
+      const size_t count = e - b;
       HashesBeg = {
-        new std::array<uint8_t, HashLength>[e - b],
+        new std::array<uint8_t, HashLength>[count],
         [](std::array<uint8_t, HashLength>* h){ delete[] h; }
       };
-      std::memcpy(HashesBeg.get(), b, e - b);
+      HashesEnd = HashesBeg.get() + count;
+      std::memcpy(HashesBeg.get(), b, count * HashLength);
     }
-
-    HashesEnd = e;
   }
 
-  virtual const Header& header() const { return Hdr; }
+  virtual ~HashSetImpl() {}
 
   virtual bool contains(const uint8_t* hash) const {
     return std::binary_search(
@@ -86,7 +57,6 @@ public:
 protected:
   std::unique_ptr<std::array<uint8_t, HashLength>[], void(*)(std::array<uint8_t, HashLength>*)> HashesBeg;
   std::array<uint8_t, HashLength>* HashesEnd;
-  Header Hdr;
 };
 
 uint32_t expected_index(const uint8_t* h, uint32_t set_size);
@@ -111,24 +81,27 @@ uint32_t compute_radius(
 template <size_t HashLength>
 class HashSetRadiusImpl: public HashSetImpl<HashLength> {
 public:
-/*
-  HashSetRadiusImpl(const Header& header):
-    HashSetImpl<HashLength>(header)
-  {}
-*/
-
-  HashSetRadiusImpl(Header&& header):
-    HashSetImpl<HashLength>(std::move(header))
-  {}
+  HashSetRadiusImpl(
+    const void* beg,
+    const void* end,
+    bool shared,
+    uint32_t radius
+  ):
+    HashSetImpl<HashLength>(beg, end, shared), Radius(radius) {}
 
   virtual ~HashSetRadiusImpl() {}
 
   virtual bool contains(const uint8_t* hash) const override {
     const size_t exp = expected_index(hash, this->HashesEnd - this->HashesBeg.get());
     return std::binary_search(
-      std::max(this->HashesBeg.get(), this->HashesBeg.get() + exp - this->Hdr.radius),
-      std::min(this->HashesEnd, this->HashesBeg.get() + exp + this->Hdr.radius + 1),
+      std::max(this->HashesBeg.get(), this->HashesBeg.get() + exp - Radius),
+      std::min(this->HashesEnd, this->HashesBeg.get() + exp + Radius + 1),
       *reinterpret_cast<const std::array<uint8_t, HashLength>*>(hash)
     );
   }
+
+protected:
+  uint32_t Radius;
 };
+
+HashSetInfo* parse_header(const char* beg, const char* end);

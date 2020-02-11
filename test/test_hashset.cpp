@@ -4,11 +4,12 @@
 
 #include <iostream>
 
+#include <cstring>
 #include <fstream>
 #include <iterator>
 #include <vector>
 
-bool operator==(const Header& l, const Header& r) {
+bool operator==(const HashSetInfo& l, const HashSetInfo& r) {
   return l.version == r.version &&
          l.hash_type == r.hash_type &&
          l.hash_length == r.hash_length &&
@@ -17,13 +18,14 @@ bool operator==(const Header& l, const Header& r) {
          l.hashset_off == r.hashset_off &&
          l.sizes_off == r.sizes_off &&
          l.radius == r.radius &&
-         l.hashset_name == r.hashset_name &&
-         l.hashset_time == r.hashset_time &&
-         l.hashset_desc == r.hashset_desc &&
-         l.hashset_sha256 == r.hashset_sha256;
+         !std::memcmp(l.hashset_sha256, r.hashset_sha256,
+                      sizeof(l.hashset_sha256)) &&
+         !std::strcmp(l.hashset_name, r.hashset_name) &&
+         !std::strcmp(l.hashset_time, r.hashset_time) &&
+         !std::strcmp(l.hashset_desc, r.hashset_desc);
 }
 
-std::ostream& operator<<(std::ostream& o, const Header& h) {
+std::ostream& operator<<(std::ostream& o, const HashSetInfo& h) {
   o << '{'
     << h.version << ','
     << h.hash_type << ","
@@ -33,11 +35,11 @@ std::ostream& operator<<(std::ostream& o, const Header& h) {
     << h.hashset_off << ','
     << h.sizes_off << ','
     << h.radius << ','
+    << to_hex(h.hashset_sha256,
+              h.hashset_sha256 + sizeof(h.hashset_sha256)) << ','
     << '"' << h.hashset_name << "\","
     << '"' << h.hashset_time << "\","
-    << '"' << h.hashset_desc << "\","
-    << to_hex(h.hashset_sha256.data(),
-              h.hashset_sha256.data() + h.hashset_sha256.size())
+    << '"' << h.hashset_desc << "\""
     << '}';
   return o;
 }
@@ -50,7 +52,11 @@ std::vector<char> read_file(const std::string& path) {
                            std::istreambuf_iterator<char>());
 }
 
-const Header test1_header{
+char test1_name[] = "Some test hashes";
+char test1_timestamp[] = "2020-02-10T17:18:48.733937";
+char test1_desc[] = "These are test hashes.";
+
+const HashSetInfo test1_info{
   1,                            // version
   SF_HASH_SHA_1,                // hash type
   20,                           // hash length
@@ -59,10 +65,15 @@ const Header test1_header{
   4096,                         // hashset offset
   0,                            // sizes offset
   12,                           // radius
-  "Some test hashes",           // hashset name
-  "2020-02-10T17:18:48.733937", // hashset timestamp
-  "These are test hashes.",     // hashset description
-  to_bytes<32>("3de9a545f3891ee3655ccc37df62c5b25d918f47fb98a342fa688ab3e7faa9a9") // hashset SHA256
+  {
+    0x3d, 0xe9, 0xa5, 0x45, 0xf3, 0x89, 0x1e, 0xe3,
+    0x65, 0x5c, 0xcc, 0x37, 0xdf, 0x62, 0xc5, 0xb2,
+    0x5d, 0x91, 0x8f, 0x47, 0xfb, 0x98, 0xa3, 0x42,
+    0xfa, 0x68, 0x8a, 0xb3, 0xe7, 0xfa, 0xa9, 0xa9
+  },                            // hashset SHA256
+  test1_name,                   // hashset name
+  test1_timestamp,              // hashset timestamp
+  test1_desc,                   // hashset description
 };
 
 const std::vector<std::array<uint8_t, 20>> test1_in{
@@ -177,9 +188,12 @@ const std::vector<std::array<uint8_t,20>> test1_out{
 const std::vector<char> test1_data = read_file("test/test1.hset");
 
 SCOPE_TEST(parse_headerTest) {
-  const Header act = parse_header(test1_data.data(),
-                                  test1_data.data() + test1_data.size());
-  SCOPE_ASSERT_EQUAL(test1_header, act);
+  auto act = make_unique_del(
+    parse_header(test1_data.data(), test1_data.data() + test1_data.size()),
+    sf_destroy_hashset_info
+  );
+
+  SCOPE_ASSERT_EQUAL(test1_info, *act);
 }
 
 SCOPE_TEST(expected_indexTest) {
@@ -198,35 +212,37 @@ SCOPE_TEST(expected_indexTest) {
 
 SCOPE_TEST(compute_radiusTest) {
   SCOPE_ASSERT_EQUAL(
-    test1_header.radius,
+    test1_info.radius,
     compute_radius(test1_in.data(), test1_in.data() + test1_in.size())
   );
 }
 
 template <typename Hashes>
-void api_tester(const Header& header, const std::vector<char> data, const Hashes& hashes, const Hashes& nonhashes, bool shared) {
+void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, const Hashes& hashes, const Hashes& nonhashes, bool shared) {
   HasherError* err = nullptr;
 
-  std::unique_ptr<HashSet, void(*)(HashSet*)> hs(
-    sf_load_hashset_header(data.data(), data.data() + data.size(), &err),
-    sf_destroy_hashset
+  auto hsinfo_act = make_unique_del(
+    sf_load_hashset_info(data.data(), data.data() + data.size(), &err),
+    sf_destroy_hashset_info
   );
 
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(hsinfo_act);
+  SCOPE_ASSERT_EQUAL(hsinfo_exp, *hsinfo_act);
+
+  auto beg = data.data() + hsinfo_act->hashset_off;
+  auto end = beg + hsinfo_act->hashset_size * hsinfo_act->hash_length;
+
+  auto hs = make_unique_del(
+    sf_load_hashset(hsinfo_act.get(), beg, end, shared, &err),
+    sf_destroy_hashset
+  );
+  SCOPE_ASSERT(!err);
   SCOPE_ASSERT(hs);
-  SCOPE_ASSERT(!err);
-
-  // stuff from the header
-  SCOPE_ASSERT_EQUAL(header.hashset_name, sf_hashset_name(hs.get()));
-  SCOPE_ASSERT_EQUAL(header.hashset_desc, sf_hashset_description(hs.get()));
-  SCOPE_ASSERT_EQUAL(header.hashset_size, sf_hashset_size(hs.get()));
-  SCOPE_ASSERT_EQUAL(header.hash_type, sf_hash_type(hs.get()));
-  SCOPE_ASSERT_EQUAL(header.hash_length, sf_hash_length(hs.get()));
-
-  sf_load_hashset_data(hs.get(), data.data() + 4096, data.data() + data.size(), true, &err);
-  SCOPE_ASSERT(!err);
 
   // in hashes are in
   for (const auto& h: hashes) {
+    std::cerr << to_hex(h.data(), h.data() + h.size()) << std::endl;
     SCOPE_ASSERT(sf_lookup_hashset(hs.get(), h.data()));
   }
 
@@ -237,9 +253,9 @@ void api_tester(const Header& header, const std::vector<char> data, const Hashes
 }
 
 SCOPE_TEST(hashset_shared_api_Test) {
-  api_tester(test1_header, test1_data, test1_in, test1_out, true);
+  api_tester(test1_info, test1_data, test1_in, test1_out, true);
 }
 
 SCOPE_TEST(hashset_copied_api_Test) {
-  api_tester(test1_header, test1_data, test1_in, test1_out, false);
+  api_tester(test1_info, test1_data, test1_in, test1_out, false);
 }

@@ -1,10 +1,11 @@
 #include <algorithm>
 #include <cstring>
+#include <unordered_set>
 
 #include "hasher/api.h"
 #include "hashset.h"
 #include "throw.h"
-
+#include "util.h"
 
 uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
   /*
@@ -72,11 +73,12 @@ uint64_t read_uint64_le(const char* beg, const char*& i, const char* end) {
   return r;
 }
 
-std::string read_cstring(const char* beg, const char*& i, const char* end, size_t field_width) {
+char* read_cstring(const char* beg, const char*& i, const char* end, size_t field_width) {
   THROW_IF(i + field_width > end, "out of data reading string at " << (i-beg));
   const char* j = std::find(i, i + field_width, '\0');
   THROW_IF(j == i + field_width, "unterminated cstring at " << (i-beg));
-  std::string r(i, j);
+  char* r = new char[j - i + 1];
+  std::strcpy(r, i);
   i += field_width;
   return r;
 }
@@ -130,85 +132,63 @@ uint64_t hash_type_length(SF_HASH_TYPE_ENUM hash_type) {
   }
 }
 
-Header parse_header(const char* beg, const char* end) {
-  // check file magic
-  check_magic(beg, end);
-
-  Header h;
-  const char* cur = beg;
-
-  // read format version
-  h.version = read_uint64_le(beg, cur, end);
-  THROW_IF(h.version != 1, "unsupported format version " << h.version);
-
-  // read the rest of the header
-  h.flags = read_uint64_le(beg, cur, end);
-
-  const uint64_t htype = read_uint64_le(beg, cur, end);
-  THROW_IF(!hash_type_name(htype), "unknown hash type " << htype);
-  h.hash_type = static_cast<SF_HASH_TYPE_ENUM>(htype);
-
-  h.hash_length = read_uint64_le(beg, cur, end);
-  const uint64_t exp_hash_length = hash_type_length(h.hash_type);
-  THROW_IF(
-    exp_hash_length && exp_hash_length != h.hash_length,
-    "expected hash length " << exp_hash_length <<
-    ", actual hash length " << h.hash_length
-  );
-
-  h.hashset_size = read_uint64_le(beg, cur, end);
-  h.hashset_off = read_uint64_le(beg, cur, end);
-  h.sizes_off = read_uint64_le(beg, cur, end);
-  h.radius = read_uint64_le(beg, cur, end);
-  read_bytes(h.hashset_sha256.data(), sizeof(h.hashset_sha256), beg, cur, end);
-  h.hashset_name = read_cstring(beg, cur, end, 96);
-  h.hashset_time = read_cstring(beg, cur, end, 40);
-  h.hashset_desc = read_cstring(beg, cur, end, 512);
-
-  return h;
-}
-
-template <size_t N>
-HashSet* make_hashset(Header&& hdr) {
-  return hdr.radius == std::numeric_limits<size_t>::max() ? 
-    new HashSetImpl<N>(std::move(hdr)) :
-    new HashSetRadiusImpl<N>(std::move(hdr));
-}
-
-HashSet* make_hashset(Header&& hdr) {
-  switch (hdr.hash_length) {
-  case 16:
-    return make_hashset<16>(std::move(hdr));
-  case 20:
-    return make_hashset<20>(std::move(hdr));
-  case 32:
-    return make_hashset<32>(std::move(hdr));
-  default:
-    THROW("unsupported hash size " << hdr.hash_length); 
-  }
-}
-
 void fill_error(HasherError** err, const std::string& msg) {
   *err = new HasherError;
   (*err)->message = new char[msg.length()+1];
   std::strcpy((*err)->message, msg.c_str());
 }
 
-HashSet* read_header(const char* beg, const char* end) {
+HashSetInfo* parse_header(const char* beg, const char* end) {
   THROW_IF(beg > end, "beg > end!");
-  // read 4KB header
+  // header must be 4KB
   THROW_IF(beg + 4096 > end, "out of data reading header");
-  return make_hashset(parse_header(beg, beg + 4096));
+
+  // check file magic
+  check_magic(beg, end);
+
+  auto h = make_unique_del(new HashSetInfo, sf_destroy_hashset_info);
+
+  const char* cur = beg;
+
+  // read format version
+  h->version = read_uint64_le(beg, cur, end);
+  THROW_IF(h->version != 1, "unsupported format version " << h->version);
+
+  // read the rest of the header
+  h->flags = read_uint64_le(beg, cur, end);
+
+  const uint64_t htype = read_uint64_le(beg, cur, end);
+  THROW_IF(!hash_type_name(htype), "unknown hash type " << htype);
+  h->hash_type = static_cast<SF_HASH_TYPE_ENUM>(htype);
+
+  h->hash_length = read_uint64_le(beg, cur, end);
+  const uint64_t exp_hash_length = hash_type_length(h->hash_type);
+  THROW_IF(
+    exp_hash_length && exp_hash_length != h->hash_length,
+    "expected hash length " << exp_hash_length <<
+    ", actual hash length " << h->hash_length
+  );
+
+  h->hashset_size = read_uint64_le(beg, cur, end);
+  h->hashset_off = read_uint64_le(beg, cur, end);
+  h->sizes_off = read_uint64_le(beg, cur, end);
+  h->radius = read_uint64_le(beg, cur, end);
+  read_bytes(h->hashset_sha256, sizeof(h->hashset_sha256), beg, cur, end);
+  h->hashset_name = read_cstring(beg, cur, end, 96);
+  h->hashset_time = read_cstring(beg, cur, end, 40);
+  h->hashset_desc = read_cstring(beg, cur, end, 512);
+
+  return h.release();
 }
 
-HashSet* sf_load_hashset_header(
+HashSetInfo* sf_load_hashset_info(
   const void* beg,
   const void* end,
   HasherError** err)
 {
   try {
-    return read_header(static_cast<const char*>(beg),
-                       static_cast<const char*>(end));
+    return parse_header(static_cast<const char*>(beg),
+                        static_cast<const char*>(end));
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());
@@ -216,63 +196,113 @@ HashSet* sf_load_hashset_header(
   }
 }
 
-void set_data(HashSet* hset, const void* beg, const void* end, bool shared) {
+void sf_destroy_hashset_info(HashSetInfo* hsinfo) {
+  if (hsinfo) {
+    delete[] hsinfo->hashset_name;
+    delete[] hsinfo->hashset_time;
+    delete[] hsinfo->hashset_desc;
+  }
+  delete hsinfo;
+}
+
+template <size_t N>
+HashSet* make_hashset(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
+  return hsinfo->radius == std::numeric_limits<size_t>::max() ?
+    new HashSetImpl<N>(beg, end, shared) :
+    new HashSetRadiusImpl<N>(beg, end, shared, hsinfo->radius);
+}
+
+HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
   THROW_IF(beg > end, "beg > end!");
 
-  const size_t exp_len = hset->header().hashset_size * hset->header().hash_length;
+  const size_t exp_len = hsinfo->hashset_size * hsinfo->hash_length;
   const size_t act_len = static_cast<const char*>(end) - static_cast<const char*>(beg);
 
   THROW_IF(exp_len > act_len, "out of data reading hashes");
   THROW_IF(exp_len < act_len, "data trailing hashes");
-  
-  hset->set_data(beg, end, shared);
+
+  switch (hsinfo->hash_length) {
+  case 16:
+    return make_hashset<16>(hsinfo, beg, end, shared);
+  case 20:
+    return make_hashset<20>(hsinfo, beg, end, shared);
+  case 28:
+    return make_hashset<28>(hsinfo, beg, end, shared);
+  case 32:
+    return make_hashset<32>(hsinfo, beg, end, shared);
+  case 48:
+    return make_hashset<48>(hsinfo, beg, end, shared);
+  case 64:
+    return make_hashset<64>(hsinfo, beg, end, shared);
+  default:
+    THROW("unsupported hash size " << hsinfo->hash_length);
+  }
 }
 
-bool sf_load_hashset_data(
-  HashSet* hset,
+HashSet* sf_load_hashset(
+  const HashSetInfo* hsinfo,
   const void* beg,
   const void* end,
   bool shared,
   HasherError** err)
 {
-  try { 
-    hset->set_data(beg, end, shared);
-    return true;
+  try {
+    return load_hashset(hsinfo, beg, end, shared);
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());
-    return false;
+    return nullptr;
   }
 }
 
 void sf_destroy_hashset(HashSet* hset) { delete hset; }
 
-int sf_lookup_hashset(const HashSet* hset, const void* hash) {
+bool sf_lookup_hashset(const HashSet* hset, const void* hash) {
   return hset->contains(static_cast<const uint8_t*>(hash));
 }
 
-const char* sf_hashset_name(const HashSet* hset) {
-  return hset->header().hashset_name.c_str();
+struct SizeSet {
+  std::unordered_set<uint64_t> sizes;
+};
+
+SizeSet* load_sizeset(
+  HashSetInfo* hsinfo,
+  const void* beg,
+  const void* end)
+{
+  THROW_IF(beg > end, "beg > end!");
+
+  const size_t exp_len = hsinfo->hashset_size * sizeof(uint64_t);
+  const size_t act_len = static_cast<const char*>(end) - static_cast<const char*>(beg);
+
+  THROW_IF(exp_len > act_len, "out of data reading sizes");
+  THROW_IF(exp_len < act_len, "data trailing sizes");
+
+  return new SizeSet{{static_cast<const uint64_t*>(beg),
+                     static_cast<const uint64_t*>(end)}};
 }
 
-const char* sf_hashset_description(const HashSet* hset) {
-  return hset->header().hashset_desc.c_str();
+SizeSet* sf_load_sizeset(
+  HashSetInfo* hsinfo,
+  const void* beg,
+  const void* end,
+  HasherError** err)
+{
+  try {
+    return load_sizeset(hsinfo, beg, end);
+  }
+  catch (const std::exception& e) {
+    fill_error(err, e.what());
+    return nullptr;
+  }
 }
 
-size_t sf_hashset_size(const HashSet* hset) {
-  return hset->header().hashset_size;
+bool sf_lookup_sizeset(const SizeSet* sset, uint64_t size) {
+  return sset->sizes.find(size) != sset->sizes.end();
 }
 
-SF_HASH_TYPE_ENUM sf_hash_type(const HashSet* hset) {
-  return hset->header().hash_type;
-}
-
-const char* sf_hash_type_name(SF_HASH_TYPE_ENUM hash_type) {
-  return hash_type_name(hash_type);
-}
-
-size_t sf_hash_length(const HashSet* hset) {
-  return hset->header().hash_length;
+void sf_destroy_sizeset(SizeSet* sset) {
+  delete sset;
 }
 
 void sf_free_hashset_error(HasherError* err) {
