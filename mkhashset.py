@@ -1,15 +1,18 @@
 #!/usr/bin/python3
 
-#
 # Make a hashset from a list of filenames:
 #
-# find | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py SHA1 'Some test hashes' 'These are test hashes.' >sha1.hset
+# find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py SHA-1 'Some test hashes' 'These are test hashes.' >sha1.hset
 #
-
 #
-# Make a hashset from the NSRL:
+# Make a hashset and sizeset from a list of filenames:
 #
-# for i in NSRLFile.*.txt.gz ; do zcat $i | awk -F',' '{print $1}' | tail -n +2 ; done | cut -b 2-41 | ./mkhashset.py SHA1 'NSRL' 'The NSRL!' >nsrl.hset
+# for i in  $(find -type f); do echo $(sha1sum $i) $(stat --printf=%s $i) ; done | cut -f1,3 -d' ' | sort -u | ./mkhashset.py SHA-1 'Some test hashes' 'These are test hashes.' >sha1.hset
+#
+#
+# Make a hashset and sizeset from the NSRL:
+#
+# zcat /home/juckelman/projects/nsrl/extracted/NSRLFile.*.txt.gz | awk -F',' 'FNR > 1 {print substr($1, 2, length($1) -2) " " $5}' | ./mkhashset.py SHA-1 'NSRL' 'The NSRL!' >nsrl.hset
 #
 
 import datetime
@@ -69,7 +72,18 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     version = 1
     flags = 0
 
-    hashes = [bytes.fromhex(line) for line in nonempty_lines(inlines)]
+    hashes = []
+    sizes = []
+
+    for line in nonempty_lines(inlines):
+        cols = line.split(' ')
+        hashes.append(bytes.fromhex(cols[0]))
+        if (len(cols) == 2):
+            sizes.append(int(cols[1]))
+
+    if len(hashes) != len(sizes) and len(sizes) != 0:
+        raise RuntimeError('some sizes missing')
+
     hash_length = len(hashes[0])
 
     max_delta = 0
@@ -81,6 +95,9 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     hasher = hashlib.sha256()
     hasher.update(hashset)
 
+    hashes_off = 4096
+    sizes_off = hashes_off + len(hashes)*hash_length if len(sizes) else 0
+
     timestamp = datetime.datetime.now().isoformat(timespec='microseconds').encode('UTF-8')
     timestamp_field_len = 40
 
@@ -91,15 +108,20 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     pos += outbuf.write(hash_type.to_bytes(8, 'little', signed=False))
     pos += outbuf.write(hash_length.to_bytes(8, 'little', signed=False))
     pos += outbuf.write(len(hashes).to_bytes(8, 'little', signed=False))
-    pos += outbuf.write(int(4096).to_bytes(8, 'little', signed=False))
-    pos += outbuf.write(int(0).to_bytes(8, 'little', signed=False))
+    pos += outbuf.write(hashes_off.to_bytes(8, 'little', signed=False))
+    pos += outbuf.write(sizes_off.to_bytes(8, 'little', signed=False))
     pos += outbuf.write(max_delta.to_bytes(8, 'little', signed=False))
     pos += outbuf.write(hasher.digest())
     pos += write_cstring(hashset_name, hashset_name_field_len, outbuf)
     pos += write_cstring(timestamp, timestamp_field_len, outbuf)
     pos += write_cstring(hashset_desc, hashset_desc_field_len, outbuf)
-    pos += outbuf.write(b'\0' * (4096-pos))
+    pos += outbuf.write(b'\0' * (hashes_off-pos))
     pos += outbuf.write(hashset)
+
+    if len(sizes):
+        pos += outbuf.write(b'\0' * (sizes_off-pos))
+        for s in sizes:
+            pos += outbuf.write(s.to_bytes(8, 'little', signed=False))
 
 
 if __name__ == "__main__":

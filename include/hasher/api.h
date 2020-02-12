@@ -77,7 +77,6 @@ SizeSet* sf_load_sizeset(
   HashSetInfo* hsinfo,
   const void* beg,
   const void* end,
-  bool shared,
   HasherError** err
 );
 

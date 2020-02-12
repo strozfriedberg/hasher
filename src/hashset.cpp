@@ -25,7 +25,7 @@ uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
   return static_cast<uint32_t>((high32 * set_size) >> 32);
 }
 
-uint32_t read_uint32_be(const char* beg, const char*& i, const char* end) {
+uint32_t read_uint32_be(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
   THROW_IF(i + 4 > end, "out of data reading uint32_be at " << (i-beg));
   const uint32_t r = (static_cast<uint32_t>(i[0]) << 24) |
                      (static_cast<uint32_t>(i[1]) << 16) |
@@ -35,7 +35,7 @@ uint32_t read_uint32_be(const char* beg, const char*& i, const char* end) {
   return r;
 }
 
-uint32_t read_uint32_le(const char* beg, const char*& i, const char* end) {
+uint32_t read_uint32_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
   THROW_IF(i + 4 > end, "out of data reading uint32_le at " << (i-beg));
   const uint32_t r =  static_cast<uint32_t>(i[0])        |
                      (static_cast<uint32_t>(i[1]) <<  8) |
@@ -45,7 +45,7 @@ uint32_t read_uint32_le(const char* beg, const char*& i, const char* end) {
   return r;
 }
 
-uint64_t read_uint64_be(const char* beg, const char*& i, const char* end) {
+uint64_t read_uint64_be(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
   THROW_IF(i + 8 > end, "out of data reading uint64_be at " << (i-beg));
   const uint64_t r = (static_cast<uint64_t>(i[0]) << 56) |
                      (static_cast<uint64_t>(i[1]) << 48) |
@@ -59,7 +59,7 @@ uint64_t read_uint64_be(const char* beg, const char*& i, const char* end) {
   return r;
 }
 
-uint64_t read_uint64_le(const char* beg, const char*& i, const char* end) {
+uint64_t read_uint64_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
   THROW_IF(i + 8 > end, "out of data reading uint64_le at " << (i-beg));
   const uint64_t r =  static_cast<uint64_t>(i[0])        |
                      (static_cast<uint64_t>(i[1]) <<  8) |
@@ -73,23 +73,23 @@ uint64_t read_uint64_le(const char* beg, const char*& i, const char* end) {
   return r;
 }
 
-char* read_cstring(const char* beg, const char*& i, const char* end, size_t field_width) {
+char* read_cstring(const uint8_t* beg, const uint8_t*& i, const uint8_t* end, size_t field_width) {
   THROW_IF(i + field_width > end, "out of data reading string at " << (i-beg));
-  const char* j = std::find(i, i + field_width, '\0');
+  const uint8_t* j = std::find(i, i + field_width, '\0');
   THROW_IF(j == i + field_width, "unterminated cstring at " << (i-beg));
   char* r = new char[j - i + 1];
-  std::strcpy(r, i);
+  std::strcpy(r, reinterpret_cast<const char*>(i));
   i += field_width;
   return r;
 }
 
-void read_bytes(uint8_t* dst, size_t len, const char* beg, const char*& i, const char* end) {
+void read_bytes(uint8_t* dst, size_t len, const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
   THROW_IF(i + len > end, "out of data reading bytes at " << (i-beg));
   std::memcpy(dst, i, len);
   i += len;
 }
 
-void check_magic(const char*& i, const char* end) {
+void check_magic(const uint8_t*& i, const uint8_t* end) {
   static const uint8_t magic[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
 
   // read magic
@@ -138,17 +138,18 @@ void fill_error(HasherError** err, const std::string& msg) {
   std::strcpy((*err)->message, msg.c_str());
 }
 
-HashSetInfo* parse_header(const char* beg, const char* end) {
+HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end) {
   THROW_IF(beg > end, "beg > end!");
   // header must be 4KB
   THROW_IF(beg + 4096 > end, "out of data reading header");
 
+  const uint8_t* cur = beg;
+
   // check file magic
-  check_magic(beg, end);
+  check_magic(cur, end);
 
   auto h = make_unique_del(new HashSetInfo, sf_destroy_hashset_info);
-
-  const char* cur = beg;
+  h->hashset_name = h->hashset_time = h->hashset_desc = nullptr;
 
   // read format version
   h->version = read_uint64_le(beg, cur, end);
@@ -187,8 +188,8 @@ HashSetInfo* sf_load_hashset_info(
   HasherError** err)
 {
   try {
-    return parse_header(static_cast<const char*>(beg),
-                        static_cast<const char*>(end));
+    return parse_header(static_cast<const uint8_t*>(beg),
+                        static_cast<const uint8_t*>(end));
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());
@@ -267,19 +268,25 @@ struct SizeSet {
 
 SizeSet* load_sizeset(
   HashSetInfo* hsinfo,
-  const void* beg,
-  const void* end)
+  const uint8_t* beg,
+  const uint8_t* end)
 {
   THROW_IF(beg > end, "beg > end!");
 
   const size_t exp_len = hsinfo->hashset_size * sizeof(uint64_t);
-  const size_t act_len = static_cast<const char*>(end) - static_cast<const char*>(beg);
+  const size_t act_len = end - beg;
 
   THROW_IF(exp_len > act_len, "out of data reading sizes");
   THROW_IF(exp_len < act_len, "data trailing sizes");
 
-  return new SizeSet{{static_cast<const uint64_t*>(beg),
-                     static_cast<const uint64_t*>(end)}};
+  auto sset = make_unique_del(new SizeSet, sf_destroy_sizeset);
+
+  const uint8_t* cur = beg;
+  while (cur < end) {
+    sset->sizes.insert(read_uint64_le(beg, cur, end));
+  }
+
+  return sset.release();
 }
 
 SizeSet* sf_load_sizeset(
@@ -289,7 +296,8 @@ SizeSet* sf_load_sizeset(
   HasherError** err)
 {
   try {
-    return load_sizeset(hsinfo, beg, end);
+    return load_sizeset(hsinfo, static_cast<const uint8_t*>(beg),
+                                static_cast<const uint8_t*>(end));
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());

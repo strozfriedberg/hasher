@@ -104,4 +104,4 @@ protected:
   uint32_t Radius;
 };
 
-HashSetInfo* parse_header(const char* beg, const char* end);
+HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end);
