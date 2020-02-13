@@ -7,72 +7,6 @@
 #include "throw.h"
 #include "util.h"
 
-uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
-  /*
-   * The expected index for a hash (assuming a uniform distribution) in
-   * the hash set is hash/2^(hash length) * set_size. We assume that
-   * set_size fits in 32 bits, so nothing beyond the most significant 32
-   * bits of the hash can make a difference for the expected index. Hence,
-   * we can simplify the expected index to high/2^32 * set_size =
-   * (high * set_size)/2^32. Observing that (2^32-1)^2 < (2^32)^2 = 2^64,
-   * we see that (high * set_size) fits into 64 bits without overflow, so
-   * can compute the expected index as (high * set_size) >> 32.
-   */
-  const uint64_t high32 = (static_cast<uint32_t>(h[0]) << 24) |
-                          (static_cast<uint32_t>(h[1]) << 16) |
-                          (static_cast<uint32_t>(h[2]) <<  8) |
-                           static_cast<uint32_t>(h[3]);
-  return static_cast<uint32_t>((high32 * set_size) >> 32);
-}
-
-uint32_t read_uint32_be(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
-  THROW_IF(i + 4 > end, "out of data reading uint32_be at " << (i-beg));
-  const uint32_t r = (static_cast<uint32_t>(i[0]) << 24) |
-                     (static_cast<uint32_t>(i[1]) << 16) |
-                     (static_cast<uint32_t>(i[2]) <<  8) |
-                      static_cast<uint32_t>(i[3]);
-  i += 4;
-  return r;
-}
-
-uint32_t read_uint32_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
-  THROW_IF(i + 4 > end, "out of data reading uint32_le at " << (i-beg));
-  const uint32_t r =  static_cast<uint32_t>(i[0])        |
-                     (static_cast<uint32_t>(i[1]) <<  8) |
-                     (static_cast<uint32_t>(i[2]) << 16) |
-                     (static_cast<uint32_t>(i[3]) << 24);
-  i += 4;
-  return r;
-}
-
-uint64_t read_uint64_be(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
-  THROW_IF(i + 8 > end, "out of data reading uint64_be at " << (i-beg));
-  const uint64_t r = (static_cast<uint64_t>(i[0]) << 56) |
-                     (static_cast<uint64_t>(i[1]) << 48) |
-                     (static_cast<uint64_t>(i[2]) << 40) |
-                     (static_cast<uint64_t>(i[3]) << 32) |
-                     (static_cast<uint64_t>(i[4]) << 24) |
-                     (static_cast<uint64_t>(i[5]) << 16) |
-                     (static_cast<uint64_t>(i[6]) <<  8) |
-                      static_cast<uint64_t>(i[7]);
-  i += 8;
-  return r;
-}
-
-uint64_t read_uint64_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
-  THROW_IF(i + 8 > end, "out of data reading uint64_le at " << (i-beg));
-  const uint64_t r =  static_cast<uint64_t>(i[0])        |
-                     (static_cast<uint64_t>(i[1]) <<  8) |
-                     (static_cast<uint64_t>(i[2]) << 16) |
-                     (static_cast<uint64_t>(i[3]) << 24) |
-                     (static_cast<uint64_t>(i[4]) << 32) |
-                     (static_cast<uint64_t>(i[5]) << 40) |
-                     (static_cast<uint64_t>(i[6]) << 48) |
-                     (static_cast<uint64_t>(i[7]) << 56);
-  i += 8;
-  return r;
-}
-
 char* read_cstring(const uint8_t* beg, const uint8_t*& i, const uint8_t* end, size_t field_width) {
   THROW_IF(i + field_width > end, "out of data reading string at " << (i-beg));
   const uint8_t* j = std::find(i, i + field_width, '\0');
@@ -152,17 +86,17 @@ HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end) {
   h->hashset_name = h->hashset_time = h->hashset_desc = nullptr;
 
   // read format version
-  h->version = read_uint64_le(beg, cur, end);
+  h->version = read_le<uint64_t>(beg, cur, end);
   THROW_IF(h->version != 1, "unsupported format version " << h->version);
 
   // read the rest of the header
-  h->flags = read_uint64_le(beg, cur, end);
+  h->flags = read_le<uint64_t>(beg, cur, end);
 
-  const uint64_t htype = read_uint64_le(beg, cur, end);
+  const uint64_t htype = read_le<uint64_t>(beg, cur, end);
   THROW_IF(!hash_type_name(htype), "unknown hash type " << htype);
   h->hash_type = static_cast<SF_HASH_TYPE_ENUM>(htype);
 
-  h->hash_length = read_uint64_le(beg, cur, end);
+  h->hash_length = read_le<uint64_t>(beg, cur, end);
   const uint64_t exp_hash_length = hash_type_length(h->hash_type);
   THROW_IF(
     exp_hash_length && exp_hash_length != h->hash_length,
@@ -170,10 +104,10 @@ HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end) {
     ", actual hash length " << h->hash_length
   );
 
-  h->hashset_size = read_uint64_le(beg, cur, end);
-  h->hashset_off = read_uint64_le(beg, cur, end);
-  h->sizes_off = read_uint64_le(beg, cur, end);
-  h->radius = read_uint64_le(beg, cur, end);
+  h->hashset_size = read_le<uint64_t>(beg, cur, end);
+  h->hashset_off = read_le<uint64_t>(beg, cur, end);
+  h->sizes_off = read_le<uint64_t>(beg, cur, end);
+  h->radius = read_le<uint64_t>(beg, cur, end);
   read_bytes(h->hashset_sha256, sizeof(h->hashset_sha256), beg, cur, end);
   h->hashset_name = read_cstring(beg, cur, end, 96);
   h->hashset_time = read_cstring(beg, cur, end, 40);
@@ -283,7 +217,7 @@ SizeSet* load_sizeset(
 
   const uint8_t* cur = beg;
   while (cur < end) {
-    sset->sizes.insert(read_uint64_le(beg, cur, end));
+    sset->sizes.insert(read_le<uint64_t>(beg, cur, end));
   }
 
   return sset.release();
@@ -318,4 +252,19 @@ void sf_free_hashset_error(HasherError* err) {
     delete[] err->message;
     delete err;
   }
+}
+
+uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
+  /*
+   * The expected index for a hash (assuming a uniform distribution) in
+   * the hash set is hash/2^(hash length) * set_size. We assume that
+   * set_size fits in 32 bits, so nothing beyond the most significant 32
+   * bits of the hash can make a difference for the expected index. Hence,
+   * we can simplify the expected index to high/2^32 * set_size =
+   * (high * set_size)/2^32. Observing that (2^32-1)^2 < (2^32)^2 = 2^64,
+   * we see that (high * set_size) fits into 64 bits without overflow, so
+   * can compute the expected index as (high * set_size) >> 32.
+   */
+  const uint64_t high32 = to_uint_be<uint32_t>(h);
+  return static_cast<uint32_t>((high32 * set_size) >> 32);
 }
