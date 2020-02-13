@@ -12,15 +12,17 @@ enum SFHASH_HashAlgorithms {
   MD5       = 1 << 0,
   SHA1      = 1 << 1,
   SHA256    = 1 << 2,
-  FUZZY     = 1 << 3,
-  ENTROPY   = 1 << 4,
-  QUICK_MD5 = 1 << 5
+  SHA3_256  = 1 << 3,
+  FUZZY     = 1 << 4,
+  ENTROPY   = 1 << 5,
+  QUICK_MD5 = 1 << 6
 };
 
 typedef struct SFHASH_HashValues {
   uint8_t Md5[16];
   uint8_t Sha1[20];
   uint8_t Sha256[32];
+  uint8_t Sha3_256[32];
   uint8_t Fuzzy[148];
   uint8_t QuickMd5[16];
   double Entropy;

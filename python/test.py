@@ -13,6 +13,7 @@ empty_hashes = {
     "md5": "d41d8cd98f00b204e9800998ecf8427e",
     "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sha3_256": "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
     "quick_md5": "d41d8cd98f00b204e9800998ecf8427e",
 }
 
@@ -24,6 +25,7 @@ lc_alphabet_hashes = {
     "md5": "c3fcd3d76192e4007dfb496cca67e13b",
     "sha1": "32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
     "sha256": "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
+    "sha3_256": "7cab2dc765e21b241dbc1c255ce620b29f527c6d5e7f5f843e56288f0d707521",
     "quick_md5": "c3fcd3d76192e4007dfb496cca67e13b",
 }
 
@@ -35,6 +37,7 @@ abc_hashes = {
     "md5": "900150983cd24fb0d6963f7d28e17f72",
     "sha1": "a9993e364706816aba3e25717850c26c9cd0d89d",
     "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "sha3_256": "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532",
     "quick_md5": "900150983cd24fb0d6963f7d28e17f72",
 }
 
@@ -69,7 +72,7 @@ class HasherTestCase(unittest.TestCase):
 
 
 class TestHasher(HasherTestCase):
-    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA256 | hasher.QUICK_MD5
+    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA256 | hasher.SHA3_256 | hasher.QUICK_MD5
     def test_nothing(self):
         self.hash_this((), empty_hashes)
 
