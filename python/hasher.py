@@ -30,6 +30,7 @@ class HasherHashes(Structure):
     _fields_ = [('md5', c_uint8 * 16),
                 ('sha1', c_uint8 * 20),
                 ('sha256', c_uint8 * 32),
+                ('sha3_256', c_uint8 * 32),
                 ('_fuzzy', c_uint8 * 148),
                 ('quick_md5', c_uint8 * 16),
                 ('entropy', c_double)]
@@ -39,6 +40,7 @@ class HasherHashes(Structure):
             return (self.md5[:] == other.md5[:] and
                     self.sha1[:] == other.sha1[:] and
                     self.sha256[:] == other.sha256[:] and
+                    self.sha3_256[:] == other.sha3_256[:] and
                     self.fuzzy == other.fuzzy and
                     self.entropy == other.entropy and
                     self.quick_md5[:] == other.quick_md5[:])
@@ -128,9 +130,10 @@ _sfhash_destroy_fuzzy_matcher.restype = None
 MD5       = 1 << 0
 SHA1      = 1 << 1
 SHA256    = 1 << 2
-FUZZY     = 1 << 3
-ENTROPY   = 1 << 4
-QUICK_MD5 = 1 << 5
+SHA3_256  = 1 << 3
+FUZZY     = 1 << 4
+ENTROPY   = 1 << 5
+QUICK_MD5 = 1 << 6
 
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -217,6 +220,8 @@ class Hasher(object):
             d['sha1'] = bytes(h.sha1).hex()
         if self.algs & SHA256:
             d['sha256'] = bytes(h.sha256).hex()
+        if self.algs & SHA3_256:
+            d['sha3_256'] = bytes(h.sha3_256).hex()
         if self.algs & FUZZY:
             d['fuzzy'] = h.fuzzy
         if self.algs & ENTROPY:

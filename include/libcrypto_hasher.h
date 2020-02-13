@@ -40,3 +40,5 @@ std::unique_ptr<HasherImpl> make_md5_hasher();
 std::unique_ptr<HasherImpl> make_sha1_hasher();
 
 std::unique_ptr<HasherImpl> make_sha256_hasher();
+
+std::unique_ptr<HasherImpl> make_sha3_256_hasher();
