@@ -5,15 +5,11 @@
 #include <type_traits>
 
 template <typename C>
-std::string to_hex(C beg, C end) {
+void to_hex(char* dst, C beg, C end) {
   static constexpr char hex[] {
     '0', '1', '2', '3', '4', '5', '6', '7',
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
   };
-
-  const size_t len = end - beg;
-  std::string ret(len * 2, '\0');
-  char* dst = &ret[0];
 
   for (C c = beg; c != end; ++c) {
     const uint8_t lo = *c & 0x0F;
@@ -22,7 +18,12 @@ std::string to_hex(C beg, C end) {
     *dst++ = hex[hi];
     *dst++ = hex[lo];
   }
+}
 
+template <typename C>
+std::string to_hex(C beg, C end) {
+  std::string ret((end - beg) * 2, '\0');
+  to_hex(&ret[0], beg, end);
   return ret;
 }
 
