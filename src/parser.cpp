@@ -1,3 +1,4 @@
+#include "hex.h"
 #include "parser.h"
 #include "throw.h"
 

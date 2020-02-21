@@ -11,6 +11,7 @@
 
 #include "config.h"
 #include "hasher.h"
+#include "hex.h"
 #include "throw.h"
 #include "util.h"
 

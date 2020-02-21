@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "parser.h"
+#include "hex.h"
 #include "util.h"
 
 template <size_t N>

@@ -5,6 +5,7 @@
 #include <fuzzy.h>
 
 #include "hasher.h"
+#include "hex.h"
 #include "util.h"
 
 void empty_hash_checker(const SFHASH_HashValues& hashes) {

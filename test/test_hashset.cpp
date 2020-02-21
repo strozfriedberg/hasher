@@ -1,5 +1,6 @@
 #include "hashset.h"
 #include "hasher/api.h"
+#include "hex.h"
 #include "util.h"
 
 #include <iostream>

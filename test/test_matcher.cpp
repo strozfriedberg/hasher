@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "hasher.h"
+#include "hex.h"
 #include "matcher.h"
 #include "util.h"
 
