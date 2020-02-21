@@ -91,3 +91,14 @@ template <typename out_t>
 out_t read_be(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
   return read_uint<out_t, false>(beg, i, end);
 }
+
+//
+// Error handling
+//
+
+struct SFHASH_Error;
+struct LG_Error;
+
+void fill_error(SFHASH_Error** err, const std::string& msg);
+
+void fill_error(SFHASH_Error** err, const LG_Error* lg_err);

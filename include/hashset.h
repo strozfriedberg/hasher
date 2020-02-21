@@ -8,10 +8,11 @@
 #include <memory>
 #include <numeric>
 #include <string>
+#include <unordered_set>
 
-class HashSet {
+class SFHASH_HashSet {
 public:
-  virtual ~HashSet() {}
+  virtual ~SFHASH_HashSet() {}
 
   virtual bool contains(const uint8_t* hash) const = 0;
 };
@@ -22,7 +23,7 @@ std::array<uint8_t, HashLength>* hash_ptr_cast(const void* ptr) {
 }
 
 template <size_t HashLength>
-class HashSetImpl: public HashSet {
+class HashSetImpl: public SFHASH_HashSet {
 public:
   HashSetImpl(const void* beg, const void* end, bool shared):
     HashesBeg(nullptr, nullptr)
@@ -77,7 +78,6 @@ uint32_t compute_radius(
   return max_delta;
 }
 
-// TODO: compute a radius if there's not one; collapse this into the default impl
 template <size_t HashLength>
 class HashSetRadiusImpl: public HashSetImpl<HashLength> {
 public:
@@ -104,4 +104,8 @@ protected:
   uint32_t Radius;
 };
 
-HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end);
+SFHASH_HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end);
+
+struct SFHASH_SizeSet {
+  std::unordered_set<uint64_t> sizes;
+};

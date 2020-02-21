@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "hasher.h"
+#include "hasher/api.h"
 #include "hex.h"
 #include "matcher.h"
 #include "util.h"
@@ -66,7 +66,7 @@ SCOPE_TEST(loadHashset) {
 }
 
 SCOPE_TEST(has_size) {
-  LG_Error* err = nullptr;
+  SFHASH_Error* err = nullptr;
 
   auto m = make_unique_del(sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
                            sfhash_destroy_matcher);
@@ -88,7 +88,7 @@ SCOPE_TEST(has_hash) {
 
   const sha1_t not_there = to_bytes<20>("deadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
 
-  LG_Error* err = nullptr;
+  SFHASH_Error* err = nullptr;
 
   auto m = make_unique_del(sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
                            sfhash_destroy_matcher);
@@ -103,7 +103,7 @@ SCOPE_TEST(has_hash) {
 }
 
 SCOPE_TEST(has_filename) {
-  LG_Error* err = nullptr;
+  SFHASH_Error* err = nullptr;
 
   auto m = make_unique_del(sfhash_create_matcher(HSET, HSET + std::strlen(HSET), &err),
                            sfhash_destroy_matcher);

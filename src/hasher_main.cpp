@@ -1,4 +1,5 @@
-#include "hasher.h"
+#include "hasher/api.h"
+#include "hash_types.h"
 #include "hex.h"
 #include "throw.h"
 #include "util.h"
@@ -14,22 +15,23 @@
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: hasher ALGS PATH\n"
-              << "ALGS values:\n"
-              << "  " << MD5 << " MD5\n"
-              << "  " << SHA1 << " SHA1\n"
-              << "  " << SHA256 << " SHA256\n"
-              << "  " << FUZZY  << " FUZZY\n"
-              << "  " << ENTROPY << " ENTROPY\n"
-              << "  " << QUICK_MD5  << " QUICK_MD5\n"
-              << "Bitwise-OR them for multihashing."
-              << std::endl;
+              << "ALGS values:\n";
+
+    for (uint32_t i = 1; i; i <<= 1) {
+      std::cerr << "  " << i << ' '
+                << sfhash_hash_name(static_cast<SFHASH_HashAlgorithm>(i))
+                << '\n';
+    }
+    std::cerr << "Bitwise-OR them for multihashing." << std::endl;
     return -1;
   }
 
   try {
-    const int algs = boost::lexical_cast<int>(argv[1]);
+    const uint32_t algs = boost::lexical_cast<uint32_t>(argv[1]);
 
-    auto hasher = make_unique_del(sfhash_create_hasher(algs), sfhash_destroy_hasher);
+    auto hasher = make_unique_del(
+      sfhash_create_hasher(algs), sfhash_destroy_hasher
+    );
 
     char buf[4096];
 
@@ -46,22 +48,44 @@ int main(int argc, char** argv) {
     SFHASH_HashValues hashes;
     sfhash_get_hashes(hasher.get(), &hashes);
 
-    if (algs & MD5) {
-      std::cout << to_hex(hashes.Md5, hashes.Md5 + 16) << '\n';
-    }
+    for (uint32_t i = 1; i; i <<= 1) {
+      if (!(algs & i)) {
+        continue;
+      }
 
-    if (algs & SHA1) {
-      std::cout << to_hex(hashes.Sha1, hashes.Sha1 + 20) << '\n';
-    }
+      const SFHASH_HashAlgorithm a = static_cast<SFHASH_HashAlgorithm>(i);
 
-    if (algs & SHA256) {
-      std::cout << to_hex(hashes.Sha256, hashes.Sha256 + 32) << '\n';
-    }
-
-    if (algs & ENTROPY) {
-      std::cout << std::setprecision(std::numeric_limits<double>::digits10 + 1)
-                << std::fixed
-                << hashes.Entropy << '\n';
+      switch (a) {
+      case SFHASH_MD5:
+      case SFHASH_SHA_1:
+      case SFHASH_SHA_2_224:
+      case SFHASH_SHA_2_256:
+      case SFHASH_SHA_2_384:
+      case SFHASH_SHA_2_512:
+      case SFHASH_SHA_3_224:
+      case SFHASH_SHA_3_256:
+      case SFHASH_SHA_3_384:
+      case SFHASH_SHA_3_512:
+      case SFHASH_QUICK_MD5:
+        {
+          const size_t off = hash_member_offset(a);
+          std::cout << to_hex(
+            reinterpret_cast<const char*>(&hashes + off),
+            reinterpret_cast<const char*>(&hashes + off + sfhash_hash_length(a))) << '\n';
+          break;
+        }
+      case SFHASH_FUZZY:
+        std::cout << reinterpret_cast<const char*>(hashes.Fuzzy) << '\n';
+        break;
+      case SFHASH_ENTROPY:
+        std::cout << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+                  << std::fixed
+                  << hashes.Entropy << '\n';
+        break;
+      default:
+        // impossible
+        break;
+      }
     }
   }
   catch (const std::exception& e) {

@@ -1,5 +1,5 @@
+#include "hasher/api.h"
 #include "matcher.h"
-#include "hasher.h"
 #include "parser.h"
 #include "throw.h"
 #include "util.h"
@@ -115,38 +115,13 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   );
 }
 
-std::unique_ptr<SFHASH_FileMatcher> load_hashset_binary(const char* beg, const char* end) {
-  const char* cur = beg;
-
-  const size_t radius = (cur[0] << 24) | (cur[1] << 16) | (cur[2] << 8) | cur[3];
-  cur += 4;
-  const size_t record_size = (cur[0] << 24) | (cur[1] << 16) | (cur[2] << 8) | cur[3];
-  cur += 4;
-
-  // std::cerr << "radius == " << radius << '\n'
-  //           << "records == " << (end - cur)/record_size << std::endl;
-
-  std::vector<sha1_t> hashes;
-  hashes.reserve((end - cur)/record_size);
-
-  while (cur < end) {
-    hashes.push_back(*reinterpret_cast<const sha1_t*>(cur));
-    cur += sizeof(sha1_t);
+Matcher* sfhash_create_matcher(const char* beg, const char* end, SFHASH_Error** err) {
+  LG_Error* lg_err = nullptr;
+  auto m = load_hashset(beg, end, &lg_err);
+  if (lg_err) {
+    fill_error(err, lg_err);
   }
-
-  auto prog = make_unique_del(nullptr, lg_destroy_program);
-
-  return std::unique_ptr<Matcher>(
-    new Matcher{{}, std::move(hashes), std::move(prog), radius}
-  );
-}
-
-Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err) {
-  return load_hashset(beg, end, err).release();
-}
-
-Matcher* sfhash_create_matcher_binary(const char* beg, const char* end) {
-  return load_hashset_binary(beg, end).release();
+  return m.release();
 }
 
 int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
@@ -208,6 +183,38 @@ int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
 
   return hit;
 }
+
+/*
+std::unique_ptr<SFHASH_FileMatcher> load_hashset_binary(const char* beg, const char* end) {
+  const char* cur = beg;
+
+  const size_t radius = (cur[0] << 24) | (cur[1] << 16) | (cur[2] << 8) | cur[3];
+  cur += 4;
+  const size_t record_size = (cur[0] << 24) | (cur[1] << 16) | (cur[2] << 8) | cur[3];
+  cur += 4;
+
+  // std::cerr << "radius == " << radius << '\n'
+  //           << "records == " << (end - cur)/record_size << std::endl;
+
+  std::vector<sha1_t> hashes;
+  hashes.reserve((end - cur)/record_size);
+
+  while (cur < end) {
+    hashes.push_back(*reinterpret_cast<const sha1_t*>(cur));
+    cur += sizeof(sha1_t);
+  }
+
+  auto prog = make_unique_del(nullptr, lg_destroy_program);
+
+  return std::unique_ptr<Matcher>(
+    new Matcher{{}, std::move(hashes), std::move(prog), radius}
+  );
+}
+
+Matcher* sfhash_create_matcher_binary(const char* beg, const char* end) {
+  return load_hashset_binary(beg, end).release();
+}
+*/
 
 /*
 size_t sizes_size(const Matcher* matcher) {

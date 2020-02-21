@@ -1,14 +1,24 @@
-#include "hashset.h"
 #include "hasher/api.h"
+
+#include "hashset.h"
 #include "hex.h"
 #include "util.h"
 
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <chrono>
 #include <iostream>
 
 #include <cstring>
 #include <fstream>
 #include <iterator>
 #include <vector>
+
+using HashSetInfo = SFHASH_HashSetInfo;
 
 bool operator==(const HashSetInfo& l, const HashSetInfo& r) {
   return l.version == r.version &&
@@ -59,7 +69,7 @@ char test1_desc[] = "These are test hashes.";
 
 const HashSetInfo test1_info{
   1,                            // version
-  SF_HASH_SHA_1,                // hash type
+  SFHASH_SHA_1,                 // hash type
   20,                           // hash length
   0,                            // flags
   100,                          // hashset size
@@ -192,7 +202,7 @@ SCOPE_TEST(parse_headerTest) {
   auto beg = reinterpret_cast<const uint8_t*>(test1_data.data());
   auto end = beg + test1_data.size();
 
-  auto act = make_unique_del(parse_header(beg, end), sf_destroy_hashset_info);
+  auto act = make_unique_del(parse_header(beg, end), sfhash_destroy_hashset_info);
   SCOPE_ASSERT_EQUAL(test1_info, *act);
 }
 
@@ -224,11 +234,11 @@ SCOPE_TEST(compute_radiusTest) {
 
 template <typename Hashes>
 void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, const Hashes& ins, const Hashes& outs, bool shared) {
-  HasherError* err = nullptr;
+  SFHASH_Error* err = nullptr;
 
   auto hsinfo_act = make_unique_del(
-    sf_load_hashset_info(data.data(), data.data() + data.size(), &err),
-    sf_destroy_hashset_info
+    sfhash_load_hashset_info(data.data(), data.data() + data.size(), &err),
+    sfhash_destroy_hashset_info
   );
 
   SCOPE_ASSERT(!err);
@@ -239,8 +249,8 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   auto end = beg + hsinfo_act->hashset_size * hsinfo_act->hash_length;
 
   auto hs = make_unique_del(
-    sf_load_hashset(hsinfo_act.get(), beg, end, shared, &err),
-    sf_destroy_hashset
+    sfhash_load_hashset(hsinfo_act.get(), beg, end, shared, &err),
+    sfhash_destroy_hashset
   );
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(hs);
@@ -249,8 +259,8 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   end = beg + hsinfo_act->hashset_size * sizeof(uint64_t);
 
   auto ss = make_unique_del(
-    sf_load_sizeset(hsinfo_act.get(), beg, end, &err),
-    sf_destroy_sizeset
+    sfhash_load_sizeset(hsinfo_act.get(), beg, end, &err),
+    sfhash_destroy_sizeset
   );
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(ss);
@@ -261,15 +271,15 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   // ins are in
   for (const auto& p: ins) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(sf_lookup_hashset(hs.get(), hash.data()));
-    SCOPE_ASSERT(sf_lookup_sizeset(ss.get(), size));
+    SCOPE_ASSERT(sfhash_lookup_hashset(hs.get(), hash.data()));
+    SCOPE_ASSERT(sfhash_lookup_sizeset(ss.get(), size));
   }
 
   // outs are out
   for (const auto& p: outs) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(!sf_lookup_hashset(hs.get(), hash.data()));
-    SCOPE_ASSERT(!sf_lookup_sizeset(ss.get(), size));
+    SCOPE_ASSERT(!sfhash_lookup_hashset(hs.get(), hash.data()));
+    SCOPE_ASSERT(!sfhash_lookup_sizeset(ss.get(), size));
   }
 }
 
@@ -280,3 +290,51 @@ SCOPE_TEST(hashset_shared_api_Test) {
 SCOPE_TEST(hashset_copied_api_Test) {
   api_tester(test1_info, test1_data, test1_in, test1_out, false);
 }
+
+/*
+SCOPE_TEST(nsrlTest) {
+  char header[4096];
+
+  int fd = open("test/nsrl.hset", O_RDONLY);
+  SCOPE_ASSERT(fd != -1);
+
+  const ssize_t r = read(fd, header, sizeof(header));
+  SCOPE_ASSERT_EQUAL(sizeof(header), r);
+
+  SFHASH_Error* err = nullptr;
+
+  auto hsinfo = make_unique_del(
+    sfhash_load_hashset_info(header, header + sizeof(header), &err),
+    sfhash_destroy_hashset_info
+  );
+
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(hsinfo);
+
+  const size_t len = hsinfo->hashset_size * hsinfo->hash_length;
+  void* beg = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, hsinfo->hashset_off);
+  const void* end = static_cast<const char*>(beg) + len;
+
+  SCOPE_ASSERT(beg != MAP_FAILED);
+
+  auto hs = make_unique_del(
+    sfhash_load_hashset(hsinfo.get(), beg, end, true, &err),
+    sfhash_destroy_hashset
+  );
+
+  SCOPE_ASSERT(!err);
+  SCOPE_ASSERT(hs);
+
+  const auto start = std::chrono::system_clock::now();
+  SCOPE_ASSERT_EQUAL(
+    hsinfo->radius,
+    compute_radius<20>(static_cast<const std::array<uint8_t, 20>*>(beg),
+                       static_cast<const std::array<uint8_t, 20>*>(end))
+  );
+  const auto stop = std::chrono::system_clock::now();
+  std::cerr << hsinfo->radius << ' ' << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << "ms" << std::endl;
+
+  munmap(beg, len);
+  close(fd);
+}
+*/

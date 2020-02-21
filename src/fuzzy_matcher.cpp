@@ -5,7 +5,6 @@
 #include <fuzzy.h>
 
 #include "fuzzy_matcher.h"
-#include "hasher.h"
 #include "parser.h"
 
 using FuzzyMatcher = SFHASH_FuzzyMatcher;
@@ -36,7 +35,7 @@ int sfhash_fuzzy_result_score(const FuzzyResult* result, size_t i) {
   return result->score(i);
 }
 
-void sfhash_fuzzy_destroy_match(const FuzzyResult* result) {
+void sfhash_destroy_fuzzy_match(const FuzzyResult* result) {
   delete result;
 }
 

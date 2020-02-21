@@ -59,11 +59,34 @@ std::unique_ptr<HasherImpl> make_sha1_hasher() {
   return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha1()));
 }
 
-std::unique_ptr<HasherImpl> make_sha256_hasher() {
+std::unique_ptr<HasherImpl> make_sha2_224_hasher() {
+  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha224()));
+}
+
+std::unique_ptr<HasherImpl> make_sha2_256_hasher() {
   return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha256()));
+}
+
+std::unique_ptr<HasherImpl> make_sha2_384_hasher() {
+  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha384()));
+}
+
+std::unique_ptr<HasherImpl> make_sha2_512_hasher() {
+  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha512()));
+}
+
+std::unique_ptr<HasherImpl> make_sha3_224_hasher() {
+  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha3_224()));
 }
 
 std::unique_ptr<HasherImpl> make_sha3_256_hasher() {
   return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha3_256()));
 }
 
+std::unique_ptr<HasherImpl> make_sha3_384_hasher() {
+  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha3_384()));
+}
+
+std::unique_ptr<HasherImpl> make_sha3_512_hasher() {
+  return std::unique_ptr<LibcryptoHasher>(new LibcryptoHasher(EVP_sha3_512()));
+}

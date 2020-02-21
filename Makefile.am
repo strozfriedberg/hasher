@@ -22,13 +22,15 @@ src_libhasherint_la_SOURCES = \
 	src/entropy.cpp \
 	src/fuzzy_hasher.cpp \
 	src/fuzzy_matcher.cpp \
+	src/hash_types.cpp \
 	src/hasher.cpp \
 	src/hashset.cpp \
 	src/hex.cpp \
 	src/libcrypto_hasher.cpp \
 	src/matcher.cpp \
 	src/parser.cpp \
-	src/quick_hasher.cpp
+	src/quick_hasher.cpp \
+	src/util.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
