@@ -9,7 +9,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include "config.h"
 #include "hasher.h"
 #include "parser.h"
 #include "throw.h"
