@@ -16,7 +16,7 @@ ParsedLine parse_line(const char* beg, const char* const end) {
   uint8_t flags = BLANK_LINE;
   std::string name;
   uint64_t size = 0;
-  sha1_t hash{};
+  std::array<uint8_t, 20> hash{};
 
   if (beg != end) {
     const char* cbeg = beg;
