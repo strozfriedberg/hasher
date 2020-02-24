@@ -1,5 +1,6 @@
 #include "hasher/api.h"
 #include "error.h"
+#include "hashset.h"
 #include "matcher.h"
 #include "parser.h"
 #include "sizeset.h"
@@ -12,7 +13,6 @@
 #include <iostream>
 #include <iterator>
 #include <utility>
-#include <vector>
 
 using Error = SFHASH_Error;
 using Matcher = SFHASH_FileMatcher;
@@ -41,8 +41,10 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   auto sizes = make_unique_del(new SizeSet, sfhash_destroy_sizeset);
   sizes->sizes.reserve(lines);
 
-  std::vector<sha1_t> hashes;
-  hashes.reserve(lines);
+  std::unique_ptr<std::array<uint8_t, 20>[]> hashes(
+    new std::array<uint8_t, 20>[lines]
+  );
+  std::array<uint8_t, 20>* hcur = hashes.get();
 
   const LG_KeyOptions kopts{1, 0, 0};
 
@@ -76,7 +78,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
       }
 
       if (t.flags & HAS_HASH) {
-        hashes.push_back(t.hash);
+        *hcur = t.hash;
+        ++hcur;
       }
     }
     catch (const std::runtime_error& e) {
@@ -111,17 +114,15 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
     return nullptr;
   }
 
-  std::sort(hashes.begin(), hashes.end());
+  std::sort(hashes.get(), hcur);
 
-  const size_t hsize = hashes.size();
+  auto hptr = make_unique_del(
+    make_hashset<20>(hashes.get(), hcur, std::numeric_limits<uint32_t>::max(), false),
+    sfhash_destroy_hashset
+  );
 
   return std::unique_ptr<Matcher>(
-    new Matcher{
-      std::move(sizes),
-      std::move(hashes),
-      std::move(prog),
-      hsize
-    }
+    new Matcher{std::move(sizes), std::move(hptr), std::move(prog)}
   );
 }
 
@@ -138,42 +139,8 @@ int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
   return sfhash_lookup_sizeset(matcher->Sizes.get(), size);
 }
 
-template <typename Hash>
-uint32_t expected_index(const Hash& h, uint32_t set_size) {
-  /*
-   * The expected index for a hash (assuming a uniform distribution) in
-   * the hash set is hash/2^(hash length) * set_size. We assume that
-   * set_size fits in 32 bits, so nothing beyond the most significant 32
-   * bits of the hash can make a difference for the expected index. Hence,
-   * we can simplify the expected index to high/2^32 * set_size =
-   * (high * set_size)/2^32. Observing that (2^32-1)^2 < (2^32)^2 = 2^64,
-   * we see that (high * set_size) fits into 64 bits without overflow, so
-   * can compute the expected index as (high * set_size) >> 32.
-   */
-  const uint64_t high32 = (static_cast<uint32_t>(h[0]) << 24) |
-                          (static_cast<uint32_t>(h[1]) << 16) |
-                          (static_cast<uint32_t>(h[2]) <<  8) |
-                          (static_cast<uint32_t>(h[3]) <<  0);
-  return static_cast<uint32_t>((high32 * set_size) >> 32);
-}
-
 int sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
-  sha1_t hash;
-  std::memcpy(&hash[0], sha1, sizeof(sha1_t));
-
-  const size_t exp = expected_index(hash, matcher->Hashes.size());
-
-  const size_t left = exp < matcher->HashRadius ? 0 : exp - matcher->HashRadius;
-  const size_t right = std::min(exp + matcher->HashRadius + 1, matcher->Hashes.size());
-
-  // std::cerr << '[' << left << ',' << right << ')' << std::endl;
-  // std::cerr << "exp: " << exp << ", matcher->HashRadius: " << matcher->HashRadius << ", matcher->Hashers.size(): " << matcher->Hashes.size() << std::endl;
-
-  return std::binary_search(
-    matcher->Hashes.cbegin() + left,
-    matcher->Hashes.cbegin() + right,
-    hash
-  );
+  return sfhash_lookup_hashset(matcher->Hashes.get(), sha1);
 }
 
 void cb(void* userData, const LG_SearchHit* const) {

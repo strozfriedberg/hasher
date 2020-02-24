@@ -35,7 +35,8 @@ std::ostream& operator<<(std::ostream& o, const std::unordered_set<T>& s) {
   return o;
 }
 
-std::ostream& operator<<(std::ostream& o, const sha1_t& h) {
+template <size_t N>
+std::ostream& operator<<(std::ostream& o, const std::array<uint8_t, N>& h) {
   return o << to_hex(h);
 }
 
@@ -46,7 +47,7 @@ const char HSET[] = "x\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
                     "y\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
                     "filename with spaces\t0\t5e810a94c86ff057849bfa992bd176d8f743d160\n";
 
-const std::vector<sha1_t> EXP_HASHES = {
+const std::vector<std::array<uint8_t, 20>> EXP_HASHES = {
   to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2"),
   to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"),
   to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160")
@@ -63,7 +64,10 @@ SCOPE_TEST(loadHashset) {
 
   // FIXME: SCOPE_ASSERT_EQUAL mishandles std::unordered_set
   SCOPE_ASSERT(EXP_SIZES == m->Sizes->sizes);
-  SCOPE_ASSERT_EQUAL(EXP_HASHES, m->Hashes);
+
+  SCOPE_ASSERT(sfhash_matcher_has_hash(m.get(), EXP_HASHES[0].data()));
+  SCOPE_ASSERT(sfhash_matcher_has_hash(m.get(), EXP_HASHES[1].data()));
+  SCOPE_ASSERT(sfhash_matcher_has_hash(m.get(), EXP_HASHES[2].data()));
 }
 
 SCOPE_TEST(has_size) {
@@ -81,13 +85,13 @@ SCOPE_TEST(has_size) {
 }
 
 SCOPE_TEST(has_hash) {
-  const sha1_t hashes[] = {
+  const std::array<uint8_t, 20> hashes[] = {
     to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2"),
     to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"),
     to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160")
   };
 
-  const sha1_t not_there = to_bytes<20>("deadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
+  const auto not_there = to_bytes<20>("deadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
 
   SFHASH_Error* err = nullptr;
 

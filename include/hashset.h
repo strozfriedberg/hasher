@@ -63,22 +63,6 @@ protected:
 uint32_t expected_index(const uint8_t* h, uint32_t set_size);
 
 template <size_t HashLength>
-uint32_t compute_radius(
-  const std::array<uint8_t, HashLength>* beg,
-  const std::array<uint8_t, HashLength>* end
-)
-{
-// FIXME: types
-  const uint32_t count = end - beg;
-  int64_t max_delta = 0;
-  for (ssize_t i = 0; i < count; ++i) {
-    max_delta = std::max(max_delta,
-                         std::abs(i - expected_index(beg[i].data(), count)));
-  }
-  return max_delta;
-}
-
-template <size_t HashLength>
 class HashSetRadiusImpl: public HashSetImpl<HashLength> {
 public:
   HashSetRadiusImpl(
@@ -104,6 +88,22 @@ protected:
   uint32_t Radius;
 };
 
+template <size_t HashLength>
+uint32_t compute_radius(
+  const std::array<uint8_t, HashLength>* beg,
+  const std::array<uint8_t, HashLength>* end
+)
+{
+// FIXME: types
+  const uint32_t count = end - beg;
+  int64_t max_delta = 0;
+  for (ssize_t i = 0; i < count; ++i) {
+    max_delta = std::max(max_delta,
+                         std::abs(i - expected_index(beg[i].data(), count)));
+  }
+  return max_delta;
+}
+
 template <size_t N>
 SFHASH_HashSet* make_hashset(
   const void* beg,
@@ -113,7 +113,7 @@ SFHASH_HashSet* make_hashset(
 {
   return new HashSetRadiusImpl<N>(
     beg, end, shared,
-    radius == std::numeric_limits<size_t>::max() ?
+    radius == std::numeric_limits<uint32_t>::max() ?
       compute_radius<N>(static_cast<const std::array<uint8_t, N>*>(beg),
                         static_cast<const std::array<uint8_t, N>*>(end)) :
       radius
