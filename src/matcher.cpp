@@ -38,9 +38,10 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   // person has a file which doesn't end with EOL, count it as 1 either way.
   const size_t lines = std::count(beg, end - 1, '\n') + 1;
 
-  std::unordered_set<uint64_t> sizes;
+  auto sizes = make_unique_del(new SizeSet, sfhash_destroy_sizeset);
+  sizes->sizes.reserve(lines);
+
   std::vector<sha1_t> hashes;
-  sizes.reserve(lines);
   hashes.reserve(lines);
 
   const LG_KeyOptions kopts{1, 0, 0};
@@ -71,7 +72,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
       // put the size and hash into the table
       if (t.flags & HAS_SIZE) {
-        sizes.insert(t.size);
+        sizes->sizes.insert(t.size);
       }
 
       if (t.flags & HAS_HASH) {
@@ -116,7 +117,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
 
   return std::unique_ptr<Matcher>(
     new Matcher{
-      make_unique_del(new SizeSet{std::move(sizes)}, sfhash_destroy_sizeset),
+      std::move(sizes),
       std::move(hashes),
       std::move(prog),
       hsize

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <string>
@@ -102,3 +103,19 @@ public:
 protected:
   uint32_t Radius;
 };
+
+template <size_t N>
+SFHASH_HashSet* make_hashset(
+  const void* beg,
+  const void* end,
+  uint32_t radius,
+  bool shared)
+{
+  return new HashSetRadiusImpl<N>(
+    beg, end, shared,
+    radius == std::numeric_limits<size_t>::max() ?
+      compute_radius<N>(static_cast<const std::array<uint8_t, N>*>(beg),
+                        static_cast<const std::array<uint8_t, N>*>(end)) :
+      radius
+  );
+}

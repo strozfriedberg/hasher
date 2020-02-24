@@ -11,17 +11,6 @@ using Error = SFHASH_Error;
 using HashSet = SFHASH_HashSet;
 using HashSetInfo = SFHASH_HashSetInfo;
 
-template <size_t N>
-HashSet* make_hashset(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
-  return new HashSetRadiusImpl<N>(
-    beg, end, shared,
-    hsinfo->radius == std::numeric_limits<size_t>::max() ?
-      compute_radius<N>(static_cast<const std::array<uint8_t, N>*>(beg),
-                        static_cast<const std::array<uint8_t, N>*>(end)) :
-      hsinfo->radius
-  );
-}
-
 HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
   THROW_IF(beg > end, "beg > end!");
 
@@ -33,17 +22,17 @@ HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* en
 
   switch (hsinfo->hash_length) {
   case 16:
-    return make_hashset<16>(hsinfo, beg, end, shared);
+    return make_hashset<16>(beg, end, hsinfo->radius, shared);
   case 20:
-    return make_hashset<20>(hsinfo, beg, end, shared);
+    return make_hashset<20>(beg, end, hsinfo->radius, shared);
   case 28:
-    return make_hashset<28>(hsinfo, beg, end, shared);
+    return make_hashset<28>(beg, end, hsinfo->radius, shared);
   case 32:
-    return make_hashset<32>(hsinfo, beg, end, shared);
+    return make_hashset<32>(beg, end, hsinfo->radius, shared);
   case 48:
-    return make_hashset<48>(hsinfo, beg, end, shared);
+    return make_hashset<48>(beg, end, hsinfo->radius, shared);
   case 64:
-    return make_hashset<64>(hsinfo, beg, end, shared);
+    return make_hashset<64>(beg, end, hsinfo->radius, shared);
   default:
     THROW("unsupported hash size " << hsinfo->hash_length);
   }
