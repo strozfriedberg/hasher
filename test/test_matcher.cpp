@@ -5,6 +5,7 @@
 #include "hasher/api.h"
 #include "hex.h"
 #include "matcher.h"
+#include "sizeset.h"
 #include "util.h"
 
 /*
@@ -61,7 +62,7 @@ SCOPE_TEST(loadHashset) {
   SCOPE_ASSERT(m);
 
   // FIXME: SCOPE_ASSERT_EQUAL mishandles std::unordered_set
-  SCOPE_ASSERT(EXP_SIZES == m->Sizes);
+  SCOPE_ASSERT(EXP_SIZES == m->Sizes->sizes);
   SCOPE_ASSERT_EQUAL(EXP_HASHES, m->Hashes);
 }
 

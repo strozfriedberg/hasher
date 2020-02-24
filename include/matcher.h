@@ -10,7 +10,7 @@
 #include "util.h"
 
 struct SFHASH_FileMatcher {
-  std::unordered_set<uint64_t> Sizes;
+  std::unique_ptr<SFHASH_SizeSet, decltype(sfhash_destroy_sizeset)&> Sizes;
   std::vector<sha1_t> Hashes;
   std::unique_ptr<ProgramHandle, decltype(lg_destroy_program)&> Prog;
   size_t HashRadius;

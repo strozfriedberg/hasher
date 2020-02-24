@@ -2,6 +2,7 @@
 #include "error.h"
 #include "matcher.h"
 #include "parser.h"
+#include "sizeset.h"
 #include "throw.h"
 #include "util.h"
 
@@ -15,6 +16,7 @@
 
 using Error = SFHASH_Error;
 using Matcher = SFHASH_FileMatcher;
+using SizeSet = SFHASH_SizeSet;
 
 std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
   auto fsm = make_unique_del(lg_create_fsm(0), lg_destroy_fsm);
@@ -113,7 +115,12 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   const size_t hsize = hashes.size();
 
   return std::unique_ptr<Matcher>(
-    new Matcher{std::move(sizes), std::move(hashes), std::move(prog), hsize}
+    new Matcher{
+      make_unique_del(new SizeSet{std::move(sizes)}, sfhash_destroy_sizeset),
+      std::move(hashes),
+      std::move(prog),
+      hsize
+    }
   );
 }
 
@@ -127,7 +134,7 @@ Matcher* sfhash_create_matcher(const char* beg, const char* end, Error** err) {
 }
 
 int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
-  return matcher->Sizes.find(size) != matcher->Sizes.cend();
+  return sfhash_lookup_sizeset(matcher->Sizes.get(), size);
 }
 
 template <typename Hash>
