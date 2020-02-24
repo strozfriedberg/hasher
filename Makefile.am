@@ -20,17 +20,19 @@ noinst_LTLIBRARIES = $(HASHER_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
 	src/entropy.cpp \
+	src/error.cpp \
 	src/fuzzy_hasher.cpp \
 	src/fuzzy_matcher.cpp \
 	src/hash_types.cpp \
 	src/hasher.cpp \
 	src/hashset.cpp \
+	src/hashsetinfo.cpp \
 	src/hex.cpp \
 	src/libcrypto_hasher.cpp \
 	src/matcher.cpp \
 	src/parser.cpp \
 	src/quick_hasher.cpp \
-	src/util.cpp
+	src/sizeset.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL

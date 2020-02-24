@@ -1,18 +1,20 @@
 #include "hasher/api.h"
-#include "util.h"
+#include "error.h"
 
 #include <lightgrep/api.h>
 
 #include <cstring>
 #include <sstream>
 
-void fill_error(SFHASH_Error** err, const std::string& msg) {
-  *err = new SFHASH_Error;
+using Error = SFHASH_Error;
+
+void fill_error(Error** err, const std::string& msg) {
+  *err = new Error;
   (*err)->message = new char[msg.length()+1];
   std::strcpy((*err)->message, msg.c_str());
 }
 
-void fill_error(SFHASH_Error** err, const LG_Error* lg_err) {
+void fill_error(Error** err, const LG_Error* lg_err) {
   std::ostringstream os;
 
   while (lg_err) {
@@ -33,4 +35,11 @@ void fill_error(SFHASH_Error** err, const LG_Error* lg_err) {
   }
 
   fill_error(err, os.str());
+}
+
+void sfhash_free_error(Error* err) {
+  if (err) {
+    delete[] err->message;
+    delete err;
+  }
 }

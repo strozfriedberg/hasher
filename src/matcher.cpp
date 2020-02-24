@@ -1,4 +1,5 @@
 #include "hasher/api.h"
+#include "error.h"
 #include "matcher.h"
 #include "parser.h"
 #include "throw.h"
@@ -12,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+using Error = SFHASH_Error;
 using Matcher = SFHASH_FileMatcher;
 
 std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
@@ -115,7 +117,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   );
 }
 
-Matcher* sfhash_create_matcher(const char* beg, const char* end, SFHASH_Error** err) {
+Matcher* sfhash_create_matcher(const char* beg, const char* end, Error** err) {
   LG_Error* lg_err = nullptr;
   auto m = load_hashset(beg, end, &lg_err);
   if (lg_err) {

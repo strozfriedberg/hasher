@@ -8,7 +8,6 @@
 #include <memory>
 #include <numeric>
 #include <string>
-#include <unordered_set>
 
 class SFHASH_HashSet {
 public:
@@ -102,10 +101,4 @@ public:
 
 protected:
   uint32_t Radius;
-};
-
-SFHASH_HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end);
-
-struct SFHASH_SizeSet {
-  std::unordered_set<uint64_t> sizes;
 };
