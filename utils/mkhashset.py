@@ -12,7 +12,7 @@
 #
 # Make a hashset and sizeset from the NSRL:
 #
-# zcat /home/juckelman/projects/nsrl/extracted/NSRLFile.*.txt.gz | awk -F',' 'FNR > 1 {print substr($1, 2, length($1) -2) " " $5}' | ./mkhashset.py SHA-1 'NSRL' 'The NSRL!' >nsrl.hset
+# for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py SHA-1 'NSRL' 'The NSRL!' >nsrl.hset
 #
 
 import datetime
