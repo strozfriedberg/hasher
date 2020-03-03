@@ -15,5 +15,5 @@ All numbers little endian
 240 hash set description: char[512]
 752 reserved through 4095
 
-    hashes, sorted, starting at hashes offset
-    sizes: uint64_t, in order of hashes, starting at sizes offset
+hoff hashes, sorted, starting at hashes offset
+soff sizes: uint64_t, same order as hashes, starting at sizes offset

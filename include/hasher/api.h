@@ -9,6 +9,11 @@
 extern "C" {
 #endif
 
+/******************************************************************************
+ Hash types
+******************************************************************************/
+
+// Bit flags for specifying hash algorithms
 typedef enum {
   SFHASH_MD5       = 1 <<  0,
   SFHASH_SHA_1     = 1 <<  1,
@@ -26,23 +31,26 @@ typedef enum {
   SFHASH_OTHER     = 1 << 31
 } SFHASH_HashAlgorithm;
 
+// Returns a name string corresponding to the given hash type
 const char* sfhash_hash_name(SFHASH_HashAlgorithm hash_type);
 
+// Returns the byte length of the given hash type
 uint32_t sfhash_hash_length(SFHASH_HashAlgorithm hash_type);
 
-/*
- * Error handling
- */
+/******************************************************************************
+ Error handling
+******************************************************************************/
 
 struct SFHASH_Error {
   char* message;
 };
 
+// Frees an error struct
 void sfhash_free_error(SFHASH_Error* err);
 
-/*
- * Hashing functions
- */
+/******************************************************************************
+ Hashing functions
+******************************************************************************/
 
 struct SFHASH_HashValues {
   uint8_t Md5[16];
@@ -62,60 +70,77 @@ struct SFHASH_HashValues {
 
 struct SFHASH_Hasher;
 
+// Creates a hasher for the given hash types.
+// hashAlgs is the bitwise OR of SFHASH_HashAlgorithm flags
 SFHASH_Hasher* sfhash_create_hasher(uint32_t hashAlgs);
 
+// Clones a hasher
 SFHASH_Hasher* sfhash_clone_hasher(const SFHASH_Hasher* hasher);
 
+// Adds [beg, end) to the hasher digest
 void sfhash_update_hasher(
   SFHASH_Hasher* hasher,
   const void* beg,
   const void* end
 );
 
+// Set the expected bytes of input to be hashed
+// This is a no-op for all hash types except fuzzy.
 void sfhash_hasher_set_total_input_length(
   SFHASH_Hasher* hasher,
   uint64_t total_fixed_length
 );
 
+// Stores the requested hashes in out_hashes
 void sfhash_get_hashes(
   SFHASH_Hasher* hasher,
   SFHASH_HashValues* out_hashes
 );
 
+// Resets a hasher to its initial state, ready to hash anew
 void sfhash_reset_hasher(SFHASH_Hasher* hasher);
 
+// Frees a hasher
 void sfhash_destroy_hasher(SFHASH_Hasher* hasher);
 
-/*
- *  Hash set and size set functions
- */
+/******************************************************************************
+  Hash set and size set functions
+******************************************************************************/
 
 struct SFHASH_HashSet;
 struct SFHASH_SizeSet;
 
+// Metadata from the hashset file header
 typedef struct {
-  uint64_t version;
-  SFHASH_HashAlgorithm hash_type;
-  uint64_t hash_length;
-  uint64_t flags;
-  uint64_t hashset_size;
-  uint64_t hashset_off;
-  uint64_t sizes_off;
-  uint64_t radius;
-  uint8_t hashset_sha256[32];
-  char* hashset_name;
-  char* hashset_time;
-  char* hashset_desc;
+  uint64_t version;               // file format version
+  SFHASH_HashAlgorithm hash_type; // type of hash in this hashset
+  uint64_t hash_length;           // length of hash in this hashset
+  uint64_t flags;                 // flags; unused at present
+  uint64_t hashset_size;          // number of hashes in hashset
+  uint64_t hashset_off;           // offset of hashes in hashset file
+  uint64_t sizes_off;             // offset of sizes in hashset file
+  uint64_t radius;                // max delta of any hash from expected index
+  uint8_t hashset_sha256[32];     // SHA-2-256 of hash data only
+  char* hashset_name;             // name of hashset
+  char* hashset_time;             // ISO 8601 timestamp of hashset
+  char* hashset_desc;             // description of hashset
 } SFHASH_HashSetInfo;
 
+// Load hashset metadata
+// Returns null on error and sets err to nonnull
 SFHASH_HashSetInfo* sfhash_load_hashset_info(
   const void* beg,
   const void* end,
   SFHASH_Error** err
 );
 
+// Frees hashset metadata
 void sfhash_destroy_hashset_info(SFHASH_HashSetInfo* hsinfo);
 
+// Loads a hashset
+// The data is copied if shared is false; used directly if shared is true,
+// and caller remains responsible for freeing it.
+// Returns null on error and sets err to nonnull
 SFHASH_HashSet* sfhash_load_hashset(
   const SFHASH_HashSetInfo* hsinfo,
   const void* beg,
@@ -124,10 +149,14 @@ SFHASH_HashSet* sfhash_load_hashset(
   SFHASH_Error** err
 );
 
+// Frees a hashset
 void sfhash_destroy_hashset(SFHASH_HashSet* hset);
 
+// Checks if a given hash is contained in a hashset
 bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash);
 
+// Loads a sizeset
+// Returns null on error and sets err to nonnull
 SFHASH_SizeSet* sfhash_load_sizeset(
   SFHASH_HashSetInfo* hsinfo,
   const void* beg,
@@ -135,13 +164,17 @@ SFHASH_SizeSet* sfhash_load_sizeset(
   SFHASH_Error** err
 );
 
+// Frees a sizeset
 void sfhash_destroy_sizeset(SFHASH_SizeSet* sset);
 
+// Checks if a given size is contained in a sizeset
 bool sfhash_lookup_sizeset(const SFHASH_SizeSet* sset, uint64_t size);
 
+/******************************************************************************
+  Fuzzy matching
+******************************************************************************/
+
 /*
- *  Fuzzy matching
- *
  *  Input is the ssdeep CSV file format version 1.1
  *  The first line is the header
  *  ssdeep,1.1--blocksize:hash:hash,filename
@@ -181,9 +214,12 @@ void sfhash_destroy_fuzzy_match(const SFHASH_FuzzyResult* result);
 
 void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 
+
+/******************************************************************************
+  Matcher
+******************************************************************************/
+
 /*
- * Matcher
- *
  * Input is a three-column tab-separated UTF-8 text file, where each line
  * is of the form:
  *
@@ -215,4 +251,3 @@ void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 #endif
 
 #endif /* HASHER_C_API_H_ */
-

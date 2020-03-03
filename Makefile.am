@@ -44,7 +44,7 @@ endif
 src_libhasher_ladir = $(includedir)
 
 src_libhasher_la_HEADERS = \
-	include/hasher.h
+	include/hasher/api.h
 
 src_fuzzy_SOURCES = \
         src/fuzzy_main.cpp
