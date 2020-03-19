@@ -6,33 +6,37 @@
 #include "entropy_impl.h"
 #include "fuzzy_hasher.h"
 #include "hasher_impl.h"
+#include "libblake3_hasher.h"
 #include "libcrypto_hasher.h"
 #include "quick_hasher.h"
 
 using HashValues = SFHASH_HashValues;
 
+const std::vector<std::pair<std::unique_ptr<HasherImpl> (*)(void), off_t>>
+HasherInit{
+  {make_md5_hasher,         offsetof(HashValues, Md5)     },
+  {make_sha1_hasher,        offsetof(HashValues, Sha1)    },
+  {make_sha2_224_hasher,    offsetof(HashValues, Sha2_224)},
+  {make_sha2_256_hasher,    offsetof(HashValues, Sha2_256)},
+  {make_sha2_384_hasher,    offsetof(HashValues, Sha2_384)},
+  {make_sha2_512_hasher,    offsetof(HashValues, Sha2_512)},
+  {make_sha3_224_hasher,    offsetof(HashValues, Sha3_224)},
+  {make_sha3_256_hasher,    offsetof(HashValues, Sha3_256)},
+  {make_sha3_384_hasher,    offsetof(HashValues, Sha3_384)},
+  {make_sha3_512_hasher,    offsetof(HashValues, Sha3_512)},
+  {make_blake3_hasher,      offsetof(HashValues, Blake3)  },
+  {make_fuzzy_hasher,       offsetof(HashValues, Fuzzy)   },
+  {make_entropy_calculator, offsetof(HashValues, Entropy) },
+  {make_quick_md5_hasher,   offsetof(HashValues, QuickMd5)}
+};
+
 // TODO: make a header for this class once hasher.h is empty
 class SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
-    const std::vector<std::pair<std::unique_ptr<HasherImpl> (*)(void), off_t>>
-      init{{make_md5_hasher,         offsetof(HashValues, Md5)     },
-           {make_sha1_hasher,        offsetof(HashValues, Sha1)    },
-           {make_sha2_224_hasher,    offsetof(HashValues, Sha2_224)},
-           {make_sha2_256_hasher,    offsetof(HashValues, Sha2_256)},
-           {make_sha2_384_hasher,    offsetof(HashValues, Sha2_384)},
-           {make_sha2_512_hasher,    offsetof(HashValues, Sha2_512)},
-           {make_sha3_224_hasher,    offsetof(HashValues, Sha3_224)},
-           {make_sha3_256_hasher,    offsetof(HashValues, Sha3_256)},
-           {make_sha3_384_hasher,    offsetof(HashValues, Sha3_384)},
-           {make_sha3_512_hasher,    offsetof(HashValues, Sha3_512)},
-           {make_fuzzy_hasher,       offsetof(HashValues, Fuzzy)   },
-           {make_entropy_calculator, offsetof(HashValues, Entropy) },
-           {make_quick_md5_hasher,   offsetof(HashValues, QuickMd5)}};
-
-    for (uint32_t i = 0; i < init.size() && algs; algs >>= 1, ++i) {
+    for (uint32_t i = 0; i < HasherInit.size() && algs; algs >>= 1, ++i) {
       if (algs & 1) {
-        hashers.emplace_back(init[i].first(), init[i].second);
+        hashers.emplace_back(HasherInit[i].first(), HasherInit[i].second);
       }
     }
   }

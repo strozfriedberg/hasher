@@ -28,6 +28,7 @@ src_libhasherint_la_SOURCES = \
 	src/hashset.cpp \
 	src/hashsetinfo.cpp \
 	src/hex.cpp \
+	src/libblake3_hasher.cpp \
 	src/libcrypto_hasher.cpp \
 	src/matcher.cpp \
 	src/parser.cpp \
