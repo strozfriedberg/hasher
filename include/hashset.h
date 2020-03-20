@@ -94,12 +94,13 @@ uint32_t compute_radius(
   const std::array<uint8_t, HashLength>* end
 )
 {
-// FIXME: types
   const uint32_t count = end - beg;
   int64_t max_delta = 0;
-  for (ssize_t i = 0; i < count; ++i) {
-    max_delta = std::max(max_delta,
-                         std::abs(i - expected_index(beg[i].data(), count)));
+  for (uint32_t i = 0; i < count; ++i) {
+    max_delta = std::max(
+      max_delta,
+      std::abs((int64_t)i - expected_index(beg[i].data(), count))
+    );
   }
   return max_delta;
 }
