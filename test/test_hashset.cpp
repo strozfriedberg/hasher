@@ -5,11 +5,13 @@
 #include "hex.h"
 #include "util.h"
 
+/*
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+*/
 
 #include <chrono>
 #include <iostream>
