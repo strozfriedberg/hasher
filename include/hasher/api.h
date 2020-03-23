@@ -189,14 +189,14 @@ struct SFHASH_FuzzyMatcher;
 struct SFHASH_FuzzyResult;
 
 SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(
-  const char* beg,
-  const char* end
+  const void* beg,
+  const void* end
 );
 
 const SFHASH_FuzzyResult* sfhash_fuzzy_matcher_compare(
   SFHASH_FuzzyMatcher* matcher,
-  const char* beg,
-  const char* end
+  const void* beg,
+  const void* end
 );
 
 size_t sfhash_fuzzy_result_count(const SFHASH_FuzzyResult* result);
@@ -230,19 +230,19 @@ void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 struct SFHASH_FileMatcher;
 
 SFHASH_FileMatcher* sfhash_create_matcher(
-  const char* beg,
-  const char* end,
+  const void* beg,
+  const void* end,
   SFHASH_Error** err
 );
 
 // returns nonzero if the given file size occurs in the hash set
-int sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
+bool sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
 
 // returns nonzero if the given file hash occurrs in the hash set
-int sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, const uint8_t* sha1);
+bool sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, const uint8_t* sha1);
 
 // returns nonzero if the given filename (in UTF-8) matches the hash set
-int sfhash_matcher_has_filename(const SFHASH_FileMatcher* matcher, const char* filename);
+bool sfhash_matcher_has_filename(const SFHASH_FileMatcher* matcher, const char* filename);
 
 void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
 

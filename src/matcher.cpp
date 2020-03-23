@@ -126,20 +126,21 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   );
 }
 
-Matcher* sfhash_create_matcher(const char* beg, const char* end, Error** err) {
+Matcher* sfhash_create_matcher(const void* beg, const void* end, Error** err) {
   LG_Error* lg_err = nullptr;
-  auto m = load_hashset(beg, end, &lg_err);
+  auto m = load_hashset(static_cast<const char*>(beg),
+                        static_cast<const char*>(end), &lg_err);
   if (lg_err) {
     fill_error(err, lg_err);
   }
   return m.release();
 }
 
-int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
+bool sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
   return sfhash_lookup_sizeset(matcher->Sizes.get(), size);
 }
 
-int sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
+bool sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
   return sfhash_lookup_hashset(matcher->Hashes.get(), sha1);
 }
 
@@ -147,7 +148,7 @@ void cb(void* userData, const LG_SearchHit* const) {
   *static_cast<bool*>(userData) = true;
 }
 
-int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
+bool sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   bool hit  = false;
   auto prog = matcher->Prog.get();
   if (prog) {
