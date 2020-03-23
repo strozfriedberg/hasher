@@ -260,26 +260,42 @@ class Py_buffer(Structure):
     ]
 
 
-def ptr_range(buf, pbuf, ptype):
-    blen = len(buf)
+def buf_beg(buf, ptype):
+    # Of note for retrieving pointers to buffers:
+    #
+    # "T * 1" produces the ctypes type corresponding to the C type T[1].
+    # The buffer which we cast using this is unlikely to be of length 1,
+    # but this doesn't matter because C has type punning and all we really
+    # want is a pointer to the first element (= a pointer to the buffer)
+    # anyway.
+    #
+    # Py_buffer is a struct defined in Python's C API for use with objects
+    # implementing the buffer protocol. Q.v.:
+    #
+    # https://docs.python.org/3/c-api/buffer.html#c.Py_buffer
+    #
+    # (ptype * 1).from_buffer(buf) is a fast, simple way to get a pointer
+    # from writable buffers, but unfortunately it throws on very short
+    # (< 8 bytes) or readonly buffers which makes the total time for these
+    # much worse than had we not tried it at all.
+    #
+    obj = py_object(buf)
+    pybuf = Py_buffer()
+    try:
+        pythonapi.PyObject_GetBuffer(obj, byref(pybuf), 0)
+        return (ptype * 1).from_address(pybuf.buf)
+    finally:
+        pythonapi.PyBuffer_Release(byref(pybuf))
 
-    if isinstance(buf, bytes):
-        # yay, we can get a pointer from a bytes
-        beg = cast(buf, POINTER(ptype * 1))[0]
-    elif blen >= 8 and (not isinstance(buf, memoryview) or not buf.readonly):
-        # we have a writable buffer; from_buffer requires len >= 8
-        beg = (ptype * 1).from_buffer(buf)
-    else:
-        # we have a read-only memoryview, so have to do some gymnastics
-        obj = py_object(buf)
-        try:
-            pythonapi.PyObject_GetBuffer(obj, byref(pbuf), 0)
-            beg = (ptype * pbuf.len).from_address(pbuf.buf)
-        finally:
-            pythonapi.PyBuffer_Release(byref(pbuf))
 
-    end = cast(beg, POINTER(ptype * 1))[blen]
+def buf_range(buf, ptype):
+    beg = buf_beg(buf, ptype)
+    end = cast(beg, POINTER(ptype * 1))[len(buf)]
     return beg, end
+
+
+def buf_end(buf, ptype):
+    return buf_range(buf, ptype)[1]
 
 
 class Handle(object):
@@ -309,7 +325,7 @@ class Handle(object):
 
 class Error(Handle):
     def __init__(self):
-        super().__init__(c_void_p())
+        super().__init__(POINTER(HasherError)())
 
     def destroy(self):
         _sfhash_free_error(self.handle)
@@ -326,7 +342,6 @@ class Hasher(Handle):
     def __init__(self, algs, clone=None):
         super().__init__(_sfhash_clone_hasher(clone) if clone else _sfhash_create_hasher(algs))
         self.algs = algs
-        self.pbuf = Py_buffer()
 
     def destroy(self):
         _sfhash_destroy_hasher(self.handle)
@@ -336,7 +351,7 @@ class Hasher(Handle):
         return Hasher(self.algs, clone=self.get())
 
     def update(self, buf):
-        _sfhash_update_hasher(self.get(), *ptr_range(buf, self.pbuf, c_uint8))
+        _sfhash_update_hasher(self.get(), *buf_range(buf, c_uint8))
 
     def set_total_input_length(self, length):
         _sfhash_hasher_set_total_input_length(self.get(), length)
@@ -386,7 +401,7 @@ class Hasher(Handle):
 class HashSetInfo(Handle):
     def __init__(self, buf):
         with Error() as err:
-            super().__init__(_sfhash_load_hashset_info(*ptr_range(buf, Py_buffer(), c_char), byref(err.get())))
+            super().__init__(_sfhash_load_hashset_info(*buf_range(buf, c_char), byref(err.get())))
             if err:
                 raise RuntimeError(err)
 
@@ -400,7 +415,7 @@ class HashSetInfo(Handle):
 class HashSet(Handle):
     def __init__(self, info, buf):
         with Error() as err:
-            super().__init__(_sfhash_load_hashset(info.get(), *ptr_range(buf, Py_buffer(), c_char), byref(err.get())))
+            super().__init__(_sfhash_load_hashset(info.get(), *buf_range(buf, c_char), byref(err.get())))
             if err:
                 raise RuntimeError(err)
 
@@ -415,7 +430,7 @@ class HashSet(Handle):
 class SizeSet(Handle):
     def __init__(self, info, buf):
         with Error() as err:
-            super().__init__(_sfhash_load_sizeset(info.get(), *ptr_range(buf, Py_buffer(), c_char), byref(err.get())))
+            super().__init__(_sfhash_load_sizeset(info.get(), *buf_range(buf, c_char), byref(err.get())))
             if err:
                 raise RuntimeError(err)
 
@@ -452,9 +467,8 @@ class FuzzyResult(Handle):
 
 class FuzzyMatcher(Handle):
     def __init__(self, buf):
-        self.pbuf = Py_buffer()
         self.matcher_buf = buf.encode('utf-8')
-        super().__init__(_sfhash_create_fuzzy_matcher(*ptr_range(self.matcher_buf, self.pbuf, c_char)))
+        super().__init__(_sfhash_create_fuzzy_matcher(*buf_range(self.matcher_buf, c_char)))
         if not self.handle:
             raise Exception("Invalid hashes file")
 
@@ -464,15 +478,16 @@ class FuzzyMatcher(Handle):
 
     def matches(self, sig):
         sig_bytes = sig.encode('utf-8')
-        with FuzzyResult(_sfhash_fuzzy_matcher_compare(self.get(), *ptr_range(sig_bytes, self.pbuf, c_char))) as result:
+        with FuzzyResult(_sfhash_fuzzy_matcher_compare(self.get(), *buf_range(sig_bytes, c_char))) as result:
             for i in range(result.count):
                 yield (result.filename(i), result.query_filename, result.score(i))
 
 
 class Matcher(Handle):
-    def __init__(self, buf):
+    def __init__(self, lines):
+        buf = lines.encode('utf-8')
         with Error() as err:
-            super().__init__(_sfhash_create_matcher(*ptr_range(buf, Py_buffer(), c_char), byref(err.get())))
+            super().__init__(_sfhash_create_matcher(*buf_range(buf, c_char), byref(err.get())))
             if err:
                 raise RuntimeError(err)
 
@@ -480,11 +495,11 @@ class Matcher(Handle):
         _sfhash_destroy_matcher(self.handle)
         super().destroy()
 
-    def has_size(size):
+    def has_size(self, size):
         return _sfhash_matcher_has_size(self.get(), size)
 
-    def has_hash(h):
-        return _sfhash_matcher_has_hash(self.get(), byref(h))
+    def has_hash(self, h):
+        return _sfhash_matcher_has_hash(self.get(), *buf_range(h, c_uint8))
 
-    def has_filename(filename):
+    def has_filename(self, filename):
         return _sfhash_matcher_has_filename(self.get(), filename.encode('utf-8'))
