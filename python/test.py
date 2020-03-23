@@ -276,11 +276,11 @@ class TestFuzzyMatcher(unittest.TestCase):
           self.assertEqual(expected, set(hits))
 
     def test_match_filenames(self):
-        data =  """ssdeep,1.1--blocksize:hash:hash,filename
-786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c63e39ef408023b2aa0cee507f5f4e56\""""
+        data =  r'''ssdeep,1.1--blocksize:hash:hash,filename
+786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c63e39ef408023b2aa0cee507f5f4e56"'''
 
         with hasher.FuzzyMatcher(data) as matcher:
-            hits = list(matcher.matches('786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c:\MSOCache\All Users\Access.en-us\AccLR.cab"'))
+            hits = list(matcher.matches(r'786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c:\MSOCache\All Users\Access.en-us\AccLR.cab"'))
             self.assertEqual([('c63e39ef408023b2aa0cee507f5f4e56', r'c:\MSOCache\All Users\Access.en-us\AccLR.cab', 100)], hits)
 
 
