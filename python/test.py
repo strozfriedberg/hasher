@@ -15,6 +15,7 @@ empty_hashes = {
     "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
     "sha2_256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sha3_256": "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
+    "blake3": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
     "quick_md5": "d41d8cd98f00b204e9800998ecf8427e",
 }
 
@@ -27,6 +28,7 @@ lc_alphabet_hashes = {
     "sha1": "32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
     "sha2_256": "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
     "sha3_256": "7cab2dc765e21b241dbc1c255ce620b29f527c6d5e7f5f843e56288f0d707521",
+    "blake3": "2468eec8894acfb4e4df3a51ea916ba115d48268287754290aae8e9e6228e85f",
     "quick_md5": "c3fcd3d76192e4007dfb496cca67e13b",
 }
 
@@ -73,7 +75,7 @@ class HasherTestCase(unittest.TestCase):
 
 
 class TestHasher(HasherTestCase):
-    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA2_256 | hasher.SHA3_256 | hasher.QUICK_MD5
+    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA2_256 | hasher.SHA3_256 | hasher.BLAKE3 | hasher.QUICK_MD5
     def test_nothing(self):
         self.hash_this((), empty_hashes)
 
