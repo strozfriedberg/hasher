@@ -26,6 +26,23 @@ except Exception as e:
     raise e
 
 
+class HashSetInfoStruct(Structure):
+    _fields_ = [
+        ('version',        c_uint64),
+        ('hash_type',      c_uint32),
+        ('hash_length',    c_uint64),
+        ('flags',          c_uint64),
+        ('hashset_size',   c_uint64),
+        ('hashset_off',    c_uint64),
+        ('sizes_off',      c_uint64),
+        ('radius',         c_uint64),
+        ('hashset_sha256', c_uint8 * 32),
+        ('hashset_name',   c_char_p),
+        ('hashset_time',   c_char_p),
+        ('hashset_desc',   c_char_p)
+    ]
+
+
 class HasherHashes(Structure):
     _fields_ = [
         ('md5', c_uint8 * 16),
@@ -122,7 +139,7 @@ _sfhash_destroy_hasher.restype = None
 # SFHASH_HashSetInfo* sfhash_load_hashset_info(const void* beg, const void* end, SFHASH_Error** err);
 _sfhash_load_hashset_info = _hasher.sfhash_load_hashset_info
 _sfhash_load_hashset_info.argtypes = [c_void_p, c_void_p, POINTER(POINTER(HasherError))]
-_sfhash_load_hashset_info.restype = c_void_p
+_sfhash_load_hashset_info.restype = POINTER(HashSetInfoStruct)
 
 # void sfhash_destroy_hashset_info(SFHASH_HashSetInfo* hsinfo);
 _sfhash_destroy_hashset_info = _hasher.sfhash_destroy_hashset_info
@@ -335,7 +352,7 @@ class Error(Handle):
         return self.handle
 
     def __str__(self):
-        return str(self.handle.message.decode('utf-8')) if self.handle else ''
+        return str(self.handle.contents.message.decode('utf-8')) if self.handle else ''
 
 
 class Hasher(Handle):
@@ -403,43 +420,63 @@ class HashSetInfo(Handle):
         with Error() as err:
             super().__init__(_sfhash_load_hashset_info(*buf_range(buf, c_char), byref(err.get())))
             if err:
-                raise RuntimeError(err)
+                raise RuntimeError(str(err))
 
     def destroy(self):
         _sfhash_destroy_hashset_info(self.handle)
         super().destroy()
 
-# TODO: member access
+
+#
+# Reflect the fields of the C struct into our handle; yes, this is better
+# than listing them all out.
+#
+def make_pgetter(s):
+    return lambda self: getattr(self.get().contents, s)
+
+
+for f in HashSetInfoStruct._fields_:
+    setattr(HashSetInfo, f[0], property(make_pgetter(f[0])))
 
 
 class HashSet(Handle):
     def __init__(self, info, buf):
+        # isolate the hashes in the buffer
+        hbeg = info.hashset_off
+        hend = hbeg + info.hashset_size * info.hash_length
+        hdata = memoryview(buf)[hbeg:hend]
+
         with Error() as err:
-            super().__init__(_sfhash_load_hashset(info.get(), *buf_range(buf, c_char), byref(err.get())))
+            super().__init__(_sfhash_load_hashset(info.get(), *buf_range(hdata, c_char), True, byref(err.get())))
             if err:
-                raise RuntimeError(err)
+                raise RuntimeError(str(err))
 
     def destroy(self):
         _sfhash_destroy_hashset(self.handle)
         super().destroy()
 
-    def lookup(h):
-        return _sfhsah_lookup_hashset(self.get(), byref(h))
+    def lookup(self, h):
+        return _sfhash_lookup_hashset(self.get(), buf_beg(h, c_uint8))
 
 
 class SizeSet(Handle):
     def __init__(self, info, buf):
+        # isolate the hashes in the buffer
+        sbeg = info.sizes_off
+        send = sbeg + info.hashset_size * 64
+        sdata = memoryview(buf)[sbeg:send]
+
         with Error() as err:
-            super().__init__(_sfhash_load_sizeset(info.get(), *buf_range(buf, c_char), byref(err.get())))
+            super().__init__(_sfhash_load_sizeset(info.get(), *buf_range(sdata, c_char), byref(err.get())))
             if err:
-                raise RuntimeError(err)
+                raise RuntimeError(str(err))
 
     def destroy(self):
         _sfhash_destroy_sizeset(self.handle)
         super().destroy()
 
-    def lookup(size):
-        return _sfhsah_lookup_sizeset(self.get(), size)
+    def lookup(self, size):
+        return _sfhash_lookup_sizeset(self.get(), size)
 
 
 class FuzzyResult(Handle):
@@ -489,7 +526,7 @@ class Matcher(Handle):
         with Error() as err:
             super().__init__(_sfhash_create_matcher(*buf_range(buf, c_char), byref(err.get())))
             if err:
-                raise RuntimeError(err)
+                raise RuntimeError(str(err))
 
     def destroy(self):
         _sfhash_destroy_matcher(self.handle)

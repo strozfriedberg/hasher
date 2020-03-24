@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import mmap
 import os
 import unittest
 
@@ -287,7 +288,7 @@ class TestFuzzyMatcher(unittest.TestCase):
 class TestMatcher(unittest.TestCase):
     def test_match_bad(self):
         data = "bogus bogus\tbogus\tnonsense"
-        with self.assertRaises(RuntimeError) as ctx:
+        with self.assertRaises(RuntimeError):
             with hasher.Matcher(data) as matcher:
                 pass
 
@@ -310,6 +311,43 @@ class TestMatcher(unittest.TestCase):
             self.assertTrue(matcher.has_hash(bytes.fromhex('5e810a94c86ff057849bfa992bd176d8f743d160')))
             self.assertFalse(matcher.has_hash(bytes.fromhex('0000000000000000000000000000000000000000')))
 
+
+class TestHashSetAPI(unittest.TestCase):
+    def test_hashset_info_bad(self):
+        data = "bogus bogus bogus nonsense".encode('utf-8')
+        with self.assertRaises(RuntimeError):
+            with hasher.HashSetInfo(data) as matcher:
+                pass
+
+    def test_hashset_info_good(self):
+        with open('../test/test1.hset', 'rb') as f:
+            with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as buf:
+                # check the info
+                with hasher.HashSetInfo(buf) as info:
+                    self.assertEqual(1, info.version)
+                    self.assertEqual(hasher.SHA1, info.hash_type)
+                    self.assertEqual(20, info.hash_length)
+                    self.assertEqual(0, info.flags)
+                    self.assertEqual(100, info.hashset_size)
+                    self.assertEqual(4096, info.hashset_off)
+                    self.assertEqual(6096, info.sizes_off)
+                    self.assertEqual(10, info.radius)
+                    self.assertEqual(bytes.fromhex('26ade256a8ae8d6307cfbdc224bdfa320abdf6259a6944691613701237e751e4'), bytes(info.hashset_sha256))
+                    self.assertEqual(b'Some test hashes', info.hashset_name)
+                    self.assertEqual(b'2020-02-12T11:58:19.910221', info.hashset_time)
+                    self.assertEqual(b'These are test hashes.', info.hashset_desc)
+
+                    # check the hashset
+                    with hasher.HashSet(info, buf) as hset:
+                        self.assertTrue(hset.lookup(bytes.fromhex('55250d55d5bb84d127e34bde24ea32d86a4d1584')))
+                        self.assertTrue(hset.lookup(bytes.fromhex('fc824043658c86424b5f2d480134dce7b004143d')))
+                        self.assertFalse(hset.lookup(bytes.fromhex('baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad')))
+
+                    # check the sizeset
+                    with hasher.SizeSet(info, buf) as sset:
+                        self.assertTrue(sset.lookup(6140))
+                        self.assertTrue(sset.lookup(115))
+                        self.assertFalse(sset.lookup(1234567))
 
 if __name__ == "__main__":
     unittest.main()
