@@ -75,7 +75,8 @@ test_test_SOURCES = \
 	test/test_hasher.cpp \
 	test/test_hashset.cpp \
 	test/test_matcher.cpp \
-	test/test_parser.cpp
+	test/test_parser.cpp \
+	test/test_util.cpp
 
 test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
 
