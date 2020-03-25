@@ -9,10 +9,7 @@
 // TODO: eliminate these
 template <size_t N>
 using hash_t = std::array<uint8_t, N>;
-
-using md5_t    = hash_t<16>;
 using sha1_t   = hash_t<20>;
-using sha256_t = hash_t<32>;
 
 //
 // make_unique_del and helpers
