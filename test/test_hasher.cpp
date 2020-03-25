@@ -1,5 +1,6 @@
 #include <scope/test.h>
 
+#include <cstring>
 #include <iterator>
 
 #include <fuzzy.h>
@@ -105,6 +106,77 @@ SCOPE_TEST(alphabetHash) {
     "3:u+6LO5Sfn:u+6LO5Sfn",
     std::string((const char*)hashes.Fuzzy)
   );
+}
+
+SCOPE_TEST(updatingInPartsIsSameAsOneBigUpdate) {
+  auto hasher = make_unique_del(
+    sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 |
+                         SFHASH_SHA_3_256 | SFHASH_FUZZY | SFHASH_QUICK_MD5),
+    sfhash_destroy_hasher
+  );
+
+  char a[1024];
+  for (size_t i = 0; i < sizeof(a); ++i) {
+    a[i] = i % 256;
+  }
+
+  sfhash_update_hasher(hasher.get(), std::begin(a), std::end(a));
+
+  SFHASH_HashValues h_once, h_piecewise;
+  std::memset(&h_once, 0, sizeof(h_once));
+  std::memset(&h_piecewise, 0, sizeof(h_once));
+
+  sfhash_get_hashes(hasher.get(), &h_once);
+
+  sfhash_reset_hasher(hasher.get());
+
+  sfhash_update_hasher(hasher.get(), a, a + 27);
+  sfhash_update_hasher(hasher.get(), a + 27, a + 512);
+  sfhash_update_hasher(hasher.get(), a + 512, a + 513);
+  sfhash_update_hasher(hasher.get(), a + 513, a + 1024);
+
+  sfhash_get_hashes(hasher.get(), &h_piecewise);
+
+  SCOPE_ASSERT(!std::memcmp(&h_once, &h_piecewise, sizeof(h_once)));
+}
+
+SCOPE_TEST(updatingInPartsDiscontiguouslyIsSameAsOneBigUpdate) {
+  auto hasher = make_unique_del(
+    sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 |
+                         SFHASH_SHA_3_256 | SFHASH_FUZZY | SFHASH_QUICK_MD5),
+    sfhash_destroy_hasher
+  );
+
+  char a[1024];
+  for (size_t i = 0; i < sizeof(a); ++i) {
+    a[i] = i % 256;
+  }
+
+  // copy a into b, leaving odd gaps between segments
+  char b[1280] = { 0 };
+  std::memcpy(b, a, 55);
+  std::memcpy(b + 134, a + 55, 93);
+  std::memcpy(b + 300, a + 148, 134);
+  std::memcpy(b + 509, a + 282, 742);
+
+  sfhash_update_hasher(hasher.get(), std::begin(a), std::end(a));
+
+  SFHASH_HashValues h_once, h_piecewise;
+  std::memset(&h_once, 0, sizeof(h_once));
+  std::memset(&h_piecewise, 0, sizeof(h_once));
+
+  sfhash_get_hashes(hasher.get(), &h_once);
+
+  sfhash_reset_hasher(hasher.get());
+
+  sfhash_update_hasher(hasher.get(), b, b + 55);
+  sfhash_update_hasher(hasher.get(), b + 134, b + 227);
+  sfhash_update_hasher(hasher.get(), b + 300, b + 434);
+  sfhash_update_hasher(hasher.get(), b + 509, b + 1251);
+
+  sfhash_get_hashes(hasher.get(), &h_piecewise);
+
+  SCOPE_ASSERT(!std::memcmp(&h_once, &h_piecewise, sizeof(h_once)));
 }
 
 SCOPE_TEST(FUZZY_MAX_LEN_SIZE) {
