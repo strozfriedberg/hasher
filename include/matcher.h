@@ -16,5 +16,3 @@ struct SFHASH_FileMatcher {
 };
 
 std::unique_ptr<SFHASH_FileMatcher> load_hashset(const char* beg, const char* end, LG_Error** err);
-
-//std::unique_ptr<SFHASH_FileMatcher> load_hashset_binary(const char* beg, const char* end);
