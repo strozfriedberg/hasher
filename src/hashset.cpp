@@ -21,6 +21,10 @@ HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* en
   THROW_IF(exp_len < act_len, "data trailing hashes");
 
   switch (hsinfo->hash_length) {
+  case 4:
+    return make_hashset<4>(beg, end, hsinfo->radius, shared);
+  case 8:
+    return make_hashset<8>(beg, end, hsinfo->radius, shared);
   case 16:
     return make_hashset<16>(beg, end, hsinfo->radius, shared);
   case 20:
