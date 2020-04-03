@@ -23,4 +23,4 @@ void Libblake3Hasher::reset() {
 
 std::unique_ptr<HasherImpl> make_blake3_hasher() {
   return std::unique_ptr<Libblake3Hasher>(new Libblake3Hasher());
-} 
+}
