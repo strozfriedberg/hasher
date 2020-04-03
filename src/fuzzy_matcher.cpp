@@ -5,20 +5,21 @@
 #include <fuzzy.h>
 
 #include "fuzzy_matcher.h"
-#include "hasher.h"
 #include "parser.h"
 
 using FuzzyMatcher = SFHASH_FuzzyMatcher;
 using FuzzyResult  = SFHASH_FuzzyResult;
 
-FuzzyMatcher* sfhash_create_fuzzy_matcher(const char* beg, const char* end) {
-  return load_fuzzy_hashset(beg, end).release();
+FuzzyMatcher* sfhash_create_fuzzy_matcher(const void* beg, const void* end) {
+  return load_fuzzy_hashset(static_cast<const char*>(beg),
+                            static_cast<const char*>(end)).release();
 }
 
 const FuzzyResult* sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher,
-                                                const char* beg,
-                                                const char* end) {
-  return matcher->match(beg, end).release();
+                                                const void* beg,
+                                                const void* end) {
+  return matcher->match(static_cast<const char*>(beg),
+                        static_cast<const char*>(end)).release();
 }
 
 size_t sfhash_fuzzy_result_count(const SFHASH_FuzzyResult* result) {
@@ -36,7 +37,7 @@ int sfhash_fuzzy_result_score(const FuzzyResult* result, size_t i) {
   return result->score(i);
 }
 
-void sfhash_fuzzy_destroy_match(const FuzzyResult* result) {
+void sfhash_destroy_fuzzy_match(const FuzzyResult* result) {
   delete result;
 }
 

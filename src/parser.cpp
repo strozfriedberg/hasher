@@ -1,3 +1,4 @@
+#include "hex.h"
 #include "parser.h"
 #include "throw.h"
 
@@ -15,7 +16,7 @@ ParsedLine parse_line(const char* beg, const char* const end) {
   uint8_t flags = BLANK_LINE;
   std::string name;
   uint64_t size = 0;
-  sha1_t hash{};
+  std::array<uint8_t, 20> hash{};
 
   if (beg != end) {
     const char* cbeg = beg;
@@ -96,11 +97,16 @@ ParsedLine parse_line(const char* beg, const char* const end) {
   }
 
   if (have_size) {
-    flags |= HAS_SIZE_AND_HASH;
+    flags |= HAS_SIZE;
+  }
+
+  if (have_hash) {
+    flags |= HAS_HASH;
   }
 
   return {std::move(name), std::move(hash), size, flags};
 }
+
 const value_type& LineIterator::operator*() const {
   return Pos;
 }

@@ -9,8 +9,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "config.h"
-#include "hasher.h"
+#include "hasher/api.h"
 #include "parser.h"
 #include "throw.h"
 #include "util.h"
@@ -38,15 +37,19 @@ int main(int argc, char** argv) {
       in.close();
 
       // create the matcher
-      mptr = make_unique_del(sfhash_create_fuzzy_matcher(hset.c_str(),
-                                                         hset.c_str() + hset.length()),
-                             sfhash_destroy_fuzzy_matcher);
+      mptr = make_unique_del(
+        sfhash_create_fuzzy_matcher(hset.c_str(), hset.c_str() + hset.length()),
+        sfhash_destroy_fuzzy_matcher
+      );
     }
 
     SFHASH_FuzzyMatcher* matcher = mptr.get();
 
     // make a hasher
-    auto hptr = make_unique_del(sfhash_create_hasher(FUZZY), sfhash_destroy_hasher);
+    auto hptr = make_unique_del(
+      sfhash_create_hasher(SFHASH_FUZZY),
+      sfhash_destroy_hasher
+    );
 
     {
       std::ifstream in(argv[2], std::ios::binary);
@@ -69,8 +72,12 @@ int main(int argc, char** argv) {
         if (l->first == l->second) {
           continue;
         }
-        auto rptr = make_unique_del(sfhash_fuzzy_matcher_compare(matcher, l->first, l->second),
-                                    sfhash_fuzzy_destroy_match);
+
+        auto rptr = make_unique_del(
+          sfhash_fuzzy_matcher_compare(matcher, l->first, l->second),
+          sfhash_destroy_fuzzy_match
+        );
+
         const char* query_filename = sfhash_fuzzy_result_query_filename(rptr.get());
         for (size_t i = 0; i < sfhash_fuzzy_result_count(rptr.get()); ++i) {
           std::cout << "\"" << query_filename << "\","

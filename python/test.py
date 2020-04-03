@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import mmap
 import os
 import unittest
 
@@ -12,7 +13,7 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 empty_hashes = {
     "md5": "d41d8cd98f00b204e9800998ecf8427e",
     "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sha2_256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sha3_256": "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
     "quick_md5": "d41d8cd98f00b204e9800998ecf8427e",
 }
@@ -24,7 +25,7 @@ lc_alphabet = b'abcdefghijklmnopqrstuvwxyz'
 lc_alphabet_hashes = {
     "md5": "c3fcd3d76192e4007dfb496cca67e13b",
     "sha1": "32d10c7b8cf96570ca04ce37f2a19d84240d3a89",
-    "sha256": "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
+    "sha2_256": "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73",
     "sha3_256": "7cab2dc765e21b241dbc1c255ce620b29f527c6d5e7f5f843e56288f0d707521",
     "quick_md5": "c3fcd3d76192e4007dfb496cca67e13b",
 }
@@ -36,7 +37,7 @@ abc = b'abc'
 abc_hashes = {
     "md5": "900150983cd24fb0d6963f7d28e17f72",
     "sha1": "a9993e364706816aba3e25717850c26c9cd0d89d",
-    "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "sha2_256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
     "sha3_256": "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532",
     "quick_md5": "900150983cd24fb0d6963f7d28e17f72",
 }
@@ -72,7 +73,7 @@ class HasherTestCase(unittest.TestCase):
 
 
 class TestHasher(HasherTestCase):
-    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA256 | hasher.SHA3_256 | hasher.QUICK_MD5
+    ALGS = hasher.MD5 | hasher.SHA1 | hasher.SHA2_256 | hasher.SHA3_256 | hasher.QUICK_MD5
     def test_nothing(self):
         self.hash_this((), empty_hashes)
 
@@ -125,6 +126,7 @@ class TestHasher(HasherTestCase):
             self.hash_it(h1, (lc_alphabet,), lc_alphabet_hashes)
             with h1.clone() as h2:
                 self.assertEqual(h1.get_hashes(), h2.get_hashes())
+
 
 class TestQuickHasher(HasherTestCase):
     ALGS = hasher.MD5 | hasher.QUICK_MD5
@@ -234,22 +236,22 @@ class TestFuzzy(unittest.TestCase):
 
 class TestFuzzyMatcher(unittest.TestCase):
     def test_matches(self):
-        data =  """ssdeep,1.1--blocksize:hash:hash,filename
-6:S+W9pdFFwj+Q4HRhOhahxlA/FG65WOCWn9Q6Wg9r939:TmAgxho/r5Wun9Q6p9r9t,\"a.txt\"
-6:S5O61sdFFwj+Q4HRhOhahxlA/FG65WOCWn9hy9r9eF:gmAgxho/r5Wun9o9r9a,\"b.txt\"
-6:STLdFFwj+Q4HRhOhahxlA/FG65WOCWn9kKF9r9TKO:wLAgxho/r5Wun9k89r9TJ,\"c.txt\"
-6:Sm5dFFwj+Q4HRhOhahxlA/FG65WOCWn9l2F9r9xI2O:T5Agxho/r5Wun9lI9r9xIl,\"d.txt\"
-6:SDssdFFwj+Q4HRhOhahxlA/FG65WOCWn9nRk89r9KRkJ:YAgxho/r5Wun9RR9r9KRa,\"e.txt\"
-6:SS7Lp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9nv7LZW9r9KzLZ3:T7LLAgxho/r5Wun9v7LZW9r9KzLZ3,\"f.txt\"
-6:S8QLdFFwj+Q4HRhOhahxlA/FG65WOCWn91KRu9r9YlIv:XKAgxho/r5Wun91K89r9j,\"g.txt\"
-6:SXp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9TF9r9a9O:m5Agxho/r5Wun9h9r9aU,\"h.txt\"
-6:Si65dFFwj+Q4HRhOhahxlA/FG65WOCWn9rTF9r9iTO:q5Agxho/r5Wun919r9v,\"i.txt\"
-6:SIJS5dFFwj+Q4HRhOhahxlA/FG65WOCWn9S6J7F9r9zBi7O:9JS5Agxho/r5Wun9H7F9r907O,\"j.txt\"
-6:Sdcp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9n89r9WJ:Dp5Agxho/r5Wun9n89r9WJ,\"k.txt\"
-6:SHHsdFFwj+Q4HRhOhahxlA/FG65WOCWn9oFF9r9HFO:SsAgxho/r5Wun9EF9r9lO,\"l.txt\"
-6:SIoFsdFFwj+Q4HRhOhahxlA/FG65WOCWn9Ng9r9I9:9Agxho/r5Wun9a9r9k,\"m.txt\"
-6:Scw/dFFwj+Q4HRhOhahxlA/FG65WOCWn9nhwg9r9K69:uAgxho/r5Wun999r9KG,\"n.txt\"
-6:SY5dFFwj+Q4HRhOhahxlA/FG65WOCWn90F9r9VO:r5Agxho/r5Wun9a9r98,\"o.txt\""""
+        data = r'''ssdeep,1.1--blocksize:hash:hash,filename
+6:S+W9pdFFwj+Q4HRhOhahxlA/FG65WOCWn9Q6Wg9r939:TmAgxho/r5Wun9Q6p9r9t,"a.txt"
+6:S5O61sdFFwj+Q4HRhOhahxlA/FG65WOCWn9hy9r9eF:gmAgxho/r5Wun9o9r9a,"b.txt"
+6:STLdFFwj+Q4HRhOhahxlA/FG65WOCWn9kKF9r9TKO:wLAgxho/r5Wun9k89r9TJ,"c.txt"
+6:Sm5dFFwj+Q4HRhOhahxlA/FG65WOCWn9l2F9r9xI2O:T5Agxho/r5Wun9lI9r9xIl,"d.txt"
+6:SDssdFFwj+Q4HRhOhahxlA/FG65WOCWn9nRk89r9KRkJ:YAgxho/r5Wun9RR9r9KRa,"e.txt"
+6:SS7Lp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9nv7LZW9r9KzLZ3:T7LLAgxho/r5Wun9v7LZW9r9KzLZ3,"f.txt"
+6:S8QLdFFwj+Q4HRhOhahxlA/FG65WOCWn91KRu9r9YlIv:XKAgxho/r5Wun91K89r9j,"g.txt"
+6:SXp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9TF9r9a9O:m5Agxho/r5Wun9h9r9aU,"h.txt"
+6:Si65dFFwj+Q4HRhOhahxlA/FG65WOCWn9rTF9r9iTO:q5Agxho/r5Wun919r9v,"i.txt"
+6:SIJS5dFFwj+Q4HRhOhahxlA/FG65WOCWn9S6J7F9r9zBi7O:9JS5Agxho/r5Wun9H7F9r907O,"j.txt"
+6:Sdcp5dFFwj+Q4HRhOhahxlA/FG65WOCWn9n89r9WJ:Dp5Agxho/r5Wun9n89r9WJ,"k.txt"
+6:SHHsdFFwj+Q4HRhOhahxlA/FG65WOCWn9oFF9r9HFO:SsAgxho/r5Wun9EF9r9lO,"l.txt"
+6:SIoFsdFFwj+Q4HRhOhahxlA/FG65WOCWn9Ng9r9I9:9Agxho/r5Wun9a9r9k,"m.txt"
+6:Scw/dFFwj+Q4HRhOhahxlA/FG65WOCWn9nhwg9r9K69:uAgxho/r5Wun999r9KG,"n.txt"
+6:SY5dFFwj+Q4HRhOhahxlA/FG65WOCWn90F9r9VO:r5Agxho/r5Wun9a9r98,"o.txt"'''
         self.maxDiff = None
         expected = {
             ('a.txt', '', 78),
@@ -275,13 +277,77 @@ class TestFuzzyMatcher(unittest.TestCase):
           self.assertEqual(expected, set(hits))
 
     def test_match_filenames(self):
-        data =  """ssdeep,1.1--blocksize:hash:hash,filename
-786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c63e39ef408023b2aa0cee507f5f4e56\""""
+        data =  r'''ssdeep,1.1--blocksize:hash:hash,filename
+786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c63e39ef408023b2aa0cee507f5f4e56"'''
 
         with hasher.FuzzyMatcher(data) as matcher:
-            hits = list(matcher.matches('786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c:\MSOCache\All Users\Access.en-us\AccLR.cab"'))
+            hits = list(matcher.matches(r'786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,"c:\MSOCache\All Users\Access.en-us\AccLR.cab"'))
             self.assertEqual([('c63e39ef408023b2aa0cee507f5f4e56', r'c:\MSOCache\All Users\Access.en-us\AccLR.cab', 100)], hits)
 
+
+class TestMatcher(unittest.TestCase):
+    def test_match_bad(self):
+        data = "bogus bogus\tbogus\tnonsense"
+        with self.assertRaises(RuntimeError):
+            with hasher.Matcher(data) as matcher:
+                pass
+
+
+    def test_match_good(self):
+        data = (
+            "Davout\t521\t375d38e640ae802b4d95468af1e8780ed7fbbf04\n"
+            "Soult\t768\te3cc51c54197fdcd477a73e7f8a0b6b55eaa8478\n"
+            "Ney\t12344565\t5e810a94c86ff057849bfa992bd176d8f743d160\n"
+        )
+
+        with hasher.Matcher(data) as matcher:
+            self.assertTrue(matcher.has_filename("Davout"))
+            self.assertFalse(matcher.has_filename("Bernadotte"))
+
+            self.assertTrue(matcher.has_size(12344565))
+            self.assertFalse(matcher.has_size(0))
+            self.assertFalse(matcher.has_size(522))
+
+            self.assertTrue(matcher.has_hash(bytes.fromhex('5e810a94c86ff057849bfa992bd176d8f743d160')))
+            self.assertFalse(matcher.has_hash(bytes.fromhex('0000000000000000000000000000000000000000')))
+
+
+class TestHashSetAPI(unittest.TestCase):
+    def test_hashset_info_bad(self):
+        data = "bogus bogus bogus nonsense".encode('utf-8')
+        with self.assertRaises(RuntimeError):
+            with hasher.HashSetInfo(data) as matcher:
+                pass
+
+    def test_hashset_info_good(self):
+        with open('../test/test1.hset', 'rb') as f:
+            with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as buf:
+                # check the info
+                with hasher.HashSetInfo(buf) as info:
+                    self.assertEqual(1, info.version)
+                    self.assertEqual(hasher.SHA1, info.hash_type)
+                    self.assertEqual(20, info.hash_length)
+                    self.assertEqual(0, info.flags)
+                    self.assertEqual(100, info.hashset_size)
+                    self.assertEqual(4096, info.hashset_off)
+                    self.assertEqual(6096, info.sizes_off)
+                    self.assertEqual(10, info.radius)
+                    self.assertEqual(bytes.fromhex('26ade256a8ae8d6307cfbdc224bdfa320abdf6259a6944691613701237e751e4'), bytes(info.hashset_sha256))
+                    self.assertEqual(b'Some test hashes', info.hashset_name)
+                    self.assertEqual(b'2020-02-12T11:58:19.910221', info.hashset_time)
+                    self.assertEqual(b'These are test hashes.', info.hashset_desc)
+
+                    # check the hashset
+                    with hasher.HashSet(info, buf) as hset:
+                        self.assertTrue(hset.lookup(bytes.fromhex('55250d55d5bb84d127e34bde24ea32d86a4d1584')))
+                        self.assertTrue(hset.lookup(bytes.fromhex('fc824043658c86424b5f2d480134dce7b004143d')))
+                        self.assertFalse(hset.lookup(bytes.fromhex('baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad')))
+
+                    # check the sizeset
+                    with hasher.SizeSet(info, buf) as sset:
+                        self.assertTrue(sset.lookup(6140))
+                        self.assertTrue(sset.lookup(115))
+                        self.assertFalse(sset.lookup(1234567))
 
 if __name__ == "__main__":
     unittest.main()

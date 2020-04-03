@@ -1,6 +1,9 @@
+#include "hasher/api.h"
+#include "error.h"
+#include "hashset.h"
 #include "matcher.h"
-#include "hasher.h"
 #include "parser.h"
+#include "sizeset.h"
 #include "throw.h"
 #include "util.h"
 
@@ -10,9 +13,10 @@
 #include <iostream>
 #include <iterator>
 #include <utility>
-#include <vector>
 
+using Error = SFHASH_Error;
 using Matcher = SFHASH_FileMatcher;
+using SizeSet = SFHASH_SizeSet;
 
 std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error** err) {
   auto fsm = make_unique_del(lg_create_fsm(0), lg_destroy_fsm);
@@ -34,8 +38,13 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   // person has a file which doesn't end with EOL, count it as 1 either way.
   const size_t lines = std::count(beg, end - 1, '\n') + 1;
 
-  std::vector<std::pair<uint64_t, sha1_t>> table;
-  table.reserve(lines);
+  auto sizes = make_unique_del(new SizeSet, sfhash_destroy_sizeset);
+  sizes->sizes.reserve(lines);
+
+  std::unique_ptr<std::array<uint8_t, 20>[]> hashes(
+    new std::array<uint8_t, 20>[lines]
+  );
+  std::array<uint8_t, 20>* hcur = hashes.get();
 
   const LG_KeyOptions kopts{1, 0, 0};
 
@@ -64,8 +73,13 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
       }
 
       // put the size and hash into the table
-      if (t.flags & HAS_SIZE_AND_HASH) {
-        table.emplace_back(t.size, t.hash);
+      if (t.flags & HAS_SIZE) {
+        sizes->sizes.insert(t.size);
+      }
+
+      if (t.flags & HAS_HASH) {
+        *hcur = t.hash;
+        ++hcur;
       }
     }
     catch (const std::runtime_error& e) {
@@ -100,36 +114,41 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
     return nullptr;
   }
 
-  std::sort(table.begin(), table.end());
+  std::sort(hashes.get(), hcur);
 
-  return std::unique_ptr<Matcher>(new Matcher{std::move(table), std::move(prog)});
+  auto hptr = make_unique_del(
+    make_hashset<20>(hashes.get(), hcur, std::numeric_limits<uint32_t>::max(), false),
+    sfhash_destroy_hashset
+  );
+
+  return std::unique_ptr<Matcher>(
+    new Matcher{std::move(sizes), std::move(hptr), std::move(prog)}
+  );
 }
 
-Matcher* sfhash_create_matcher(const char* beg, const char* end, LG_Error** err) {
-  return load_hashset(beg, end, err).release();
+Matcher* sfhash_create_matcher(const void* beg, const void* end, Error** err) {
+  LG_Error* lg_err = nullptr;
+  auto m = load_hashset(static_cast<const char*>(beg),
+                        static_cast<const char*>(end), &lg_err);
+  if (lg_err) {
+    fill_error(err, lg_err);
+  }
+  return m.release();
 }
 
-int sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
-  const auto i = std::lower_bound(matcher->Table.begin(),
-                                  matcher->Table.end(),
-                                  std::make_pair(size, sha1_t()));
-  return i == matcher->Table.end() ? false : i->first == size;
+bool sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
+  return sfhash_lookup_sizeset(matcher->Sizes.get(), size);
 }
 
-int sfhash_matcher_has_hash(const Matcher* matcher, uint64_t size, const uint8_t* sha1) {
-  sha1_t hash;
-  std::memcpy(&hash[0], sha1, sizeof(sha1_t));
-
-  return std::binary_search(matcher->Table.begin(),
-                            matcher->Table.end(),
-                            std::make_pair(size, std::move(hash)));
+bool sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
+  return sfhash_lookup_hashset(matcher->Hashes.get(), sha1);
 }
 
 void cb(void* userData, const LG_SearchHit* const) {
   *static_cast<bool*>(userData) = true;
 }
 
-int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
+bool sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   bool hit  = false;
   auto prog = matcher->Prog.get();
   if (prog) {
@@ -141,51 +160,6 @@ int sfhash_matcher_has_filename(const Matcher* matcher, const char* filename) {
   }
 
   return hit;
-}
-
-size_t table_size(const Matcher* matcher) {
-  return sizeof(decltype(Matcher::Table)::value_type) * matcher->Table.size();
-}
-
-int sfhash_matcher_size(const Matcher* matcher) {
-  return sizeof(size_t) + table_size(matcher) + lg_program_size(matcher->Prog.get());
-}
-
-void sfhash_write_binary_matcher(const Matcher* matcher, void* buf) {
-  const size_t tlen          = table_size(matcher);
-  *static_cast<size_t*>(buf) = tlen;
-
-  buf = static_cast<void*>(static_cast<size_t*>(buf) + 1);
-  std::memcpy(buf, matcher->Table.data(), tlen);
-  buf = static_cast<void*>(static_cast<uint8_t*>(buf) + tlen);
-  lg_write_program(matcher->Prog.get(), buf);
-}
-
-Matcher* sfhash_read_binary_matcher(const void* beg, const void* end) {
-  const uint8_t* buf = static_cast<const uint8_t*>(beg);
-  const size_t tlen  = *reinterpret_cast<const size_t*>(buf);
-  buf += sizeof(size_t);
-
-  if (buf + tlen > end) {
-    return nullptr;
-  }
-
-  std::vector<std::pair<uint64_t, sha1_t>> table(tlen / sizeof(std::pair<uint64_t, sha1_t>));
-  std::memcpy(table.data(), buf, tlen);
-  buf += tlen;
-
-  const size_t plen = static_cast<const uint8_t*>(end) - buf;
-
-  auto prog = make_unique_del(
-    // TODO: remove the const_cast after fixing the liblg API
-    lg_read_program(const_cast<uint8_t*>(buf), plen),
-    lg_destroy_program);
-
-  if (!prog) {
-    return nullptr;
-  }
-
-  return new Matcher{std::move(table), std::move(prog)};
 }
 
 void sfhash_destroy_matcher(Matcher* matcher) {

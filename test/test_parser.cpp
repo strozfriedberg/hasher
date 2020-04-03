@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "parser.h"
+#include "hex.h"
 #include "util.h"
 
 template <size_t N>
@@ -131,23 +132,23 @@ SCOPE_TEST(iterateHashset1) {
 
   ParsedLine exp[] = {
     // clang-format off
-    { "a", to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2"), 123, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "b", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "c", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "d", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "e", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "f", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "g", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "h", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "filename with spaces", to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160"), 0, HAS_FILENAME | HAS_SIZE_AND_HASH },
+    { "a", to_bytes<20>("1eb328edc1794050fa64c6c62d6656d5c6b1b6b2"), 123, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "b", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "c", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "d", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "e", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "f", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "g", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "h", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "filename with spaces", to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160"), 0, HAS_FILENAME | HAS_SIZE | HAS_HASH },
     { "filename_only", sha1_t(), 0, HAS_FILENAME },
     { "filename_only", sha1_t(), 0, HAS_FILENAME },
     { "filename_only", sha1_t(), 0, HAS_FILENAME },
     { "", sha1_t(), 0, BLANK_LINE },
     { "", sha1_t(), 0, BLANK_LINE },
     { "", sha1_t(), 0, BLANK_LINE },
-    { "", to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0"), 8675309, HAS_SIZE_AND_HASH },
-    { "extra column!", to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0"), 8675309, HAS_FILENAME | HAS_SIZE_AND_HASH }
+    { "", to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0"), 8675309, HAS_SIZE | HAS_HASH },
+    { "extra column!", to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0"), 8675309, HAS_FILENAME | HAS_SIZE | HAS_HASH }
     // clang-format on
   };
 
@@ -194,8 +195,8 @@ SCOPE_TEST(iterateHashset2) {
 
   ParsedLine exp[] = {
     // clang-format off
-    { "filename with spaces", to_bytes<20>("da39a3ee5e6b4b0d3255bfef95601890afd80709"), 0, HAS_FILENAME | HAS_SIZE_AND_HASH },
-    { "filename êèðèëëèöà", to_bytes<20>("7f8fc202eb553370d4a05b446e57fef1734eca8f"), 1, HAS_FILENAME | HAS_SIZE_AND_HASH }
+    { "filename with spaces", to_bytes<20>("da39a3ee5e6b4b0d3255bfef95601890afd80709"), 0, HAS_FILENAME | HAS_SIZE | HAS_HASH },
+    { "filename êèðèëëèöà", to_bytes<20>("7f8fc202eb553370d4a05b446e57fef1734eca8f"), 1, HAS_FILENAME | HAS_SIZE | HAS_HASH }
     // clang-format on
   };
 

@@ -8,9 +8,10 @@
 
 enum {
   // anonymous enum
-  BLANK_LINE        = 0,
-  HAS_FILENAME      = 1,
-  HAS_SIZE_AND_HASH = 2
+  BLANK_LINE   = 0,
+  HAS_FILENAME = 1,
+  HAS_SIZE     = 2,
+  HAS_HASH     = 4,
 };
 
 struct ParsedLine {

@@ -10,7 +10,9 @@
 #include <boost/filesystem.hpp>
 
 #include "config.h"
-#include "hasher.h"
+
+#include "hasher/api.h"
+#include "hex.h"
 #include "throw.h"
 #include "util.h"
 
@@ -36,15 +38,18 @@ int main(int argc, char** argv) {
                              (std::istreambuf_iterator<char>()));
       in.close();
 
+      std::cerr << "hset.length() == " << hset.length() << std::endl;
+
       // create the matcher
-      LG_Error* err = nullptr;
+      SFHASH_Error* err = nullptr;
       mptr.reset(sfhash_create_matcher(hset.c_str(), hset.c_str() + hset.length(), &err));
+//      mptr.reset(sfhash_create_matcher_binary(hset.c_str(), hset.c_str() + hset.length()));
     }
 
     SFHASH_FileMatcher* matcher = mptr.get();
 
     // make a hasher
-    auto hptr = make_unique_del(sfhash_create_hasher(SHA1), sfhash_destroy_hasher);
+    auto hptr = make_unique_del(sfhash_create_hasher(SFHASH_SHA_1), sfhash_destroy_hasher);
 
     SFHASH_Hasher* hasher = hptr.get();
     char buf[1024 * 1024];
@@ -81,12 +86,11 @@ int main(int argc, char** argv) {
             } while (f);
 
             sfhash_get_hashes(hasher, &hashes);
-            hmatch = sfhash_matcher_has_hash(matcher, size, hashes.Sha1);
+            hmatch = sfhash_matcher_has_hash(matcher, hashes.Sha1);
           }
 
           if (fmatch || hmatch) {
             // we had a match, print something
-
             struct stat s;
             THROW_IF(stat(n.c_str(), &s) == -1, "stat failed: " << std::strerror(errno));
 

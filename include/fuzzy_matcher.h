@@ -9,7 +9,7 @@
 
 #include <sparsepp/spp.h>
 
-#include "hasher.h"
+#include "hasher/api.h"
 
 struct FuzzyFileOffsets {
   // Offsets of block, double_block, and filename in ssdeep format hash file

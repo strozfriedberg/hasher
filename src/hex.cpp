@@ -1,4 +1,4 @@
-#include "util.h"
+#include "hex.h"
 #include "throw.h"
 
 uint8_t char_to_nibble(char c) {
