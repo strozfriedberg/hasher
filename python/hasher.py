@@ -408,6 +408,8 @@ class Hasher(Handle):
             d['sha3_384'] = bytes(h.sha3_384).hex()
         if self.algs & SHA3_512:
             d['sha3_512'] = bytes(h.sha3_512).hex()
+        if self.algs & BLAKE3:
+            d['blake3'] = bytes(h.blake3).hex()
         if self.algs & FUZZY:
             d['fuzzy'] = h.fuzzy
         if self.algs & ENTROPY:

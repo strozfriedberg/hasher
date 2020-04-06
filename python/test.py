@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import ctypes
 import mmap
 import os
 import unittest
@@ -41,6 +42,7 @@ abc_hashes = {
     "sha1": "a9993e364706816aba3e25717850c26c9cd0d89d",
     "sha2_256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
     "sha3_256": "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532",
+    "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85",
     "quick_md5": "900150983cd24fb0d6963f7d28e17f72",
 }
 
@@ -59,10 +61,16 @@ class HasherTestCase(unittest.TestCase):
         # to test both get_hashes() and get_hashes_dict() we must recompute
         for buf in bufs:
             h.update(buf)
-
         hashes = h.get_hashes()
 
-        self.assertEqual(exp, {k: bytes(getattr(hashes, k)).hex() for k in exp.keys()})
+        exp_h = hasher.HasherHashes()
+        for n, t in exp_h._fields_:
+            try:
+                setattr(exp_h, n, t(*bytes.fromhex(exp[n])))
+            except KeyError:
+                pass
+
+        self.assertEqual(exp_h, hashes)
 
         h.reset()
 
@@ -70,7 +78,6 @@ class HasherTestCase(unittest.TestCase):
             h.update(buf)
 
         hashes_dict = h.get_hashes_dict()
-
         self.assertEqual(exp, hashes_dict)
 
 
