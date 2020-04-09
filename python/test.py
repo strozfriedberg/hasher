@@ -339,15 +339,15 @@ class TestHashSetAPI(unittest.TestCase):
 
                     # check the hashset
                     with hasher.HashSet(info, buf) as hset:
-                        self.assertTrue(hset.lookup(bytes.fromhex('55250d55d5bb84d127e34bde24ea32d86a4d1584')))
-                        self.assertTrue(hset.lookup(bytes.fromhex('fc824043658c86424b5f2d480134dce7b004143d')))
-                        self.assertFalse(hset.lookup(bytes.fromhex('baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad')))
+                        self.assertTrue(bytes.fromhex('55250d55d5bb84d127e34bde24ea32d86a4d1584') in hset)
+                        self.assertTrue(bytes.fromhex('fc824043658c86424b5f2d480134dce7b004143d') in hset)
+                        self.assertFalse(bytes.fromhex('baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad') in hset)
 
                     # check the sizeset
                     with hasher.SizeSet(info, buf) as sset:
-                        self.assertTrue(sset.lookup(6140))
-                        self.assertTrue(sset.lookup(115))
-                        self.assertFalse(sset.lookup(1234567))
+                        self.assertTrue(6140 in sset)
+                        self.assertTrue(115 in sset)
+                        self.assertFalse(1234567 in sset)
 
 if __name__ == "__main__":
     unittest.main()
