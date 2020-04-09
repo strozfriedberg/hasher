@@ -455,7 +455,7 @@ class HashSet(Handle):
         _sfhash_destroy_hashset(self.handle)
         super().destroy()
 
-    def lookup(self, h):
+    def __contains__(self, h):
         return _sfhash_lookup_hashset(self.get(), buf_beg(h, c_uint8))
 
 
@@ -475,7 +475,7 @@ class SizeSet(Handle):
         _sfhash_destroy_sizeset(self.handle)
         super().destroy()
 
-    def lookup(self, size):
+    def __contains__(self, size):
         return _sfhash_lookup_sizeset(self.get(), size)
 
 
