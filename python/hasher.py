@@ -45,19 +45,20 @@ class HashSetInfoStruct(Structure):
 
 class HasherHashes(Structure):
     _fields_ = [
-        ('md5', c_uint8 * 16),
-        ('sha1', c_uint8 * 20),
-        ('sha2_224', c_uint8 * 28),
-        ('sha2_256', c_uint8 * 32),
-        ('sha2_384', c_uint8 * 48),
-        ('sha2_512', c_uint8 * 64),
-        ('sha3_224', c_uint8 * 28),
-        ('sha3_256', c_uint8 * 32),
-        ('sha3_384', c_uint8 * 48),
-        ('sha3_512', c_uint8 * 64),
-        ('_fuzzy', c_uint8 * 148),
+        ('md5',       c_uint8 * 16),
+        ('sha1',      c_uint8 * 20),
+        ('sha2_224',  c_uint8 * 28),
+        ('sha2_256',  c_uint8 * 32),
+        ('sha2_384',  c_uint8 * 48),
+        ('sha2_512',  c_uint8 * 64),
+        ('sha3_224',  c_uint8 * 28),
+        ('sha3_256',  c_uint8 * 32),
+        ('sha3_384',  c_uint8 * 48),
+        ('sha3_512',  c_uint8 * 64),
+        ('blake3',    c_uint8 * 32),
+        ('_fuzzy',    c_uint8 * 148),
         ('quick_md5', c_uint8 * 16),
-        ('entropy', c_double)
+        ('entropy',   c_double)
     ]
 
     def __eq__(self, other):
@@ -72,6 +73,7 @@ class HasherHashes(Structure):
                     self.sha3_256[:] == other.sha3_256[:] and
                     self.sha3_384[:] == other.sha3_384[:] and
                     self.sha3_512[:] == other.sha3_512[:] and
+                    self.blake3[:] == other.blake3[:] and
                     self.fuzzy == other.fuzzy and
                     self.entropy == other.entropy and
                     self.quick_md5[:] == other.quick_md5[:])
@@ -252,9 +254,10 @@ SHA3_224  = 1 <<  6
 SHA3_256  = 1 <<  7
 SHA3_384  = 1 <<  8
 SHA3_512  = 1 <<  9
-FUZZY     = 1 << 10
-ENTROPY   = 1 << 11
-QUICK_MD5 = 1 << 12
+BLAKE3    = 1 << 10
+FUZZY     = 1 << 11
+ENTROPY   = 1 << 12
+QUICK_MD5 = 1 << 13
 OTHER     = 1 << 31
 
 
@@ -405,6 +408,8 @@ class Hasher(Handle):
             d['sha3_384'] = bytes(h.sha3_384).hex()
         if self.algs & SHA3_512:
             d['sha3_512'] = bytes(h.sha3_512).hex()
+        if self.algs & BLAKE3:
+            d['blake3'] = bytes(h.blake3).hex()
         if self.algs & FUZZY:
             d['fuzzy'] = h.fuzzy
         if self.algs & ENTROPY:

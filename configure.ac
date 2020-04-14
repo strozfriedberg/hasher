@@ -58,6 +58,11 @@ AX_CHECK_LIBRARY([FUZZY], [fuzzy.h], [fuzzy],
                  [AC_MSG_ERROR([Failed to find libfuzzy])])
 AC_SUBST([FUZZY_LIBS])
 
+AX_CHECK_LIBRARY([BLAKE3], [blake3.h], [blake3],
+                 [BLAKE3_LIBS=-lblake3],
+                 [AC_MSG_ERROR([Failed to find libblake3])])
+AC_SUBST([BLAKE3_LIBS])
+
 if test "x$with_boost" = "xno"; then
   AC_MSG_ERROR([--without-boost specified, but Boost is mandatory.])
 else
@@ -197,7 +202,7 @@ AC_DEFUN([SF_APPEND], [{
 }])
 
 # collect the flags from everything which might set some
-for lib in BOOST CRYPTO LIGHTGREP FUZZY; do
+for lib in BOOST CRYPTO LIGHTGREP FUZZY BLAKE3; do
   # fold CFLAGS into CXXFLAGS since everything here is C++
   h="${lib}_CXXFLAGS"
   t=$(eval echo \"\$${lib}_CFLAGS\")
