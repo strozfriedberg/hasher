@@ -32,16 +32,11 @@ std::string to_hex(const C& c) {
   return to_hex(&c[0], &c[c.size()]);
 }
 
-uint8_t char_to_nibble(char c);
+void from_hex(uint8_t* dst, const char* src, size_t dlen);
 
 template <size_t N, class = typename std::enable_if<N % 2 == 0>::type>
 std::array<uint8_t, N> to_bytes(const char* c) {
   std::array<uint8_t, N> buf;
-  uint8_t* out = &buf[0];
-  const char* const end = c + 2 * N;
-  for (; c != end; ++out, c += 2) {
-    *out = (char_to_nibble(*c) << 4) | char_to_nibble(*(c + 1));
-  }
-
+  from_hex(&buf[0], c, N);
   return buf;
 }

@@ -172,6 +172,19 @@ void sfhash_destroy_sizeset(SFHASH_SizeSet* sset);
 // Checks if a given size is contained in a sizeset
 bool sfhash_lookup_sizeset(const SFHASH_SizeSet* sset, uint64_t size);
 
+
+/******************************************************************************
+  Hex encoding
+******************************************************************************/
+
+// Converts bytes src to a hexadecimal string dst
+void sfhash_hex(char* dst, const void* src, size_t slen);
+
+// Converts a hexadecimal string src to bytes dst. Returns true on success,
+// false on bad input (i.e., src had a character not in [0-9A-Za-z]).
+bool sfhash_unhex(uint8_t* dst, const char* src, size_t dlen);
+
+
 /******************************************************************************
   Fuzzy matching
 ******************************************************************************/
