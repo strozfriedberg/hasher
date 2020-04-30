@@ -1,3 +1,4 @@
+#include "hasher/api.h"
 #include "hex.h"
 
 #include <algorithm>
@@ -43,7 +44,7 @@ const std::vector<std::pair<std::string, std::vector<uint8_t>>> tests{
 SCOPE_TEST(to_hexTest) {
   for (const auto& t: tests) {
     std::string exp = std::get<0>(t);
-    // to_hex lowercases output, so we lowercase the expected values
+    // output is lowercased, so we lowercase the expected values
     std::transform(exp.begin(), exp.end(), exp.begin(), ::tolower);
     const auto& src = std::get<1>(t);
     std::string dst(2*src.size(), '\0');
@@ -52,13 +53,34 @@ SCOPE_TEST(to_hexTest) {
   }
 }
 
+SCOPE_TEST(sfhash_hexTest) {
+  for (const auto& t: tests) {
+    std::string exp = std::get<0>(t);
+    // output is lowercased, so we lowercase the expected values
+    std::transform(exp.begin(), exp.end(), exp.begin(), ::tolower);
+    const auto& src = std::get<1>(t);
+    std::string dst(2*src.size(), '\0');
+    sfhash_hex(&dst[0], &src[0], src.size());
+    SCOPE_ASSERT_EQUAL(exp, dst);
+  }
+}
+
 SCOPE_TEST(from_hexTest) {
   for (const auto& t: tests) {
     const auto& exp = std::get<1>(t);
     const auto& src = std::get<0>(t);
-
     std::vector<uint8_t> dst(exp.size(), 0);
     from_hex(&dst[0], &src[0], dst.size());
+    SCOPE_ASSERT_EQUAL(exp, dst);
+  }
+}
+
+SCOPE_TEST(sfhash_unhexTest) {
+  for (const auto& t: tests) {
+    const auto& exp = std::get<1>(t);
+    const auto& src = std::get<0>(t);
+    std::vector<uint8_t> dst(exp.size(), 0);
+    SCOPE_ASSERT(sfhash_unhex(&dst[0], &src[0], dst.size()));
     SCOPE_ASSERT_EQUAL(exp, dst);
   }
 }
@@ -67,4 +89,10 @@ SCOPE_TEST(from_hexBogusTest) {
   const std::string nothex = "bogus";
   std::vector<uint8_t> dst(nothex.size(), 0);
   SCOPE_EXPECT(from_hex(&dst[0], &nothex[0], dst.size()), std::runtime_error);
+}
+
+SCOPE_TEST(sfhsah_unhexBogusTest) {
+  const std::string nothex = "bogus";
+  std::vector<uint8_t> dst(nothex.size(), 0);
+  SCOPE_ASSERT(!sfhash_unhex(&dst[0], &nothex[0], dst.size()));
 }

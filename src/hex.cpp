@@ -3,8 +3,9 @@
 
 #include "hasher/api.h"
 
-void to_hex(char* dst, const uint8_t* src, size_t slen) {
-  to_hex(dst, src, src + slen);
+void to_hex(char* dst, const void* src, size_t slen) {
+  to_hex(dst, static_cast<const uint8_t*>(src),
+              static_cast<const uint8_t*>(src) + slen);
 }
 
 uint8_t char_to_nibble(char c) {
