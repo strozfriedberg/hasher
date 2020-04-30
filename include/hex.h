@@ -32,6 +32,8 @@ std::string to_hex(const C& c) {
   return to_hex(&c[0], &c[c.size()]);
 }
 
+void to_hex(char* dst, const uint8_t* src, size_t slen);
+
 void from_hex(uint8_t* dst, const char* src, size_t dlen);
 
 template <size_t N, class = typename std::enable_if<N % 2 == 0>::type>

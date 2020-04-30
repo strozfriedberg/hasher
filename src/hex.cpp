@@ -3,6 +3,10 @@
 
 #include "hasher/api.h"
 
+void to_hex(char* dst, const uint8_t* src, size_t slen) {
+  to_hex(dst, src, src + slen);
+}
+
 uint8_t char_to_nibble(char c) {
   //  return 9*(c >> 6) + (c & 0x0F);
   if ('0' <= c && c <= '9') {
