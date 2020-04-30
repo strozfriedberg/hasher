@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -60,4 +61,10 @@ SCOPE_TEST(from_hexTest) {
     from_hex(&dst[0], &src[0], dst.size());
     SCOPE_ASSERT_EQUAL(exp, dst);
   }
+}
+
+SCOPE_TEST(from_hexBogusTest) {
+  const std::string nothex = "bogus";
+  std::vector<uint8_t> dst(nothex.size(), 0);
+  SCOPE_EXPECT(from_hex(&dst[0], &nothex[0], dst.size()), std::runtime_error);
 }
