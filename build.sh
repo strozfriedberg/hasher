@@ -7,12 +7,9 @@
 # Avoid macOS's inability to use DYLD_LIBRARY_PATH with SIP, or otherwise
 # resolve local boosts.
 if [ "$Target" = 'macos' ]; then
-  BOOST_DEPS=/usr/local
-else
-  BOOST_DEPS=$DEPS
+  CONFIGURE="$CONFIGURE --with-boost=/usr/local"
 fi
 
-CONFIGURE="$CONFIGURE --with-boost=$BOOST_DEPS"
 build_it
 install_it
 
