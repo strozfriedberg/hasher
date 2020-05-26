@@ -26,6 +26,41 @@ except Exception as e:
     raise e
 
 
+MD5       = 1 <<  0
+SHA1      = 1 <<  1
+SHA2_224  = 1 <<  2
+SHA2_256  = 1 <<  3
+SHA2_384  = 1 <<  4
+SHA2_512  = 1 <<  5
+SHA3_224  = 1 <<  6
+SHA3_256  = 1 <<  7
+SHA3_384  = 1 <<  8
+SHA3_512  = 1 <<  9
+BLAKE3    = 1 << 10
+FUZZY     = 1 << 11
+ENTROPY   = 1 << 12
+QUICK_MD5 = 1 << 13
+OTHER     = 1 << 31
+
+
+HASH_NAME_TO_ENUM = {
+    'md5':       MD5,
+    'sha1':      SHA1,
+    'sha2_224':  SHA2_224,
+    'sha2_256':  SHA2_256,
+    'sha2_384':  SHA2_384,
+    'sha2_512':  SHA2_512,
+    'sha3_224':  SHA3_224,
+    'sha3_256':  SHA3_256,
+    'sha3_384':  SHA3_384,
+    'sha3_512':  SHA3_512,
+    'blake3':    BLAKE3,
+    'fuzzy':     FUZZY,
+    'entropy':   ENTROPY,
+    'quick_md5': QUICK_MD5
+}
+
+
 class HashSetInfoStruct(Structure):
     _fields_ = [
         ('version',        c_uint64),
@@ -89,7 +124,7 @@ class HasherError(Structure):
 
 
 # const char* sfhash_hash_name(SFHASH_HashAlgorithm hash_type);
-_sfhash_hash_name = _hasher.sfhash_create_hasher
+_sfhash_hash_name = _hasher.sfhash_hash_name
 _sfhash_hash_name.argtypes = [c_uint32]
 _sfhash_hash_name.restype = c_char_p
 
