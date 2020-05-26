@@ -44,6 +44,7 @@ OTHER     = 1 << 31
 
 
 HASH_NAME_TO_ENUM = {
+    # variants matching the fields in HasherHashset
     'md5':       MD5,
     'sha1':      SHA1,
     'sha2_224':  SHA2_224,
@@ -57,7 +58,18 @@ HASH_NAME_TO_ENUM = {
     'blake3':    BLAKE3,
     'fuzzy':     FUZZY,
     'entropy':   ENTROPY,
-    'quick_md5': QUICK_MD5
+    'quick_md5': QUICK_MD5,
+    # display variants returned by hash_name, lowercased
+    'sha-1':     SHA1,
+    'sha-2-224': SHA2_224,
+    'sha-2-256': SHA2_256,
+    'sha-2-384': SHA2_384,
+    'sha-2-512': SHA2_512,
+    'sha-3-224': SHA3_224,
+    'sha-3-256': SHA3_256,
+    'sha-3-384': SHA3_384,
+    'sha-3-512': SHA3_512,
+    'quick md5': QUICK_MD5
 }
 
 
@@ -118,8 +130,25 @@ class HasherHashes(Structure):
     def fuzzy(self):
         return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
 
+    ENUM_TO_MEMBER_NAME = {
+        MD5:       'md5',
+        SHA1:      'sha1',
+        SHA2_224:  'sha2_224',
+        SHA2_256:  'sha2_256',
+        SHA2_384:  'sha2_384',
+        SHA2_512:  'sha2_512',
+        SHA3_224:  'sha3_224',
+        SHA3_256:  'sha3_256',
+        SHA3_384:  'sha3_384',
+        SHA3_512:  'sha3_512',
+        BLAKE3:    'blake3',
+        FUZZY:     'fuzzy',
+        ENTROPY:   'entropy',
+        QUICK_MD5: 'quick_md5'
+    }
+
     def hash_for_alg(self, alg):
-        return getattr(self, hash_name(alg))
+        return getattr(self, self.ENUM_TO_MEMBER_NAME[alg])
 
     def to_dict(self, algs, rounding=3):
         d = {}
@@ -418,7 +447,7 @@ def hash_name(alg):
 
 
 def hash_alg(name):
-    return HASH_NAME_TO_ENUM.get(name, None)
+    return HASH_NAME_TO_ENUM.get(name.lower(), None)
 
 
 class Hasher(Handle):
