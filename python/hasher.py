@@ -118,6 +118,43 @@ class HasherHashes(Structure):
     def fuzzy(self):
         return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
 
+    def hash_for_alg(self, alg):
+        return getattr(self, hash_name(alg))
+
+    def to_dict(self, algs, rounding=3):
+        d = {}
+
+        if algs & MD5:
+            d['md5'] = bytes(self.md5).hex()
+        if algs & SHA1:
+            d['sha1'] = bytes(self.sha1).hex()
+        if algs & SHA2_224:
+            d['sha2_224'] = bytes(self.sha2_224).hex()
+        if algs & SHA2_256:
+            d['sha2_256'] = bytes(self.sha2_256).hex()
+        if algs & SHA2_384:
+            d['sha2_384'] = bytes(self.sha2_384).hex()
+        if algs & SHA2_512:
+            d['sha2_512'] = bytes(self.sha2_512).hex()
+        if algs & SHA3_224:
+            d['sha3_224'] = bytes(self.sha3_224).hex()
+        if algs & SHA3_256:
+            d['sha3_256'] = bytes(self.sha3_256).hex()
+        if algs & SHA3_384:
+            d['sha3_384'] = bytes(self.sha3_384).hex()
+        if algs & SHA3_512:
+            d['sha3_512'] = bytes(self.sha3_512).hex()
+        if algs & BLAKE3:
+            d['blake3'] = bytes(self.blake3).hex()
+        if algs & FUZZY:
+            d['fuzzy'] = self.fuzzy
+        if algs & ENTROPY:
+            d['entropy'] = round(self.entropy, rounding) if rounding is not None else self.entropy
+        if algs & QUICK_MD5:
+            d['quick_md5'] = bytes(self.quick_md5).hex()
+
+        return d
+
 
 class HasherError(Structure):
     _fields_ = [('message', c_char_p)]
@@ -279,23 +316,6 @@ _sfhash_destroy_matcher.argtypes = [c_void_p]
 _sfhash_destroy_matcher.restype = None
 
 
-MD5       = 1 <<  0
-SHA1      = 1 <<  1
-SHA2_224  = 1 <<  2
-SHA2_256  = 1 <<  3
-SHA2_384  = 1 <<  4
-SHA2_512  = 1 <<  5
-SHA3_224  = 1 <<  6
-SHA3_256  = 1 <<  7
-SHA3_384  = 1 <<  8
-SHA3_512  = 1 <<  9
-BLAKE3    = 1 << 10
-FUZZY     = 1 << 11
-ENTROPY   = 1 << 12
-QUICK_MD5 = 1 << 13
-OTHER     = 1 << 31
-
-
 c_ssize_p = POINTER(c_ssize_t)
 
 
@@ -393,6 +413,14 @@ class Error(Handle):
         return str(self.handle.contents.message.decode('utf-8')) if self.handle else ''
 
 
+def hash_name(alg):
+    return str(_sfhash_hash_name(alg))
+
+
+def hash_alg(name):
+    return HASH_NAME_TO_ENUM.get(name, None)
+
+
 class Hasher(Handle):
     def __init__(self, algs, clone=None):
         super().__init__(_sfhash_clone_hasher(clone) if clone else _sfhash_create_hasher(algs))
@@ -418,41 +446,6 @@ class Hasher(Handle):
         h = HasherHashes()
         _sfhash_get_hashes(self.get(), byref(h))
         return h
-
-    def get_hashes_dict(self, rounding=3):
-        h = self.get_hashes()
-        d = {}
-
-        if self.algs & MD5:
-            d['md5'] = bytes(h.md5).hex()
-        if self.algs & SHA1:
-            d['sha1'] = bytes(h.sha1).hex()
-        if self.algs & SHA2_224:
-            d['sha2_224'] = bytes(h.sha2_224).hex()
-        if self.algs & SHA2_256:
-            d['sha2_256'] = bytes(h.sha2_256).hex()
-        if self.algs & SHA2_384:
-            d['sha2_384'] = bytes(h.sha2_384).hex()
-        if self.algs & SHA2_512:
-            d['sha2_512'] = bytes(h.sha2_512).hex()
-        if self.algs & SHA3_224:
-            d['sha3_224'] = bytes(h.sha3_224).hex()
-        if self.algs & SHA3_256:
-            d['sha3_256'] = bytes(h.sha3_256).hex()
-        if self.algs & SHA3_384:
-            d['sha3_384'] = bytes(h.sha3_384).hex()
-        if self.algs & SHA3_512:
-            d['sha3_512'] = bytes(h.sha3_512).hex()
-        if self.algs & BLAKE3:
-            d['blake3'] = bytes(h.blake3).hex()
-        if self.algs & FUZZY:
-            d['fuzzy'] = h.fuzzy
-        if self.algs & ENTROPY:
-            d['entropy'] = round(h.entropy, rounding) if rounding is not None else h.entropy
-        if self.algs & QUICK_MD5:
-            d['quick_md5'] = bytes(h.quick_md5).hex()
-
-        return d
 
 
 class HashSetInfo(Handle):
