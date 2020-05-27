@@ -361,5 +361,11 @@ class TestHashSetAPI(unittest.TestCase):
                         self.assertTrue(115 in sset)
                         self.assertFalse(1234567 in sset)
 
+
+class HashNameTest(unittest.TestCase):
+    def test_hash_name(self):
+        self.assertEqual('MD5', hasher.hash_name(hasher.MD5))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -401,11 +401,11 @@ class Error(Handle):
         return self.handle
 
     def __str__(self):
-        return str(self.handle.contents.message.decode('utf-8')) if self.handle else ''
+        return self.handle.contents.message.decode('utf-8') if self.handle else ''
 
 
 def hash_name(alg):
-    return str(_sfhash_hash_name(alg))
+    return _sfhash_hash_name(alg).decode('utf-8')
 
 
 def hash_alg(name):
