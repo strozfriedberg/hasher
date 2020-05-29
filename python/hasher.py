@@ -146,6 +146,18 @@ class HasherHashes(Structure):
 
         return d
 
+    @staticmethod
+    def from_dict(d):
+        h = hasher.HasherHashes()
+
+        for k, v in d.items():
+            if k in ('fuzzy', 'entropy'):
+                setattr(h, k, v)
+            else:
+                setattr(h, k, bytes.fromhex(v))
+
+        return h
+
 
 class HasherError(Structure):
     _fields_ = [('message', c_char_p)]
