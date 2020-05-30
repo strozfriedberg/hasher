@@ -154,7 +154,7 @@ class HasherHashes(Structure):
             if k in ('fuzzy', 'entropy'):
                 setattr(h, k, v)
             else:
-                setattr(h, k, (c_ubyte * sizeof(getattr(h, k)))(*list((bytes.fromhex(v)))))
+                setattr(h, k, (c_ubyte * sizeof(getattr(h, k)))(*bytes.fromhex(v)))
 
         return h
 
