@@ -146,15 +146,15 @@ class HasherHashes(Structure):
 
         return d
 
-    @staticmethod
-    def from_dict(d):
-        h = hasher.HasherHashes()
+    @classmethod
+    def from_dict(cls, d):
+        h = cls()
 
         for k, v in d.items():
             if k in ('fuzzy', 'entropy'):
                 setattr(h, k, v)
             else:
-                setattr(h, k, bytes.fromhex(v))
+                setattr(h, k, (c_ubyte * sizeof(getattr(h, k)))(*list((bytes.fromhex(v)))))
 
         return h
 

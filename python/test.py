@@ -61,12 +61,7 @@ class HasherTestCase(unittest.TestCase):
             h.update(buf)
         hashes = h.get_hashes()
 
-        exp_h = hasher.HasherHashes()
-        for n, t in exp_h._fields_:
-            try:
-                setattr(exp_h, n, t(*bytes.fromhex(exp[n])))
-            except KeyError:
-                pass
+        exp_h = hasher.HasherHashes.from_dict(exp)
 
         self.assertEqual(exp_h, hashes)
         self.assertEqual(exp, hashes.to_dict(self.ALGS))
