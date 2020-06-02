@@ -120,11 +120,11 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     pos += outbuf.write(b'\0' * (hashes_off-pos))
     pos += outbuf.write(hashset)
 
-    if len(sizes):
+    if sizes:
         pos += outbuf.write(b'\0' * (sizes_off-pos))
         for s in sizes:
             pos += outbuf.write(s.to_bytes(8, 'little', signed=False))
 
 
 if __name__ == "__main__":
-    run(*sys.argv[1:4], sys.stdin, sys.stdout.buffer)
+    run(*sys.argv[1:4], sys.stdin, sys.stdout.buffer)   # pylint: disable=no-value-for-parameter
