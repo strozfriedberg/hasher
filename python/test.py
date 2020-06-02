@@ -237,8 +237,10 @@ class TestFuzzy(unittest.TestCase):
             h.update(buf)
 
         hashes = h.get_hashes()
-        self.assertEqual(exp, hashes.fuzzy)
-        self.assertEqual({'fuzzy': exp}, hashes.to_dict(hasher.FUZZY))
+
+        exp_d = {'fuzzy': exp}
+        self.assertEqual(hasher.HasherHashes.from_dict(exp_d), hashes)
+        self.assertEqual(exp_d, hashes.to_dict(hasher.FUZZY))
 
 
 class TestFuzzyMatcher(unittest.TestCase):

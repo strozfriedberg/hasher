@@ -102,7 +102,7 @@ class HasherHashes(Structure):
         ('sha3_384',  c_uint8 * 48),
         ('sha3_512',  c_uint8 * 64),
         ('blake3',    c_uint8 * 32),
-        ('_fuzzy',    c_uint8 * 148),
+        ('fuzzy',     c_uint8 * 148),
         ('quick_md5', c_uint8 * 16),
         ('entropy',   c_double)
     ]
@@ -120,14 +120,10 @@ class HasherHashes(Structure):
                     self.sha3_384[:] == other.sha3_384[:] and
                     self.sha3_512[:] == other.sha3_512[:] and
                     self.blake3[:] == other.blake3[:] and
-                    self.fuzzy == other.fuzzy and
+                    self.fuzzy[:] == other.fuzzy[:] and
                     self.entropy == other.entropy and
                     self.quick_md5[:] == other.quick_md5[:])
         return NotImplemented
-
-    @property
-    def fuzzy(self):
-        return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
 
     def hash_for_alg(self, alg):
         return getattr(self, ENUM_TO_MEMBER_NAME[alg])
@@ -142,7 +138,7 @@ class HasherHashes(Structure):
             d['entropy'] = round(self.entropy, rounding) if rounding is not None else self.entropy
 
         if algs & FUZZY:
-            d['fuzzy'] = self.fuzzy
+            d['fuzzy'] = bytes(self.fuzzy).rstrip(b'\x00').decode('ascii')
 
         return d
 
@@ -151,10 +147,10 @@ class HasherHashes(Structure):
         h = cls()
 
         for k, v in d.items():
-            if k == 'fuzzy':
-                h._fuzzy = v.encode('ascii')
-            elif k == 'entropy':
+            if k == 'entropy':
                 h.entropy = v
+            elif k == 'fuzzy':
+                h.fuzzy = (c_ubyte * sizeof(h.fuzzy))(*v.encode('ascii'))
             else:
                 setattr(h, k, (c_ubyte * sizeof(getattr(h, k)))(*bytes.fromhex(v)))
 
