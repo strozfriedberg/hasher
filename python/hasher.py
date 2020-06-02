@@ -151,8 +151,10 @@ class HasherHashes(Structure):
         h = cls()
 
         for k, v in d.items():
-            if k in ('fuzzy', 'entropy'):
-                setattr(h, k, v)
+            if k == 'fuzzy':
+                h._fuzzy = v.encode('ascii')
+            elif k == 'entropy':
+                h.entropy = v
             else:
                 setattr(h, k, (c_ubyte * sizeof(getattr(h, k)))(*bytes.fromhex(v)))
 
