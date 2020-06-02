@@ -157,6 +157,11 @@ class TestEntropy(unittest.TestCase):
         self.assertEqual(exp, hashes.entropy)
 
         self.assertEqual(
+            hasher.HasherHashes.from_dict({'entropy': exp}),
+            hashes
+        )
+
+        self.assertEqual(
             {'entropy': round(exp, 3)},
             hashes.to_dict(hasher.ENTROPY)
         )
