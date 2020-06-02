@@ -23,4 +23,3 @@ with open(sys.argv[1], 'rb') as f:
             print(f'hashset name: {hsinfo.hashset_name.decode("utf-8")}')
             print(f'hashset time: {hsinfo.hashset_time.decode("utf-8")}')
             print(f'hashset description: {hsinfo.hashset_desc.decode("utf-8")}')
-

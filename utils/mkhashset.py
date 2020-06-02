@@ -80,10 +80,10 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     for line in nonempty_lines(inlines):
         cols = line.split(' ')
         hashes.append(bytes.fromhex(cols[0]))
-        if (len(cols) == 2):
+        if len(cols) == 2:
             sizes.append(int(cols[1]))
 
-    if len(hashes) != len(sizes) and len(sizes) != 0:
+    if len(hashes) != len(sizes) and sizes:
         raise RuntimeError('some sizes missing')
 
     hash_length = len(hashes[0])
@@ -98,7 +98,7 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     hasher.update(hashset)
 
     hashes_off = 4096
-    sizes_off = hashes_off + len(hashes)*hash_length if len(sizes) else 0
+    sizes_off = hashes_off + len(hashes)*hash_length if sizes else 0
 
     timestamp = datetime.datetime.now().isoformat(timespec='microseconds').encode('UTF-8')
     timestamp_field_len = 40
