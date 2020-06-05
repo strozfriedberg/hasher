@@ -2,7 +2,7 @@
 
 # Make a hashset from a list of filenames:
 #
-# find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py SHA-1 'Some test hashes' 'These are test hashes.' >sha1.hset
+# find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
 #
 #
 # Make a hashset and sizeset from a list of filenames:
