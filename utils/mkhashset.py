@@ -1,20 +1,21 @@
 #!/usr/bin/python3
 
-# Make a hashset from a list of filenames:
-#
-# find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
-#
-#
-# Make a hashset and sizeset from a list of filenames:
-#
-# for i in  $(find -type f); do echo $(sha1sum $i) $(stat --printf=%s $i) ; done | cut -f1,3 -d' ' | sort -u | ./mkhashset.py SHA-1 'Some test hashes' 'These are test hashes.' >sha1.hset
-#
-#
-# Make a hashset and sizeset from the NSRL:
-#
-# for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py SHA-1 'NSRL' 'The NSRL!' >nsrl.hset
-#
+"""
+Make a hashset from a list of filenames:
 
+find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
+
+
+Make a hashset and sizeset from a list of filenames:
+
+for i in  $(find -type f); do echo $(sha1sum $i) $(stat --printf=%s $i) ; done | cut -f1,3 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
+
+
+Make a hashset and sizeset from the NSRL:
+
+for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py sha1 'NSRL' 'The NSRL!' >nsrl.hset
+"""
+import argparse
 import datetime
 import hashlib
 import sys
@@ -127,4 +128,10 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
 
 
 if __name__ == "__main__":
-    run(*sys.argv[1:4], sys.stdin, sys.stdout.buffer)   # pylint: disable=no-value-for-parameter
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("hash_type", help="Hash type")
+    parser.add_argument("hashset_name", help="Name of hash set")
+    parser.add_argument("hashset_desc", help="Hash set description")
+    args = parser.parse_args()
+    run(args.hash_type, args.hash_name, args.hash_desc, sys.stdin,
+        sys.stdout.buffer)  # pylint: disable=no-value-for-parameter
