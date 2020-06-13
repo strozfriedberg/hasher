@@ -26,6 +26,52 @@ except Exception as e:
     raise e
 
 
+#
+# mappings and enums
+#
+
+# the complete list of hash names/enums
+ALL_HASHES = [
+    ('md5',       1 <<  0),
+    ('sha1',      1 <<  1),
+    ('sha2_224',  1 <<  2),
+    ('sha2_256',  1 <<  3),
+    ('sha2_384',  1 <<  4),
+    ('sha2_512',  1 <<  5),
+    ('sha3_224',  1 <<  6),
+    ('sha3_256',  1 <<  7),
+    ('sha3_384',  1 <<  8),
+    ('sha3_512',  1 <<  9),
+    ('blake3',    1 << 10),
+    ('fuzzy',     1 << 11),
+    ('entropy',   1 << 12),
+    ('quick_md5', 1 << 13),
+]
+
+# the list of hash names/enums for hashes which are hexadecimal
+HEX_HASHES = [(n, a) for n, a in ALL_HASHES if n not in ('entropy', 'fuzzy')]
+
+# map hash names to enums
+HASH_NAME_TO_ENUM = { name: mask for name, mask in ALL_HASHES }
+
+# map hash enums to names
+ENUM_TO_MEMBER_NAME = { mask: name for name, mask in ALL_HASHES }
+
+# set the module-level algorithm enums; this produces constants
+# with the same names and values as the enum in the C API; would
+# there were a way to read enum names using ctypes...
+this_module = sys.modules[__name__]
+
+for name, mask in ALL_HASHES:
+    setattr(this_module, name.upper(), mask)
+
+OTHER = 1 << 31
+
+
+#
+# structs
+#
+
 class HashSetInfoStruct(Structure):
     _fields_ = [
         ('version',        c_uint64),
@@ -56,7 +102,7 @@ class HasherHashes(Structure):
         ('sha3_384',  c_uint8 * 48),
         ('sha3_512',  c_uint8 * 64),
         ('blake3',    c_uint8 * 32),
-        ('_fuzzy',    c_uint8 * 148),
+        ('fuzzy',     c_uint8 * 148),
         ('quick_md5', c_uint8 * 16),
         ('entropy',   c_double)
     ]
@@ -74,14 +120,41 @@ class HasherHashes(Structure):
                     self.sha3_384[:] == other.sha3_384[:] and
                     self.sha3_512[:] == other.sha3_512[:] and
                     self.blake3[:] == other.blake3[:] and
-                    self.fuzzy == other.fuzzy and
+                    self.fuzzy[:] == other.fuzzy[:] and
                     self.entropy == other.entropy and
                     self.quick_md5[:] == other.quick_md5[:])
         return NotImplemented
 
-    @property
-    def fuzzy(self):
-        return bytes(self._fuzzy).rstrip(b'\x00').decode('ascii')
+    def hash_for_alg(self, alg):
+        return getattr(self, ENUM_TO_MEMBER_NAME[alg])
+
+    def to_dict(self, algs, rounding=3):
+        d = {
+            name: bytes(getattr(self, name)).hex()
+            for name, alg in HEX_HASHES if alg & algs
+        }
+
+        if algs & ENTROPY:
+            d['entropy'] = round(self.entropy, rounding) if rounding is not None else self.entropy
+
+        if algs & FUZZY:
+            d['fuzzy'] = bytes(self.fuzzy).rstrip(b'\x00').decode('ascii')
+
+        return d
+
+    @classmethod
+    def from_dict(cls, d):
+        h = cls()
+
+        for k, v in d.items():
+            if k == 'entropy':
+                h.entropy = v
+            elif k == 'fuzzy':
+                h.fuzzy = (c_ubyte * sizeof(h.fuzzy))(*v.encode('ascii'))
+            else:
+                setattr(h, k, (c_ubyte * sizeof(getattr(h, k)))(*bytes.fromhex(v)))
+
+        return h
 
 
 class HasherError(Structure):
@@ -89,7 +162,7 @@ class HasherError(Structure):
 
 
 # const char* sfhash_hash_name(SFHASH_HashAlgorithm hash_type);
-_sfhash_hash_name = _hasher.sfhash_create_hasher
+_sfhash_hash_name = _hasher.sfhash_hash_name
 _sfhash_hash_name.argtypes = [c_uint32]
 _sfhash_hash_name.restype = c_char_p
 
@@ -244,23 +317,6 @@ _sfhash_destroy_matcher.argtypes = [c_void_p]
 _sfhash_destroy_matcher.restype = None
 
 
-MD5       = 1 <<  0
-SHA1      = 1 <<  1
-SHA2_224  = 1 <<  2
-SHA2_256  = 1 <<  3
-SHA2_384  = 1 <<  4
-SHA2_512  = 1 <<  5
-SHA3_224  = 1 <<  6
-SHA3_256  = 1 <<  7
-SHA3_384  = 1 <<  8
-SHA3_512  = 1 <<  9
-BLAKE3    = 1 << 10
-FUZZY     = 1 << 11
-ENTROPY   = 1 << 12
-QUICK_MD5 = 1 << 13
-OTHER     = 1 << 31
-
-
 c_ssize_p = POINTER(c_ssize_t)
 
 
@@ -355,7 +411,15 @@ class Error(Handle):
         return self.handle
 
     def __str__(self):
-        return str(self.handle.contents.message.decode('utf-8')) if self.handle else ''
+        return self.handle.contents.message.decode('utf-8') if self.handle else ''
+
+
+def hash_name(alg):
+    return _sfhash_hash_name(alg).decode('utf-8')
+
+
+def hash_alg(name):
+    return HASH_NAME_TO_ENUM.get(name.lower(), None)
 
 
 class Hasher(Handle):
@@ -383,41 +447,6 @@ class Hasher(Handle):
         h = HasherHashes()
         _sfhash_get_hashes(self.get(), byref(h))
         return h
-
-    def get_hashes_dict(self, rounding=3):
-        h = self.get_hashes()
-        d = {}
-
-        if self.algs & MD5:
-            d['md5'] = bytes(h.md5).hex()
-        if self.algs & SHA1:
-            d['sha1'] = bytes(h.sha1).hex()
-        if self.algs & SHA2_224:
-            d['sha2_224'] = bytes(h.sha2_224).hex()
-        if self.algs & SHA2_256:
-            d['sha2_256'] = bytes(h.sha2_256).hex()
-        if self.algs & SHA2_384:
-            d['sha2_384'] = bytes(h.sha2_384).hex()
-        if self.algs & SHA2_512:
-            d['sha2_512'] = bytes(h.sha2_512).hex()
-        if self.algs & SHA3_224:
-            d['sha3_224'] = bytes(h.sha3_224).hex()
-        if self.algs & SHA3_256:
-            d['sha3_256'] = bytes(h.sha3_256).hex()
-        if self.algs & SHA3_384:
-            d['sha3_384'] = bytes(h.sha3_384).hex()
-        if self.algs & SHA3_512:
-            d['sha3_512'] = bytes(h.sha3_512).hex()
-        if self.algs & BLAKE3:
-            d['blake3'] = bytes(h.blake3).hex()
-        if self.algs & FUZZY:
-            d['fuzzy'] = h.fuzzy
-        if self.algs & ENTROPY:
-            d['entropy'] = round(h.entropy, rounding) if rounding is not None else h.entropy
-        if self.algs & QUICK_MD5:
-            d['quick_md5'] = bytes(h.quick_md5).hex()
-
-        return d
 
 
 class HashSetInfo(Handle):

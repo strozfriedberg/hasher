@@ -5,7 +5,7 @@ import io
 import sys
 
 # Fun note:
-# 
+#
 # NSRL files don't have a consistent encoding. While the hash and file size
 # columns are ASCII, the filename column is encoded as however the filename
 # was encoded (!). For example, the file named

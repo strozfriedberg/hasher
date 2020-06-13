@@ -1,37 +1,40 @@
 #!/usr/bin/python3
 
-# Make a hashset from a list of filenames:
-#
-# find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py SHA-1 'Some test hashes' 'These are test hashes.' >sha1.hset
-#
-#
-# Make a hashset and sizeset from a list of filenames:
-#
-# for i in  $(find -type f); do echo $(sha1sum $i) $(stat --printf=%s $i) ; done | cut -f1,3 -d' ' | sort -u | ./mkhashset.py SHA-1 'Some test hashes' 'These are test hashes.' >sha1.hset
-#
-#
-# Make a hashset and sizeset from the NSRL:
-#
-# for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py SHA-1 'NSRL' 'The NSRL!' >nsrl.hset
-#
+"""
+Make a hashset from a list of filenames:
 
+find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
+
+
+Make a hashset and sizeset from a list of filenames:
+
+for i in  $(find -type f); do echo $(sha1sum $i) $(stat --printf=%s $i) ; done | cut -f1,3 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
+
+
+Make a hashset and sizeset from the NSRL:
+
+for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py sha1 'NSRL' 'The NSRL!' >nsrl.hset
+"""
+import argparse
 import datetime
 import hashlib
 import sys
 
 
 HASH_TYPE = {
-    'Other':      0,
-    'MD5':        1,
-    'SHA-1':      2,
-    'SHA-2-224':  3,
-    'SHA-2-256':  4,
-    'SHA-2-384':  5,
-    'SHA-2-512':  6,
-    'SHA-3-224':  7,
-    'SHA-3-256':  8,
-    'SHA-3-384':  9,
-    'SHA-3-512': 10
+    'md5':       1 <<  0,
+    'sha1':      1 <<  1,
+    'sha2_224':  1 <<  2,
+    'sha2_256':  1 <<  3,
+    'sha2_384':  1 <<  4,
+    'sha2_512':  1 <<  5,
+    'sha3_224':  1 <<  6,
+    'sha3_256':  1 <<  7,
+    'sha3_384':  1 <<  8,
+    'sha3_512':  1 <<  9,
+    'blake3':    1 << 10,
+    'quick_md5': 1 << 13,
+    'other':     1 <  31
 }
 
 
@@ -78,10 +81,10 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     for line in nonempty_lines(inlines):
         cols = line.split(' ')
         hashes.append(bytes.fromhex(cols[0]))
-        if (len(cols) == 2):
+        if len(cols) == 2:
             sizes.append(int(cols[1]))
 
-    if len(hashes) != len(sizes) and len(sizes) != 0:
+    if len(hashes) != len(sizes) and sizes:
         raise RuntimeError('some sizes missing')
 
     hash_length = len(hashes[0])
@@ -96,7 +99,7 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     hasher.update(hashset)
 
     hashes_off = 4096
-    sizes_off = hashes_off + len(hashes)*hash_length if len(sizes) else 0
+    sizes_off = hashes_off + len(hashes)*hash_length if sizes else 0
 
     timestamp = datetime.datetime.now().isoformat(timespec='microseconds').encode('UTF-8')
     timestamp_field_len = 40
@@ -118,11 +121,17 @@ def run(hash_type, hashset_name, hashset_desc, inlines, outbuf):
     pos += outbuf.write(b'\0' * (hashes_off-pos))
     pos += outbuf.write(hashset)
 
-    if len(sizes):
+    if sizes:
         pos += outbuf.write(b'\0' * (sizes_off-pos))
         for s in sizes:
             pos += outbuf.write(s.to_bytes(8, 'little', signed=False))
 
 
 if __name__ == "__main__":
-    run(*sys.argv[1:4], sys.stdin, sys.stdout.buffer)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("hash_type", help="Hash type")
+    parser.add_argument("hashset_name", help="Name of hash set")
+    parser.add_argument("hashset_desc", help="Hash set description")
+    args = parser.parse_args()
+    run(args.hash_type, args.hash_name, args.hash_desc, sys.stdin,
+        sys.stdout.buffer)  # pylint: disable=no-value-for-parameter

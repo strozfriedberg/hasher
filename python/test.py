@@ -57,28 +57,14 @@ class HasherTestCase(unittest.TestCase):
             self.hash_it(h, bufs, exp)
 
     def hash_it(self, h, bufs, exp):
-        # NB: getting the crypto hashes clears the internal hashers, so
-        # to test both get_hashes() and get_hashes_dict() we must recompute
         for buf in bufs:
             h.update(buf)
         hashes = h.get_hashes()
 
-        exp_h = hasher.HasherHashes()
-        for n, t in exp_h._fields_:
-            try:
-                setattr(exp_h, n, t(*bytes.fromhex(exp[n])))
-            except KeyError:
-                pass
+        exp_h = hasher.HasherHashes.from_dict(exp)
 
         self.assertEqual(exp_h, hashes)
-
-        h.reset()
-
-        for buf in bufs:
-            h.update(buf)
-
-        hashes_dict = h.get_hashes_dict()
-        self.assertEqual(exp, hashes_dict)
+        self.assertEqual(exp, hashes.to_dict(self.ALGS))
 
 
 class TestHasher(HasherTestCase):
@@ -166,11 +152,27 @@ class TestEntropy(unittest.TestCase):
         for buf in bufs:
             h.update(buf)
 
-        self.assertEqual(exp, h.get_hashes().entropy)
+        hashes = h.get_hashes()
 
-        self.assertEqual({'entropy': round(exp, 3)}, h.get_hashes_dict())
-        self.assertEqual({'entropy': round(exp, 6)}, h.get_hashes_dict(rounding=6))
-        self.assertEqual({'entropy': exp}, h.get_hashes_dict(rounding=None))
+        self.assertEqual(exp, hashes.entropy)
+
+        self.assertEqual(
+            hasher.HasherHashes.from_dict({'entropy': exp}),
+            hashes
+        )
+
+        self.assertEqual(
+            {'entropy': round(exp, 3)},
+            hashes.to_dict(hasher.ENTROPY)
+        )
+        self.assertEqual(
+            {'entropy': round(exp, 6)},
+            hashes.to_dict(hasher.ENTROPY, rounding=6)
+        )
+        self.assertEqual(
+            {'entropy': exp},
+            hashes.to_dict(hasher.ENTROPY, rounding=None)
+        )
 
     def test_entropy_nothing(self):
         self.process_this((), empty_entropy)
@@ -239,8 +241,11 @@ class TestFuzzy(unittest.TestCase):
         for buf in bufs:
             h.update(buf)
 
-        self.assertEqual(exp, h.get_hashes().fuzzy)
-        self.assertEqual({'fuzzy': exp}, h.get_hashes_dict())
+        hashes = h.get_hashes()
+
+        exp_d = {'fuzzy': exp}
+        self.assertEqual(hasher.HasherHashes.from_dict(exp_d), hashes)
+        self.assertEqual(exp_d, hashes.to_dict(hasher.FUZZY))
 
 
 class TestFuzzyMatcher(unittest.TestCase):
@@ -357,6 +362,12 @@ class TestHashSetAPI(unittest.TestCase):
                         self.assertTrue(6140 in sset)
                         self.assertTrue(115 in sset)
                         self.assertFalse(1234567 in sset)
+
+
+class HashNameTest(unittest.TestCase):
+    def test_hash_name(self):
+        self.assertEqual('MD5', hasher.hash_name(hasher.MD5))
+
 
 if __name__ == "__main__":
     unittest.main()
