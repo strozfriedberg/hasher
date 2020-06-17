@@ -31,14 +31,19 @@ void from_hex(uint8_t* dst, const char* src, size_t dlen) {
   }
 }
 
-void sfhash_hex(char* dst, const void* src, size_t slen) {
+void sfhash_hex(char* dst, const void* src, size_t len) {
   to_hex(dst, static_cast<const uint8_t*>(src),
-              static_cast<const uint8_t*>(src) + slen);
+              static_cast<const uint8_t*>(src) + len);
 }
 
-bool sfhash_unhex(uint8_t* dst, const char* src, size_t dlen) {
+bool sfhash_unhex(uint8_t* dst, const char* src, size_t len) {
+  if (len & 1) {
+    // length of hex strings must be even
+    return false;
+  }
+
   try {
-    from_hex(dst, src, dlen);
+    from_hex(dst, src, len >> 1);
     return true;
   }
   catch (const std::exception& e) {

@@ -114,7 +114,7 @@ SCOPE_TEST(sfhash_unhexTest) {
     const auto& exp = std::get<1>(t);
     const auto& src = std::get<0>(t);
     std::vector<uint8_t> dst(exp.size(), 0);
-    SCOPE_ASSERT(sfhash_unhex(&dst[0], &src[0], dst.size()));
+    SCOPE_ASSERT(sfhash_unhex(&dst[0], &src[0], src.size()));
     SCOPE_ASSERT_EQUAL(exp, dst);
   }
 }
@@ -128,5 +128,5 @@ SCOPE_TEST(from_hexBogusTest) {
 SCOPE_TEST(sfhsah_unhexBogusTest) {
   const char nothex[] = "bogus";
   std::vector<uint8_t> dst(std::strlen(nothex), 0);
-  SCOPE_ASSERT(!sfhash_unhex(&dst[0], &nothex[0], dst.size()));
+  SCOPE_ASSERT(!sfhash_unhex(&dst[0], &nothex[0], std::strlen(nothex)));
 }
