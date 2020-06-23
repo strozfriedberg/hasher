@@ -39,5 +39,37 @@ SCOPE_TEST(test_read_be) {
   SCOPE_EXPECT(read_be<uint64_t>(std::begin(x), i, std::end(x)), std::runtime_error);
 }
 
+SCOPE_TEST(test_write_le) {
+  uint8_t buf[16];
+  uint8_t* out = buf;
 
+  write_le<1>(6, buf, out, buf + sizeof(buf));
+  SCOPE_ASSERT_EQUAL(buf + 1, out);
+  SCOPE_ASSERT_EQUAL(6, buf[0]);
 
+  out = buf;
+  write_le<2>(6, buf, out, buf + sizeof(buf));
+  SCOPE_ASSERT_EQUAL(buf + 2, out);
+  SCOPE_ASSERT_EQUAL(6, buf[0]);
+  SCOPE_ASSERT_EQUAL(0, buf[1]);
+
+  out = buf;
+  write_le<4>(0x12345678, buf, out, buf + sizeof(buf));
+  SCOPE_ASSERT_EQUAL(buf + 4, out);
+  SCOPE_ASSERT_EQUAL(0x78, buf[0]);
+  SCOPE_ASSERT_EQUAL(0x56, buf[1]);
+  SCOPE_ASSERT_EQUAL(0x34, buf[2]);
+  SCOPE_ASSERT_EQUAL(0x12, buf[3]);
+
+  out = buf;
+  write_le<8>(0x0123456789ABCDEF, buf, out, buf + sizeof(buf));
+  SCOPE_ASSERT_EQUAL(buf + 8, out);
+  SCOPE_ASSERT_EQUAL(0xEF, buf[0]);
+  SCOPE_ASSERT_EQUAL(0xCD, buf[1]);
+  SCOPE_ASSERT_EQUAL(0xAB, buf[2]);
+  SCOPE_ASSERT_EQUAL(0x89, buf[3]);
+  SCOPE_ASSERT_EQUAL(0x67, buf[4]);
+  SCOPE_ASSERT_EQUAL(0x45, buf[5]);
+  SCOPE_ASSERT_EQUAL(0x23, buf[6]);
+  SCOPE_ASSERT_EQUAL(0x01, buf[7]);
+}

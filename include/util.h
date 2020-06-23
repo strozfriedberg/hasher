@@ -38,7 +38,7 @@ std::unique_ptr<ArgOf<D>, D> make_unique_del(std::nullptr_t, D&& deleter) {
 }
 
 //
-// Templates for reading unsigned integers from raw bytes
+// Templates for reading unsigned integers from bytes
 //
 
 template <typename out_t, bool le, size_t i>
@@ -87,4 +87,23 @@ out_t read_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
 template <typename out_t>
 out_t read_be(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
   return read_uint<out_t, false>(beg, i, end);
+}
+
+//
+// Templates for writing unsigned integers to bytes
+//
+
+template <size_t i, typename in_t>
+void write_byte(in_t in, uint8_t* out) {
+  if (i > 0) {
+    write_byte<i == 0 ? 0 : i-1>(in, out);
+  }
+  out[i] = i < sizeof(in_t) ? (in >> (8*i)) & 0xFF : 0;
+}
+
+template <size_t n, typename in_t>
+void write_le(in_t in, const uint8_t* beg, uint8_t*& out, const uint8_t* end) {
+  THROW_IF(out + n > end, "out of space writing 8 bytes at " << (out - beg));
+  write_byte<n>(in, out);
+  out += n;
 }
