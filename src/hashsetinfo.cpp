@@ -27,13 +27,20 @@ void read_bytes(uint8_t* dst, size_t len, const uint8_t* beg, const uint8_t*& i,
   i += len;
 }
 
-void check_magic(const uint8_t*& i, const uint8_t* end) {
-  static const uint8_t magic[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
+constexpr uint8_t MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
 
+void check_magic(const uint8_t*& i, const uint8_t* end) {
   // read magic
-  THROW_IF(i + sizeof(magic) > end, "out of data reading magic");
-  THROW_IF(std::memcmp(i, magic, sizeof(magic)), "bad magic");
-  i += sizeof(magic);
+  THROW_IF(i + sizeof(MAGIC) > end, "out of data reading magic");
+  THROW_IF(std::memcmp(i, MAGIC, sizeof(MAGIC)), "bad magic");
+  i += sizeof(MAGIC);
+}
+
+void write_magic(uint8_t*& dst, const uint8_t* end) {
+  // write magic
+  THROW_IF(dst + sizeof(MAGIC) > end, "out of space writing magic");
+  std::memcpy(dst, MAGIC, sizeof(MAGIC));
+  dst += sizeof(MAGIC);
 }
 
 HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end) {
@@ -78,6 +85,40 @@ HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end) {
   h->hashset_desc = read_cstring(beg, cur, end, 512);
 
   return h.release();
+}
+
+void write_bytes(const uint8_t* src, uint8_t* beg, uint8_t*& i, uint8_t* end, size_t len) {
+  THROW_IF(i + len > end, "out of space writing bytes at " << (i-beg));
+  std::memcpy(i, src, len);
+  i += len;
+}
+
+void write_cstring(const char* str, uint8_t* beg, uint8_t*& i, uint8_t* end, size_t field_width) {
+  THROW_IF(i + field_width > end, "out of space writing string at " << (i-beg));
+  std::strncpy(reinterpret_cast<char*>(i), str, field_width);
+  i += field_width;
+}
+
+void write_header(const SFHASH_HashSetInfo* info, uint8_t* dst, uint8_t* end) {
+  uint8_t* beg = dst;
+
+  write_magic(dst, end);
+  write_le<8>(info->version, beg, dst, end);
+  write_le<8>(info->flags, beg, dst, end);
+  write_le<8>(info->hash_type, beg, dst, end);
+  write_le<8>(info->hash_length, beg, dst, end);
+  write_le<8>(info->hashset_size, beg, dst, end);
+  write_le<8>(info->radius, beg, dst, end);
+  write_le<8>(info->hashset_off, beg, dst, end);
+  write_le<8>(info->sizes_off, beg, dst, end);
+  write_bytes(info->hashset_sha256, beg, dst, end, sizeof(info->hashset_sha256));
+  write_cstring(info->hashset_name, beg, dst, end, 96);
+  write_cstring(info->hashset_time, beg, dst, end, 40);
+  write_cstring(info->hashset_desc, beg, dst, end, 512);
+
+  // zero out remaining header space
+  std::memset(dst, 0, end - dst);
+  dst += (end - dst);
 }
 
 HashSetInfo* sfhash_load_hashset_info(
