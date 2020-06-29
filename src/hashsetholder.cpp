@@ -296,10 +296,12 @@ SFHASH_HashSetHolder* sfhash_union_hashsets(
   const SFHASH_HashSetHolder* l,
   const SFHASH_HashSetHolder* r,
   void* out,
-  bool shared)
+  bool shared,
+  const char* out_name,
+  const char* out_desc)
 {
   return hashset_dispatcher<UnionSetOp>(
-    l->info->hash_length, *l, *r, out, shared, "union", "union"
+    l->info->hash_length, *l, *r, out, shared, out_name, out_desc
   ).release();
 }
 
@@ -307,10 +309,12 @@ SFHASH_HashSetHolder* sfhash_intersect_hashsets(
   const SFHASH_HashSetHolder* l,
   const SFHASH_HashSetHolder* r,
   void* out,
-  bool shared)
+  bool shared,
+  const char* out_name,
+  const char* out_desc)
 {
   return hashset_dispatcher<IntersectSetOp>(
-    l->info->hash_length, *l, *r, out, shared, "intersection", "intersection"
+    l->info->hash_length, *l, *r, out, shared, out_name, out_desc
   ).release();
 }
 
@@ -318,9 +322,11 @@ SFHASH_HashSetHolder* sfhash_difference_hashsets(
   const SFHASH_HashSetHolder* l,
   const SFHASH_HashSetHolder* r,
   void* out,
-  bool shared)
+  bool shared,
+  const char* out_name,
+  const char* out_desc)
 {
   return hashset_dispatcher<DifferenceSetOp>(
-    l->info->hash_length, *l, *r, out, shared, "difference", "difference"
+    l->info->hash_length, *l, *r, out, shared, out_name, out_desc
   ).release();
 }

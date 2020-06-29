@@ -173,13 +173,32 @@ bool sfhash_lookup_hashset_holder(const SFHASH_HashSetHolder* hset, const void* 
 
 void sfhash_destroy_hashset_holder(SFHASH_HashSetHolder* hset);
 
-SFHASH_HashSetHolder* sfhash_union_hashsets(const SFHASH_HashSetHolder* a, const SFHASH_HashSetHolder* b, void* out, bool shared);
+SFHASH_HashSetHolder* sfhash_union_hashsets(
+  const SFHASH_HashSetHolder* a,
+  const SFHASH_HashSetHolder* b,
+  void* out,
+  bool shared,
+  const char* out_name,
+  const char* out_desc
+);
 
-SFHASH_HashSetHolder* sfhash_intersect_hashsets(const SFHASH_HashSetHolder* a, const SFHASH_HashSetHolder* b, void* out, bool shared);
+SFHASH_HashSetHolder* sfhash_intersect_hashsets(
+  const SFHASH_HashSetHolder* a,
+  const SFHASH_HashSetHolder* b,
+  void* out,
+  bool shared,
+  const char* out_name,
+  const char* out_desc
+);
 
-SFHASH_HashSetHolder* sfhash_difference_hashsets(const SFHASH_HashSetHolder* a, const SFHASH_HashSetHolder* b, void* out, bool shared);
-
-
+SFHASH_HashSetHolder* sfhash_difference_hashsets(
+  const SFHASH_HashSetHolder* a,
+  const SFHASH_HashSetHolder* b,
+  void* out,
+  bool shared,
+  const char* out_name,
+  const char* out_desc
+);
 
 // Loads a sizeset
 // Returns null on error and sets err to nonnull
