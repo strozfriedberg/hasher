@@ -15,6 +15,8 @@ public:
   virtual ~SFHASH_HashSet() {}
 
   virtual bool contains(const uint8_t* hash) const = 0;
+
+  virtual const uint8_t* data() const = 0;
 };
 
 template <size_t HashLength>
@@ -53,6 +55,10 @@ public:
       HashesBeg.get(), HashesEnd,
       *reinterpret_cast<const std::array<uint8_t, HashLength>*>(hash)
     );
+  }
+
+  virtual const uint8_t* data() const {
+    return reinterpret_cast<const uint8_t*>(HashesBeg.get());
   }
 
 protected:
@@ -120,3 +126,10 @@ SFHASH_HashSet* make_hashset(
       radius
   );
 }
+
+SFHASH_HashSet* load_hashset(
+  const SFHASH_HashSetInfo* hsinfo,
+  const void* beg,
+  const void* end,
+  bool shared
+);

@@ -109,6 +109,7 @@ void sfhash_destroy_hasher(SFHASH_Hasher* hasher);
   Hash set and size set functions
 ******************************************************************************/
 
+struct SFHASH_HashSetHolder;
 struct SFHASH_HashSet;
 struct SFHASH_SizeSet;
 
@@ -156,6 +157,29 @@ void sfhash_destroy_hashset(SFHASH_HashSet* hset);
 
 // Checks if a given hash is contained in a hashset
 bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash);
+
+
+
+SFHASH_HashSetHolder* sfhash_load_hashset_holder(
+  const void* beg,
+  const void* end,
+  bool shared,
+  SFHASH_Error** err
+);
+
+const SFHASH_HashSetInfo* sfhash_info_from_holder(const SFHASH_HashSetHolder* hset);
+
+bool sfhash_lookup_hashset_holder(const SFHASH_HashSetHolder* hset, const void* hash);
+
+void sfhash_destroy_hashset_holder(SFHASH_HashSetHolder* hset);
+
+SFHASH_HashSetHolder* sfhash_union_hashsets(const SFHASH_HashSetHolder* a, const SFHASH_HashSetHolder* b, void* out, bool shared);
+
+SFHASH_HashSetHolder* sfhash_intersect_hashsets(const SFHASH_HashSetHolder* a, const SFHASH_HashSetHolder* b, void* out, bool shared);
+
+SFHASH_HashSetHolder* sfhash_difference_hashsets(const SFHASH_HashSetHolder* a, const SFHASH_HashSetHolder* b, void* out, bool shared);
+
+
 
 // Loads a sizeset
 // Returns null on error and sets err to nonnull
