@@ -4,12 +4,22 @@
 #include "hasher/api.h"
 #include "error.h"
 #include "hashset.h"
+#include "hashset_util.h"
 #include "throw.h"
 #include "util.h"
 
 using Error = SFHASH_Error;
 using HashSet = SFHASH_HashSet;
 using HashSetInfo = SFHASH_HashSetInfo;
+
+// adaptor for use with hashset_dispatcher
+template <size_t HashLength>
+struct MakeHashSet {
+  template <class... Args>
+  auto operator()(Args&&... args) {
+    return make_hashset<HashLength>(std::forward<Args>(args)...);
+  }
+};
 
 HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
   THROW_IF(beg > end, "beg > end!");
@@ -20,26 +30,9 @@ HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* en
   THROW_IF(exp_len > act_len, "out of data reading hashes");
   THROW_IF(exp_len < act_len, "data trailing hashes");
 
-  switch (hsinfo->hash_length) {
-  case 4:
-    return make_hashset<4>(beg, end, hsinfo->radius, shared);
-  case 8:
-    return make_hashset<8>(beg, end, hsinfo->radius, shared);
-  case 16:
-    return make_hashset<16>(beg, end, hsinfo->radius, shared);
-  case 20:
-    return make_hashset<20>(beg, end, hsinfo->radius, shared);
-  case 28:
-    return make_hashset<28>(beg, end, hsinfo->radius, shared);
-  case 32:
-    return make_hashset<32>(beg, end, hsinfo->radius, shared);
-  case 48:
-    return make_hashset<48>(beg, end, hsinfo->radius, shared);
-  case 64:
-    return make_hashset<64>(beg, end, hsinfo->radius, shared);
-  default:
-    THROW("unsupported hash size " << hsinfo->hash_length);
-  }
+  return hashset_dispatcher<MakeHashSet>(
+    hsinfo->hash_length, beg, end, hsinfo->radius, shared
+  );
 }
 
 HashSet* sfhash_load_hashset(
