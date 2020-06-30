@@ -15,6 +15,7 @@
 void SFHASH_HashSetHolder::load(const void* ptr, size_t len, bool shared) {
   const uint8_t* p = static_cast<const uint8_t*>(ptr);
 
+    std::unique_ptr<SFHASH_Error> errptr;
     SFHASH_Error* err = nullptr;
 
     info = make_unique_del(
@@ -22,7 +23,7 @@ void SFHASH_HashSetHolder::load(const void* ptr, size_t len, bool shared) {
       sfhash_destroy_hashset_info
     );
 
-// FIXME: leaks err
+    errptr.reset(err);
     THROW_IF(err, err->message);
 
     hset = make_unique_del(
@@ -36,7 +37,7 @@ void SFHASH_HashSetHolder::load(const void* ptr, size_t len, bool shared) {
       sfhash_destroy_hashset
     );
 
-// FIXME: leaks err
+    errptr.reset(err);
     THROW_IF(err, err->message);
 }
 
