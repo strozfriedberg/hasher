@@ -75,9 +75,6 @@ void sfhash_destroy_hashset_holder(SFHASH_HashSetHolder* hset) {
   delete hset;
 }
 
-const size_t HEADER_END = 4096;
-const size_t HASHSET_OFF = HEADER_END;
-
 template <size_t HashLength>
 using IItr = const std::array<uint8_t, HashLength>*;
 
@@ -89,67 +86,6 @@ char* to_iso8601(std::time_t tt) {
   char* iso8601 = new char[maxlen];
   std::strftime(iso8601, maxlen, "%FT%TZ", std::gmtime(&tt));
   return iso8601;
-}
-
-template <class Itr>
-std::unique_ptr<SFHASH_HashSetInfo, void(*)(SFHASH_HashSetInfo*)> make_info(
-  const char* name,
-  const char* desc,
-  SFHASH_HashAlgorithm type,
-  Itr dbeg,
-  Itr dend)
-{
-  const uint32_t radius = compute_radius(dbeg, dend);
-
-  auto hasher = make_unique_del(
-    sfhash_create_hasher(SFHASH_SHA_2_256),
-    sfhash_destroy_hasher
-  );
-
-  sfhash_update_hasher(hasher.get(), dbeg, dend);
-  SFHASH_HashValues hashes;
-  sfhash_get_hashes(hasher.get(), &hashes);
-
-  auto info = make_unique_del(
-    new SFHASH_HashSetInfo{
-        1,
-        type,
-        sfhash_hash_length(type),
-        0,
-        static_cast<uint64_t>(dend - dbeg),
-        HASHSET_OFF,
-        0,
-        radius,
-        {0},
-        nullptr,
-        nullptr,
-        nullptr
-    },
-    sfhash_destroy_hashset_info
-  );
-
-/*
-  info->version = 1;
-  info->hash_type = type;
-  info->hash_length = sfhash_hash_length(type);
-  info->flags = 0;
-  info->hashset_size = dend - dbeg;
-  info->hashset_off = HASHSET_OFF;
-  info->sizes_off = 0;
-  info->radius = radius;
-*/
-
-  std::memcpy(info->hashset_sha256, hashes.Sha2_256, sizeof(hashes.Sha2_256));
-
-  info->hashset_name = new char[std::strlen(name)+1];
-  std::strcpy(info->hashset_name, name);
-
-  info->hashset_time = to_iso8601(std::time(nullptr));
-
-  info->hashset_desc = new char[std::strlen(desc)+1];
-  std::strcpy(info->hashset_desc, desc);
-
-  return info;
 }
 
 struct UnionOp {
@@ -221,12 +157,8 @@ std::unique_ptr<SFHASH_HashSetHolder, void (*)(SFHASH_HashSetHolder*)> set_op(
 {
   auto out = reinterpret_cast<uint8_t*>(outptr);
 
-  const auto lbeg = reinterpret_cast<IItr<HashLength>>(
-    l.hset->data() + l.info->hashset_off
-  );
-  const auto rbeg = reinterpret_cast<IItr<HashLength>>(
-    r.hset->data() + r.info->hashset_off
-  );
+  const auto lbeg = reinterpret_cast<IItr<HashLength>>(l.hset->data());
+  const auto rbeg = reinterpret_cast<IItr<HashLength>>(r.hset->data());
 
   const auto lend = lbeg + l.info->hashset_size;
   const auto rend = rbeg + r.info->hashset_size;
