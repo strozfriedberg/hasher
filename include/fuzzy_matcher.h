@@ -56,18 +56,18 @@ private:
 
 class SFHASH_FuzzyResult {
 public:
-  SFHASH_FuzzyResult(const std::string&& queryFilename,
-                     const std::vector<std::pair<std::string, int>>&& matches);
+  SFHASH_FuzzyResult(std::string&& queryFilename,
+                     std::vector<std::pair<std::string, int>>&& matches);
 
   size_t count() const;
   const char* queryFilename() const;
   const char* filename(size_t i) const;
   int score(size_t i) const;
 
-  const std::vector<std::pair<std::string, int>> Matches;
+  std::vector<std::pair<std::string, int>> Matches;
 
 private:
-  const std::string QueryFilename;
+  std::string QueryFilename;
 };
 
 int validate_hash(const char* a, const char* b);
@@ -76,4 +76,4 @@ std::string removeDuplicates(const std::string& s);
 
 std::unordered_set<uint64_t> decode_chunks(const std::string& s);
 
-std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end);
+std::unique_ptr<SFHASH_FuzzyMatcher, void (*)(SFHASH_FuzzyMatcher*)> load_fuzzy_hashset(const char* beg, const char* end);

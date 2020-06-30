@@ -253,7 +253,7 @@ SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(
   const void* end
 );
 
-const SFHASH_FuzzyResult* sfhash_fuzzy_matcher_compare(
+SFHASH_FuzzyResult* sfhash_fuzzy_matcher_compare(
   SFHASH_FuzzyMatcher* matcher,
   const void* beg,
   const void* end
@@ -270,7 +270,7 @@ const char* sfhash_fuzzy_result_query_filename(const SFHASH_FuzzyResult* result)
 
 int sfhash_fuzzy_result_score(const SFHASH_FuzzyResult* result, size_t i);
 
-void sfhash_destroy_fuzzy_match(const SFHASH_FuzzyResult* result);
+void sfhash_destroy_fuzzy_match(SFHASH_FuzzyResult* result);
 
 void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 
