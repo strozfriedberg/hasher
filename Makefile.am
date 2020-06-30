@@ -76,6 +76,7 @@ test_test_SOURCES = \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
 	test/test_hashset.cpp \
+	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
 	test/test_matcher.cpp \
 	test/test_parser.cpp \
