@@ -352,7 +352,7 @@ class TestHashSetAPI(unittest.TestCase):
                     self.assertEqual(b'These are test hashes.', info.hashset_desc)
 
                     # check the hashset
-                    with hasher.HashSet(info, buf) as hset:
+                    with hasher.HashSetData(info, buf) as hset:
                         self.assertTrue(bytes.fromhex('55250d55d5bb84d127e34bde24ea32d86a4d1584') in hset)
                         self.assertTrue(bytes.fromhex('fc824043658c86424b5f2d480134dce7b004143d') in hset)
                         self.assertFalse(bytes.fromhex('baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad') in hset)
