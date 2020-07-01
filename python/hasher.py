@@ -236,6 +236,41 @@ _sfhash_lookup_hashset_data = _hasher.sfhash_lookup_hashset_data
 _sfhash_lookup_hashset_data.argtypes = [c_void_p, c_void_p]
 _sfhash_lookup_hashset_data.restype = c_bool
 
+# SFHASH_HashSet* sfhash_load_hashset(const void* beg, const void* end, bool shared, SFHASH_Error** err);
+_sfhash_load_hashset = _hasher.sfhash_load_hashset
+_sfhash_load_hashset.argtypes = [c_void_p, c_void_p, c_bool, POINTER(POINTER(HasherError))]
+_sfhash_load_hashset.restype = c_void_p
+
+# const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset);
+_sfhash_info_for_hashset = _hasher.sfhash_info_for_hashset
+_sfhash_info_for_hashset.argtypes = [c_void_p]
+_sfhash_info_for_hashset.restype = c_void_p
+
+# bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash);
+_sfhash_lookup_hashset = _hasher.sfhash_lookup_hashset
+_sfhash_lookup_hashset.argtypes = [c_void_p, c_void_p]
+_sfhash_lookup_hashset.restype = c_bool
+
+# void sfhash_destroy_hashset(SFHASH_HashSet* hset);
+_sfhash_destroy_hashset = _hasher.sfhash_destroy_hashset
+_sfhash_destroy_hashset.argtypes = [c_void_p]
+_sfhash_destroy_hashset.restype = None
+
+# SFHASH_HashSet* sfhash_union_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, bool shared, const char* out_name, const char* out_desc);
+_sfhash_union_hashsets = _hasher.sfhash_union_hashsets
+_sfhash_union_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_bool, c_char_p, c_char_p]
+_sfhash_union_hashsets.restype = c_void_p
+
+# SFHASH_HashSet* sfhash_intersect_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, bool shared, const char* out_name, const char* out_desc);
+_sfhash_intersect_hashsets = _hasher.sfhash_intersect_hashsets
+_sfhash_intersect_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_bool, c_char_p, c_char_p]
+_sfhash_intersect_hashsets.restype = c_void_p
+
+# SFHASH_HashSet* sfhash_difference_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, bool shared, const char* out_name, const char* out_desc);
+_sfhash_difference_hashsets = _hasher.sfhash_difference_hashsets
+_sfhash_difference_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_bool, c_char_p, c_char_p]
+_sfhash_difference_hashsets.restype = c_void_p
+
 # SFHASH_SizeSet* sfhash_load_sizeset(SFHASH_HashSetInfo* hsinfo, const void* beg, const void* end, SFHASH_Error** err);
 _sfhash_load_sizeset = _hasher.sfhash_load_sizeset
 _sfhash_load_sizeset.argtypes = [c_void_p, c_void_p, c_void_p, POINTER(POINTER(HasherError))]
@@ -491,6 +526,18 @@ class HashSetData(Handle):
 
     def __contains__(self, h):
         return _sfhash_lookup_hashset_data(self.get(), buf_beg(h, c_uint8))
+
+
+class HashSet(Handle):
+    def __init__(self, buf):
+        with Error() as err:
+            super().__init__(_sfhash_load_hashset(*buf_range(buf, c_char), True, byref(err.get())))
+            if err:
+                raise RuntimeError(str(err))
+
+    def destroy(self):
+        _sfhash_destroy_hashset(self.handle)
+        super().destroy()
 
 
 class SizeSet(Handle):
