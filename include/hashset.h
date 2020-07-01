@@ -10,9 +10,9 @@
 #include <numeric>
 #include <string>
 
-class SFHASH_HashSet {
+class SFHASH_HashSetData {
 public:
-  virtual ~SFHASH_HashSet() {}
+  virtual ~SFHASH_HashSetData() {}
 
   virtual bool contains(const uint8_t* hash) const = 0;
 
@@ -25,9 +25,9 @@ std::array<uint8_t, HashLength>* hash_ptr_cast(const void* ptr) {
 }
 
 template <size_t HashLength>
-class HashSetImpl: public SFHASH_HashSet {
+class HashSetDataImpl: public SFHASH_HashSetData {
 public:
-  HashSetImpl(const void* beg, const void* end, bool shared):
+  HashSetDataImpl(const void* beg, const void* end, bool shared):
     HashesBeg(nullptr, nullptr)
   {
     auto b = hash_ptr_cast<HashLength>(beg);
@@ -48,7 +48,7 @@ public:
     }
   }
 
-  virtual ~HashSetImpl() {}
+  virtual ~HashSetDataImpl() {}
 
   virtual bool contains(const uint8_t* hash) const {
     return std::binary_search(
@@ -69,17 +69,17 @@ protected:
 uint32_t expected_index(const uint8_t* h, uint32_t set_size);
 
 template <size_t HashLength>
-class HashSetRadiusImpl: public HashSetImpl<HashLength> {
+class HashSetDataRadiusImpl: public HashSetDataImpl<HashLength> {
 public:
-  HashSetRadiusImpl(
+  HashSetDataRadiusImpl(
     const void* beg,
     const void* end,
     bool shared,
     uint32_t radius
   ):
-    HashSetImpl<HashLength>(beg, end, shared), Radius(radius) {}
+    HashSetDataImpl<HashLength>(beg, end, shared), Radius(radius) {}
 
-  virtual ~HashSetRadiusImpl() {}
+  virtual ~HashSetDataRadiusImpl() {}
 
   virtual bool contains(const uint8_t* hash) const override {
     const size_t exp = expected_index(hash, this->HashesEnd - this->HashesBeg.get());
@@ -112,13 +112,13 @@ uint32_t compute_radius(
 }
 
 template <size_t N>
-SFHASH_HashSet* make_hashset(
+SFHASH_HashSetData* make_hashset_data(
   const void* beg,
   const void* end,
   uint32_t radius,
   bool shared)
 {
-  return new HashSetRadiusImpl<N>(
+  return new HashSetDataRadiusImpl<N>(
     beg, end, shared,
     radius == std::numeric_limits<uint32_t>::max() ?
       compute_radius<N>(static_cast<const std::array<uint8_t, N>*>(beg),
@@ -127,7 +127,7 @@ SFHASH_HashSet* make_hashset(
   );
 }
 
-SFHASH_HashSet* load_hashset(
+SFHASH_HashSetData* load_hashset_data(
   const SFHASH_HashSetInfo* hsinfo,
   const void* beg,
   const void* end,

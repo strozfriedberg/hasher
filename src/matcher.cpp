@@ -117,8 +117,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   std::sort(hashes.get(), hcur);
 
   auto hptr = make_unique_del(
-    make_hashset<20>(hashes.get(), hcur, std::numeric_limits<uint32_t>::max(), false),
-    sfhash_destroy_hashset
+    make_hashset_data<20>(hashes.get(), hcur, std::numeric_limits<uint32_t>::max(), false),
+    sfhash_destroy_hashset_data
   );
 
   return std::unique_ptr<Matcher>(

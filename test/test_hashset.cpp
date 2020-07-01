@@ -252,8 +252,8 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   auto end = beg + hsinfo_act->hashset_size * hsinfo_act->hash_length;
 
   auto hs = make_unique_del(
-    sfhash_load_hashset(hsinfo_act.get(), beg, end, shared, &err),
-    sfhash_destroy_hashset
+    sfhash_load_hashset_data(hsinfo_act.get(), beg, end, shared, &err),
+    sfhash_destroy_hashset_data
   );
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(hs);

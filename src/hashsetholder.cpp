@@ -27,14 +27,14 @@ void SFHASH_HashSetHolder::load(const void* ptr, size_t len, bool shared) {
     THROW_IF(err, err->message);
 
     hset = make_unique_del(
-      sfhash_load_hashset(
+      sfhash_load_hashset_data(
         info.get(),
         p + info->hashset_off,
         p + info->hashset_off + info->hashset_size * info->hash_length,
         shared,
         &err
       ),
-      sfhash_destroy_hashset
+      sfhash_destroy_hashset_data
     );
 
     errptr.reset(err);
@@ -176,8 +176,8 @@ std::unique_ptr<SFHASH_HashSetHolder, void (*)(SFHASH_HashSetHolder*)> set_op(
   write_header(o->info.get(), out, out + HEADER_END);
 
   o->hset = make_unique_del(
-    load_hashset(o->info.get(), obeg, oend, shared),
-    sfhash_destroy_hashset
+    load_hashset_data(o->info.get(), obeg, oend, shared),
+    sfhash_destroy_hashset_data
   );
 
   return o;

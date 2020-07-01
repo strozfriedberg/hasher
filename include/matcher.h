@@ -11,7 +11,7 @@
 
 struct SFHASH_FileMatcher {
   std::unique_ptr<SFHASH_SizeSet, decltype(sfhash_destroy_sizeset)&> Sizes;
-  std::unique_ptr<SFHASH_HashSet, decltype(sfhash_destroy_hashset)&> Hashes;
+  std::unique_ptr<SFHASH_HashSetData, decltype(sfhash_destroy_hashset_data)&> Hashes;
   std::unique_ptr<ProgramHandle, decltype(lg_destroy_program)&> Prog;
 };
 

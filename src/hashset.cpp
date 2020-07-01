@@ -9,19 +9,19 @@
 #include "util.h"
 
 using Error = SFHASH_Error;
-using HashSet = SFHASH_HashSet;
 using HashSetInfo = SFHASH_HashSetInfo;
+using HashSetData = SFHASH_HashSetData;
 
 // adaptor for use with hashset_dispatcher
 template <size_t HashLength>
-struct MakeHashSet {
+struct MakeHashSetData {
   template <class... Args>
   auto operator()(Args&&... args) {
-    return make_hashset<HashLength>(std::forward<Args>(args)...);
+    return make_hashset_data<HashLength>(std::forward<Args>(args)...);
   }
 };
 
-HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
+HashSetData* load_hashset_data(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
   THROW_IF(beg > end, "beg > end!");
 
   const size_t exp_len = hsinfo->hashset_size * hsinfo->hash_length;
@@ -30,12 +30,12 @@ HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* en
   THROW_IF(exp_len > act_len, "out of data reading hashes");
   THROW_IF(exp_len < act_len, "data trailing hashes");
 
-  return hashset_dispatcher<MakeHashSet>(
+  return hashset_dispatcher<MakeHashSetData>(
     hsinfo->hash_length, beg, end, hsinfo->radius, shared
   );
 }
 
-HashSet* sfhash_load_hashset(
+HashSetData* sfhash_load_hashset_data(
   const HashSetInfo* hsinfo,
   const void* beg,
   const void* end,
@@ -43,7 +43,7 @@ HashSet* sfhash_load_hashset(
   Error** err)
 {
   try {
-    return load_hashset(hsinfo, beg, end, shared);
+    return load_hashset_data(hsinfo, beg, end, shared);
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());
@@ -51,9 +51,9 @@ HashSet* sfhash_load_hashset(
   }
 }
 
-void sfhash_destroy_hashset(HashSet* hset) { delete hset; }
+void sfhash_destroy_hashset_data(HashSetData* hset) { delete hset; }
 
-bool sfhash_lookup_hashset(const HashSet* hset, const void* hash) {
+bool sfhash_lookup_hashset(const HashSetData* hset, const void* hash) {
   return hset->contains(static_cast<const uint8_t*>(hash));
 }
 

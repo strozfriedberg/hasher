@@ -78,8 +78,8 @@ auto make_test_hashset(
   );
 
   auto hset = make_unique_del(
-    sfhash_load_hashset(info.get(), beg, end, true, &err),
-    sfhash_destroy_hashset
+    sfhash_load_hashset_data(info.get(), beg, end, true, &err),
+    sfhash_destroy_hashset_data
   );
 
   SCOPE_ASSERT(!err);

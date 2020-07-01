@@ -8,9 +8,12 @@
 #include <cstring>
 #include <memory>
 
+// TODO: rename SFHASH_HashSet to SFHASH_HashSetData
+// TODO: rename SFHASH_HashSetHolder to SFHASH_HashSet
+
 struct SFHASH_HashSetHolder {
   std::unique_ptr<SFHASH_HashSetInfo, void (*)(SFHASH_HashSetInfo*)> info;
-  std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> hset;
+  std::unique_ptr<SFHASH_HashSetData, void (*)(SFHASH_HashSetData*)> hset;
 
   void load(const void* ptr, size_t len, bool shared);
 };
