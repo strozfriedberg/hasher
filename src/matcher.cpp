@@ -1,6 +1,6 @@
 #include "hasher/api.h"
 #include "error.h"
-#include "hashset.h"
+#include "hashsetdata.h"
 #include "matcher.h"
 #include "parser.h"
 #include "sizeset.h"
@@ -141,7 +141,7 @@ bool sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
 }
 
 bool sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
-  return sfhash_lookup_hashset(matcher->Hashes.get(), sha1);
+  return sfhash_lookup_hashset_data(matcher->Hashes.get(), sha1);
 }
 
 void cb(void* userData, const LG_SearchHit* const) {

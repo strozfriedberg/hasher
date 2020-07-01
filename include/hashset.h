@@ -1,135 +1,83 @@
 #pragma once
 
 #include "hasher/api.h"
+#include "hashsetdata.h"
+#include "hashsetinfo.h"
+#include "util.h"
 
-#include <algorithm>
-#include <array>
+#include <ctime>
 #include <cstring>
-#include <limits>
 #include <memory>
-#include <numeric>
-#include <string>
 
-class SFHASH_HashSetData {
-public:
-  virtual ~SFHASH_HashSetData() {}
+struct SFHASH_HashSet {
+  std::unique_ptr<SFHASH_HashSetInfo, void (*)(SFHASH_HashSetInfo*)> info;
+  std::unique_ptr<SFHASH_HashSetData, void (*)(SFHASH_HashSetData*)> hset;
 
-  virtual bool contains(const uint8_t* hash) const = 0;
-
-  virtual const uint8_t* data() const = 0;
+  void load(const void* ptr, size_t len, bool shared);
 };
 
-template <size_t HashLength>
-std::array<uint8_t, HashLength>* hash_ptr_cast(const void* ptr) {
-  return static_cast<std::array<uint8_t, HashLength>*>(const_cast<void*>(ptr));
-}
+char* to_iso8601(std::time_t tt);
 
-template <size_t HashLength>
-class HashSetDataImpl: public SFHASH_HashSetData {
-public:
-  HashSetDataImpl(const void* beg, const void* end, bool shared):
-    HashesBeg(nullptr, nullptr)
-  {
-    auto b = hash_ptr_cast<HashLength>(beg);
-    auto e = hash_ptr_cast<HashLength>(end);
+const size_t HEADER_END = 4096;
+const size_t HASHSET_OFF = HEADER_END;
 
-    if (shared) {
-      HashesBeg = {b, [](std::array<uint8_t, HashLength>*){}};
-      HashesEnd = e;
-    }
-    else {
-      const size_t count = e - b;
-      HashesBeg = {
-        new std::array<uint8_t, HashLength>[count],
-        [](std::array<uint8_t, HashLength>* h){ delete[] h; }
-      };
-      HashesEnd = HashesBeg.get() + count;
-      std::memcpy(HashesBeg.get(), b, count * HashLength);
-    }
-  }
-
-  virtual ~HashSetDataImpl() {}
-
-  virtual bool contains(const uint8_t* hash) const {
-    return std::binary_search(
-      HashesBeg.get(), HashesEnd,
-      *reinterpret_cast<const std::array<uint8_t, HashLength>*>(hash)
-    );
-  }
-
-  virtual const uint8_t* data() const {
-    return reinterpret_cast<const uint8_t*>(HashesBeg.get());
-  }
-
-protected:
-  std::unique_ptr<std::array<uint8_t, HashLength>[], void(*)(std::array<uint8_t, HashLength>*)> HashesBeg;
-  std::array<uint8_t, HashLength>* HashesEnd;
-};
-
-uint32_t expected_index(const uint8_t* h, uint32_t set_size);
-
-template <size_t HashLength>
-class HashSetDataRadiusImpl: public HashSetDataImpl<HashLength> {
-public:
-  HashSetDataRadiusImpl(
-    const void* beg,
-    const void* end,
-    bool shared,
-    uint32_t radius
-  ):
-    HashSetDataImpl<HashLength>(beg, end, shared), Radius(radius) {}
-
-  virtual ~HashSetDataRadiusImpl() {}
-
-  virtual bool contains(const uint8_t* hash) const override {
-    const size_t exp = expected_index(hash, this->HashesEnd - this->HashesBeg.get());
-    return std::binary_search(
-      std::max(this->HashesBeg.get(), this->HashesBeg.get() + exp - Radius),
-      std::min(this->HashesEnd, this->HashesBeg.get() + exp + Radius + 1),
-      *reinterpret_cast<const std::array<uint8_t, HashLength>*>(hash)
-    );
-  }
-
-protected:
-  uint32_t Radius;
-};
-
-template <size_t HashLength>
-uint32_t compute_radius(
-  const std::array<uint8_t, HashLength>* beg,
-  const std::array<uint8_t, HashLength>* end
-)
+template <class Itr>
+std::unique_ptr<SFHASH_HashSetInfo, void(*)(SFHASH_HashSetInfo*)> make_info(
+  const char* name,
+  const char* desc,
+  SFHASH_HashAlgorithm type,
+  Itr dbeg,
+  Itr dend)
 {
-  const uint32_t count = end - beg;
-  int64_t max_delta = 0;
-  for (uint32_t i = 0; i < count; ++i) {
-    max_delta = std::max(
-      max_delta,
-      std::abs((int64_t)i - expected_index(beg[i].data(), count))
-    );
-  }
-  return max_delta;
-}
+  const uint32_t radius = compute_radius(dbeg, dend);
 
-template <size_t N>
-SFHASH_HashSetData* make_hashset_data(
-  const void* beg,
-  const void* end,
-  uint32_t radius,
-  bool shared)
-{
-  return new HashSetDataRadiusImpl<N>(
-    beg, end, shared,
-    radius == std::numeric_limits<uint32_t>::max() ?
-      compute_radius<N>(static_cast<const std::array<uint8_t, N>*>(beg),
-                        static_cast<const std::array<uint8_t, N>*>(end)) :
-      radius
+  auto hasher = make_unique_del(
+    sfhash_create_hasher(SFHASH_SHA_2_256),
+    sfhash_destroy_hasher
   );
-}
 
-SFHASH_HashSetData* load_hashset_data(
-  const SFHASH_HashSetInfo* hsinfo,
-  const void* beg,
-  const void* end,
-  bool shared
-);
+  sfhash_update_hasher(hasher.get(), dbeg, dend);
+  SFHASH_HashValues hashes;
+  sfhash_get_hashes(hasher.get(), &hashes);
+
+  auto info = make_unique_del(
+    new SFHASH_HashSetInfo{
+        1,
+        type,
+        sfhash_hash_length(type),
+        0,
+        static_cast<uint64_t>(dend - dbeg),
+        HASHSET_OFF,
+        0,
+        radius,
+        {0},
+        nullptr,
+        nullptr,
+        nullptr
+    },
+    sfhash_destroy_hashset_info
+  );
+
+/*
+  info->version = 1;
+  info->hash_type = type;
+  info->hash_length = sfhash_hash_length(type);
+  info->flags = 0;
+  info->hashset_size = dend - dbeg;
+  info->hashset_off = HASHSET_OFF;
+  info->sizes_off = 0;
+  info->radius = radius;
+*/
+
+  std::memcpy(info->hashset_sha256, hashes.Sha2_256, sizeof(hashes.Sha2_256));
+
+  info->hashset_name = new char[std::strlen(name)+1];
+  std::strcpy(info->hashset_name, name);
+
+  info->hashset_time = to_iso8601(std::time(nullptr));
+
+  info->hashset_desc = new char[std::strlen(desc)+1];
+  std::strcpy(info->hashset_desc, desc);
+
+  return info;
+}

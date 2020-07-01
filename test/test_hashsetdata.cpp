@@ -1,7 +1,7 @@
 #include "hasher/api.h"
 
+#include "hashsetdata.h"
 #include "hashsetinfo.h"
-#include "hashset.h"
 #include "hex.h"
 #include "util.h"
 
@@ -274,14 +274,14 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   // ins are in
   for (const auto& p: ins) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(sfhash_lookup_hashset(hs.get(), hash.data()));
+    SCOPE_ASSERT(sfhash_lookup_hashset_data(hs.get(), hash.data()));
     SCOPE_ASSERT(sfhash_lookup_sizeset(ss.get(), size));
   }
 
   // outs are out
   for (const auto& p: outs) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(!sfhash_lookup_hashset(hs.get(), hash.data()));
+    SCOPE_ASSERT(!sfhash_lookup_hashset_data(hs.get(), hash.data()));
     SCOPE_ASSERT(!sfhash_lookup_sizeset(ss.get(), size));
   }
 }

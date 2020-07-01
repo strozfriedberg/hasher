@@ -231,10 +231,10 @@ _sfhash_destroy_hashset_data = _hasher.sfhash_destroy_hashset_data
 _sfhash_destroy_hashset_data.argtypes = [c_void_p]
 _sfhash_destroy_hashset_data.restype = None
 
-# bool sfhash_lookup_hashset(const SFHASH_HashSetData* hset, const void* hash);
-_sfhash_lookup_hashset = _hasher.sfhash_lookup_hashset
-_sfhash_lookup_hashset.argtypes = [c_void_p, c_void_p]
-_sfhash_lookup_hashset.restype = c_bool
+# bool sfhash_lookup_hashset_data(const SFHASH_HashSetData* hset, const void* hash);
+_sfhash_lookup_hashset_data = _hasher.sfhash_lookup_hashset_data
+_sfhash_lookup_hashset_data.argtypes = [c_void_p, c_void_p]
+_sfhash_lookup_hashset_data.restype = c_bool
 
 # SFHASH_SizeSet* sfhash_load_sizeset(SFHASH_HashSetInfo* hsinfo, const void* beg, const void* end, SFHASH_Error** err);
 _sfhash_load_sizeset = _hasher.sfhash_load_sizeset
@@ -490,7 +490,7 @@ class HashSetData(Handle):
         super().destroy()
 
     def __contains__(self, h):
-        return _sfhash_lookup_hashset(self.get(), buf_beg(h, c_uint8))
+        return _sfhash_lookup_hashset_data(self.get(), buf_beg(h, c_uint8))
 
 
 class SizeSet(Handle):

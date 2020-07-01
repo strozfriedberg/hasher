@@ -26,7 +26,7 @@ src_libhasherint_la_SOURCES = \
 	src/hash_types.cpp \
 	src/hasher.cpp \
 	src/hashset.cpp \
-	src/hashsetholder.cpp \
+	src/hashsetdata.cpp \
 	src/hashsetinfo.cpp \
 	src/hex.cpp \
 	src/libblake3_hasher.cpp \
@@ -75,7 +75,7 @@ test_test_SOURCES = \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
-	test/test_hashset.cpp \
+	test/test_hashsetdata.cpp \
 	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
 	test/test_matcher.cpp \

@@ -1,7 +1,7 @@
 #include "hasher/api.h"
 #include "hashset.h"
+#include "hashsetdata.h"
 #include "hashsetinfo.h"
-#include "hashsetholder.h"
 #include "hex.h"
 #include "util.h"
 
@@ -10,17 +10,17 @@
 
 #include <scope/test.h>
 
-size_t union_max_size(const SFHASH_HashSetHolder& a, const SFHASH_HashSetHolder& b) {
+size_t union_max_size(const SFHASH_HashSet& a, const SFHASH_HashSet& b) {
   return HASHSET_OFF + a.info->hashset_size * a.info->hash_length +
                        b.info->hashset_size * b.info->hash_length;
 }
 
-size_t intersection_max_size(const SFHASH_HashSetHolder& a, const SFHASH_HashSetHolder& b) {
+size_t intersection_max_size(const SFHASH_HashSet& a, const SFHASH_HashSet& b) {
   return HASHSET_OFF +
     std::max(a.info->hashset_size, b.info->hashset_size) * a.info->hash_length;
 }
 
-size_t difference_max_size(const SFHASH_HashSetHolder& a, const SFHASH_HashSetHolder&) {
+size_t difference_max_size(const SFHASH_HashSet& a, const SFHASH_HashSet&) {
   return HASHSET_OFF + a.info->hashset_size * a.info->hash_length;
 }
 
@@ -53,9 +53,9 @@ const std::vector<std::array<uint8_t, 16>> MD5s{
   to_bytes<16>("e8e3e414fee160337703c8dcbee5a2f9")
 };
 
-void dump_test_hashset(const SFHASH_HashSetHolder& hh) {
-  auto h = reinterpret_cast<const std::array<uint8_t, 16>*>(hh.hset->data());
-  for (size_t i = 0; i < hh.info->hashset_size; ++i) {
+void dump_test_hashset(const SFHASH_HashSet& hs) {
+  auto h = reinterpret_cast<const std::array<uint8_t, 16>*>(hs.hset->data());
+  for (size_t i = 0; i < hs.info->hashset_size; ++i) {
     std::cout << to_hex(h[i]) << '\n';
   }
   std::cout << '\n';
@@ -84,7 +84,7 @@ auto make_test_hashset(
 
   SCOPE_ASSERT(!err);
 
-  return SFHASH_HashSetHolder{std::move(info), std::move(hset)};
+  return SFHASH_HashSet{std::move(info), std::move(hset)};
 }
 
 SCOPE_TEST(a_union_b_test) {
@@ -98,7 +98,7 @@ SCOPE_TEST(a_union_b_test) {
 
   auto o = make_unique_del(
     sfhash_union_hashsets(&a, &b, odata.get(), true, oname, odesc),
-    sfhash_destroy_hashset_holder
+    sfhash_destroy_hashset
   );
 
   // check the header
@@ -129,7 +129,7 @@ SCOPE_TEST(b_union_a_test) {
 
   auto o = make_unique_del(
     sfhash_union_hashsets(&b, &a, odata.get(), true, oname, odesc),
-    sfhash_destroy_hashset_holder
+    sfhash_destroy_hashset
   );
 
   // check the header
@@ -160,7 +160,7 @@ SCOPE_TEST(a_intersect_b_test) {
 
   auto o = make_unique_del(
     sfhash_intersect_hashsets(&a, &b, odata.get(), true, oname, odesc),
-    sfhash_destroy_hashset_holder
+    sfhash_destroy_hashset
   );
 
   // check the header
@@ -191,7 +191,7 @@ SCOPE_TEST(b_intersect_a_test) {
 
   auto o = make_unique_del(
     sfhash_intersect_hashsets(&b, &a, odata.get(), true, oname, odesc),
-    sfhash_destroy_hashset_holder
+    sfhash_destroy_hashset
   );
 
   // check the header
@@ -222,7 +222,7 @@ SCOPE_TEST(a_minus_b_test) {
 
   auto o = make_unique_del(
     sfhash_difference_hashsets(&a, &b, odata.get(), true, oname, odesc),
-    sfhash_destroy_hashset_holder
+    sfhash_destroy_hashset
   );
 
   // check the header
@@ -253,7 +253,7 @@ SCOPE_TEST(b_minus_a_test) {
 
   auto o = make_unique_del(
     sfhash_difference_hashsets(&b, &a, odata.get(), true, oname, odesc),
-    sfhash_destroy_hashset_holder
+    sfhash_destroy_hashset
   );
 
   // check the header
