@@ -58,9 +58,7 @@ SFHASH_HashSet* sfhash_load_hashset(
   return hset.release();
 }
 
-const SFHASH_HashSetInfo* sfhash_info_for_hashset(
-  const SFHASH_HashSet* hset)
-{
+const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset) {
   return hset->info.get();
 }
 
