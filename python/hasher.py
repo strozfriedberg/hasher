@@ -530,14 +530,37 @@ class HashSetData(Handle):
 
 class HashSet(Handle):
     def __init__(self, buf):
-        with Error() as err:
-            super().__init__(_sfhash_load_hashset(*buf_range(buf, c_char), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
+        super().__init__(buf)
 
     def destroy(self):
         _sfhash_destroy_hashset(self.handle)
         super().destroy()
+
+    def info(self):
+        return _sfhash_info_for_hashset(self.get()).contents
+
+    def __contains__(self, h):
+        return _sfhash_lookup_hashset(self.get(), buf_beg(h, c_uint8))
+
+    @classmethod
+    def load(cls, buf):
+        with Error() as err:
+            hs = cls(_sfhash_load_hashset(*buf_range(buf, c_char), byref(err.get())))
+            if err:
+                raise RuntimeError(str(err))
+        return hs
+
+    @classmethod
+    def union(cls, left, right, obuf, oname, odesc):
+        return cls(_sfhash_union_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8')))
+
+    @classmethod
+    def intersect(cls, left, right, obuf, oname, odesc):
+        return cls(_sfhash_intersect_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8')))
+
+    @classmethod
+    def difference(cls, left, right, obuf, oname, odesc):
+        return cls(_sfhash_difference_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8')))
 
 
 class SizeSet(Handle):

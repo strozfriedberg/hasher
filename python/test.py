@@ -363,6 +363,53 @@ class TestHashSetAPI(unittest.TestCase):
                         self.assertTrue(115 in sset)
                         self.assertFalse(1234567 in sset)
 
+    def test_hashset_setops(self):
+        with open('../test/0123456789_a.hset', 'rb') as af, \
+             open('../test/0123456789_b.hset', 'rb') as bf:
+            with mmap.mmap(af.fileno(), 0, access=mmap.ACCESS_READ) as abuf, \
+                 mmap.mmap(bf.fileno(), 0, access=mmap.ACCESS_READ) as bbuf:
+                with hasher.HashSet.load(abuf) as a, \
+                     hasher.HashSet.load(bbuf) as b:
+
+                    # check union
+                    with open('a_union_b.hset', 'w+b') as of:
+                        omaxsize = 4096 + a.info().hashset_size * a.info().hash_length + b.info().hashset_size * b.info().hash_length
+                        os.ftruncate(of.fileno(), omaxsize)
+                        with mmap.mmap(of.fileno(), 0, access=mmap.ACCESS_WRITE) as obuf:
+                            with hasher.HashSet.union(a, b, obuf, "a union b", "test of a union b") as o:
+                                oactualsize = o.info().hashset_off + o.info().hashset_size * o.info().hash_length
+
+                                self.assertEqual(2, o.info().hashset_size)
+                                self.assertTrue(bytes.fromhex('84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7881') in o)
+                                self.assertTrue(bytes.fromhex('84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882') in o)
+
+                        os.ftruncate(of.fileno(), oactualsize)
+
+                    # check intersection
+                    with open('a_intersect_b.hset', 'w+b') as of:
+                        omaxsize = 4096 + max(a.info().hashset_size, b.info().hashset_size) * a.info().hash_length
+                        os.ftruncate(of.fileno(), omaxsize)
+                        with mmap.mmap(of.fileno(), 0, access=mmap.ACCESS_WRITE) as obuf:
+                            with hasher.HashSet.intersect(a, b, obuf, "a intersect b", "test of a intersect b") as o:
+                                oactualsize = o.info().hashset_off + o.info().hashset_size * o.info().hash_length
+
+                                self.assertEqual(1, o.info().hashset_size)
+                                self.assertTrue(bytes.fromhex('84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882') in o)
+
+                        os.ftruncate(of.fileno(), oactualsize)
+
+                    # check difference
+                    with open('a_minus_b.hset', 'w+b') as of:
+                        omaxsize = 4096 + a.info().hashset_size * a.info().hash_length
+                        os.ftruncate(of.fileno(), omaxsize)
+                        with mmap.mmap(of.fileno(), 0, access=mmap.ACCESS_WRITE) as obuf:
+                            with hasher.HashSet.difference(a, b, obuf, "a minus b", "test of a minus b") as o:
+                                oactualsize = o.info().hashset_off + o.info().hashset_size * o.info().hash_length
+
+                                self.assertEqual(0, o.info().hashset_size)
+
+                        os.ftruncate(of.fileno(), oactualsize)
+
 
 class HashNameTest(unittest.TestCase):
     def test_hash_name(self):
