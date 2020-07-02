@@ -62,10 +62,7 @@ const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset) {
   return hset->info.get();
 }
 
-bool sfhash_lookup_hashset(
-  const SFHASH_HashSet* hset,
-  const void* hash)
-{
+bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash) {
   return hset->hset->contains(static_cast<const uint8_t*>(hash));
 }
 
