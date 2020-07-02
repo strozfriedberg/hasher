@@ -16,29 +16,29 @@
 void SFHASH_HashSet::load(const void* ptr, size_t len) {
   const uint8_t* p = static_cast<const uint8_t*>(ptr);
 
-    std::unique_ptr<SFHASH_Error> errptr;
-    SFHASH_Error* err = nullptr;
+  std::unique_ptr<SFHASH_Error> errptr;
+  SFHASH_Error* err = nullptr;
 
-    info = make_unique_del(
-      sfhash_load_hashset_info(p, p + len, &err),
-      sfhash_destroy_hashset_info
-    );
+  info = make_unique_del(
+    sfhash_load_hashset_info(p, p + len, &err),
+    sfhash_destroy_hashset_info
+  );
 
-    errptr.reset(err);
-    THROW_IF(err, err->message);
+  errptr.reset(err);
+  THROW_IF(err, err->message);
 
-    hset = make_unique_del(
-      sfhash_load_hashset_data(
-        info.get(),
-        p + info->hashset_off,
-        p + info->hashset_off + info->hashset_size * info->hash_length,
-        &err
-      ),
-      sfhash_destroy_hashset_data
-    );
+  hset = make_unique_del(
+    sfhash_load_hashset_data(
+      info.get(),
+      p + info->hashset_off,
+      p + info->hashset_off + info->hashset_size * info->hash_length,
+      &err
+    ),
+    sfhash_destroy_hashset_data
+  );
 
-    errptr.reset(err);
-    THROW_IF(err, err->message);
+  errptr.reset(err);
+  THROW_IF(err, err->message);
 }
 
 SFHASH_HashSet* sfhash_load_hashset(
