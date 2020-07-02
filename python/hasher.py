@@ -244,7 +244,7 @@ _sfhash_load_hashset.restype = c_void_p
 # const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset);
 _sfhash_info_for_hashset = _hasher.sfhash_info_for_hashset
 _sfhash_info_for_hashset.argtypes = [c_void_p]
-_sfhash_info_for_hashset.restype = c_void_p
+_sfhash_info_for_hashset.restype = POINTER(HashSetInfoStruct)
 
 # bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash);
 _sfhash_lookup_hashset = _hasher.sfhash_lookup_hashset
