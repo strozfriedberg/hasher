@@ -148,7 +148,6 @@ SFHASH_HashSetData* sfhash_load_hashset_data(
   const SFHASH_HashSetInfo* hsinfo,
   const void* beg,
   const void* end,
-  bool shared,
   SFHASH_Error** err
 );
 
@@ -163,7 +162,6 @@ bool sfhash_lookup_hashset_data(const SFHASH_HashSetData* hset, const void* hash
 SFHASH_HashSet* sfhash_load_hashset(
   const void* beg,
   const void* end,
-  bool shared,
   SFHASH_Error** err
 );
 
@@ -177,7 +175,6 @@ SFHASH_HashSet* sfhash_union_hashsets(
   const SFHASH_HashSet* a,
   const SFHASH_HashSet* b,
   void* out,
-  bool shared,
   const char* out_name,
   const char* out_desc
 );
@@ -186,7 +183,6 @@ SFHASH_HashSet* sfhash_intersect_hashsets(
   const SFHASH_HashSet* a,
   const SFHASH_HashSet* b,
   void* out,
-  bool shared,
   const char* out_name,
   const char* out_desc
 );
@@ -195,7 +191,6 @@ SFHASH_HashSet* sfhash_difference_hashsets(
   const SFHASH_HashSet* a,
   const SFHASH_HashSet* b,
   void* out,
-  bool shared,
   const char* out_name,
   const char* out_desc
 );

@@ -10,7 +10,7 @@
 #include "util.h"
 
 template <size_t N>
-std::ostream& operator<<(std::ostream& o, const hash_t<N>& h) {
+std::ostream& operator<<(std::ostream& o, const std::array<uint8_t, N>& h) {
   return o << to_hex(h);
 }
 
@@ -141,12 +141,12 @@ SCOPE_TEST(iterateHashset1) {
     { "g", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
     { "h", to_bytes<20>("3937e80075fc5a0f219c7d68e5e171ec7fe6dee3"), 456789, HAS_FILENAME | HAS_SIZE | HAS_HASH },
     { "filename with spaces", to_bytes<20>("5e810a94c86ff057849bfa992bd176d8f743d160"), 0, HAS_FILENAME | HAS_SIZE | HAS_HASH },
-    { "filename_only", sha1_t(), 0, HAS_FILENAME },
-    { "filename_only", sha1_t(), 0, HAS_FILENAME },
-    { "filename_only", sha1_t(), 0, HAS_FILENAME },
-    { "", sha1_t(), 0, BLANK_LINE },
-    { "", sha1_t(), 0, BLANK_LINE },
-    { "", sha1_t(), 0, BLANK_LINE },
+    { "filename_only", std::array<uint8_t, 20>(), 0, HAS_FILENAME },
+    { "filename_only", std::array<uint8_t, 20>(), 0, HAS_FILENAME },
+    { "filename_only", std::array<uint8_t, 20>(), 0, HAS_FILENAME },
+    { "", std::array<uint8_t, 20>(), 0, BLANK_LINE },
+    { "", std::array<uint8_t, 20>(), 0, BLANK_LINE },
+    { "", std::array<uint8_t, 20>(), 0, BLANK_LINE },
     { "", to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0"), 8675309, HAS_SIZE | HAS_HASH },
     { "extra column!", to_bytes<20>("561b0fb9acc2dbb5edaf595558a1e6112a1f24a0"), 8675309, HAS_FILENAME | HAS_SIZE | HAS_HASH }
     // clang-format on

@@ -2,6 +2,7 @@
 
 #include "util.h"
 
+#include <array>
 #include <iterator>
 #include <tuple>
 #include <utility>
@@ -16,7 +17,7 @@ enum {
 
 struct ParsedLine {
   std::string name;
-  sha1_t hash;
+  std::array<uint8_t, 20> hash;
   uint64_t size;
   uint8_t flags;
 };

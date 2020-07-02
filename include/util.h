@@ -2,14 +2,8 @@
 
 #include "throw.h"
 
-#include <array>
 #include <memory>
 #include <type_traits>
-
-// TODO: eliminate these
-template <size_t N>
-using hash_t = std::array<uint8_t, N>;
-using sha1_t   = hash_t<20>;
 
 //
 // make_unique_del and helpers

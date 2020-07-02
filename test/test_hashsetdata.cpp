@@ -236,7 +236,7 @@ SCOPE_TEST(compute_radiusTest) {
 }
 
 template <typename Hashes>
-void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, const Hashes& ins, const Hashes& outs, bool shared) {
+void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, const Hashes& ins, const Hashes& outs) {
   SFHASH_Error* err = nullptr;
 
   auto hsinfo_act = make_unique_del(
@@ -252,7 +252,7 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   auto end = beg + hsinfo_act->hashset_size * hsinfo_act->hash_length;
 
   auto hs = make_unique_del(
-    sfhash_load_hashset_data(hsinfo_act.get(), beg, end, shared, &err),
+    sfhash_load_hashset_data(hsinfo_act.get(), beg, end, &err),
     sfhash_destroy_hashset_data
   );
   SCOPE_ASSERT(!err);
@@ -286,12 +286,8 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   }
 }
 
-SCOPE_TEST(hashset_shared_api_Test) {
-  api_tester(test1_info, test1_data, test1_in, test1_out, true);
-}
-
-SCOPE_TEST(hashset_copied_api_Test) {
-  api_tester(test1_info, test1_data, test1_in, test1_out, false);
+SCOPE_TEST(hashset_api_Test) {
+  api_tester(test1_info, test1_data, test1_in, test1_out);
 }
 
 /*

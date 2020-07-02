@@ -13,7 +13,7 @@
 #include <memory>
 #include <type_traits>
 
-void SFHASH_HashSet::load(const void* ptr, size_t len, bool shared) {
+void SFHASH_HashSet::load(const void* ptr, size_t len) {
   const uint8_t* p = static_cast<const uint8_t*>(ptr);
 
     std::unique_ptr<SFHASH_Error> errptr;
@@ -32,7 +32,6 @@ void SFHASH_HashSet::load(const void* ptr, size_t len, bool shared) {
         info.get(),
         p + info->hashset_off,
         p + info->hashset_off + info->hashset_size * info->hash_length,
-        shared,
         &err
       ),
       sfhash_destroy_hashset_data
@@ -45,7 +44,6 @@ void SFHASH_HashSet::load(const void* ptr, size_t len, bool shared) {
 SFHASH_HashSet* sfhash_load_hashset(
   const void* beg,
   const void* end,
-  bool shared,
   SFHASH_Error** err)
 {
   auto hset = make_unique_del(
@@ -55,7 +53,7 @@ SFHASH_HashSet* sfhash_load_hashset(
 
   const size_t len = static_cast<const uint8_t*>(end) -
                      static_cast<const uint8_t*>(beg);
-  hset->load(beg, len, shared);
+  hset->load(beg, len);
 
   return hset.release();
 }
@@ -153,7 +151,6 @@ std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> set_op(
   const SFHASH_HashSet& l,
   const SFHASH_HashSet& r,
   void* outptr,
-  bool shared,
   const char* oname,
   const char* odesc)
 {
@@ -177,7 +174,7 @@ std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> set_op(
   write_header(o->info.get(), out, out + HEADER_END);
 
   o->hset = make_unique_del(
-    load_hashset_data(o->info.get(), obeg, oend, shared),
+    load_hashset_data(o->info.get(), obeg, oend),
     sfhash_destroy_hashset_data
   );
 
@@ -190,11 +187,10 @@ struct UnionSetOp {
     const SFHASH_HashSet& l,
     const SFHASH_HashSet& r,
     void* outptr,
-    bool shared,
     const char* oname,
     const char* odesc) const
   {
-    return set_op<N>(UnionOp(), l, r, outptr, shared, oname, odesc);
+    return set_op<N>(UnionOp(), l, r, outptr, oname, odesc);
   }
 };
 
@@ -204,11 +200,10 @@ struct IntersectSetOp {
     const SFHASH_HashSet& l,
     const SFHASH_HashSet& r,
     void* outptr,
-    bool shared,
     const char* oname,
     const char* odesc) const
   {
-    return set_op<N>(IntersectOp(), l, r, outptr, shared, oname, odesc);
+    return set_op<N>(IntersectOp(), l, r, outptr, oname, odesc);
   }
 };
 
@@ -218,11 +213,10 @@ struct DifferenceSetOp {
     const SFHASH_HashSet& l,
     const SFHASH_HashSet& r,
     void* outptr,
-    bool shared,
     const char* oname,
     const char* odesc) const
   {
-    return set_op<N>(DifferenceOp(), l, r, outptr, shared, oname, odesc);
+    return set_op<N>(DifferenceOp(), l, r, outptr, oname, odesc);
   }
 };
 
@@ -230,12 +224,11 @@ SFHASH_HashSet* sfhash_union_hashsets(
   const SFHASH_HashSet* l,
   const SFHASH_HashSet* r,
   void* out,
-  bool shared,
   const char* out_name,
   const char* out_desc)
 {
   return hashset_dispatcher<UnionSetOp>(
-    l->info->hash_length, *l, *r, out, shared, out_name, out_desc
+    l->info->hash_length, *l, *r, out, out_name, out_desc
   ).release();
 }
 
@@ -243,12 +236,11 @@ SFHASH_HashSet* sfhash_intersect_hashsets(
   const SFHASH_HashSet* l,
   const SFHASH_HashSet* r,
   void* out,
-  bool shared,
   const char* out_name,
   const char* out_desc)
 {
   return hashset_dispatcher<IntersectSetOp>(
-    l->info->hash_length, *l, *r, out, shared, out_name, out_desc
+    l->info->hash_length, *l, *r, out, out_name, out_desc
   ).release();
 }
 
@@ -256,11 +248,10 @@ SFHASH_HashSet* sfhash_difference_hashsets(
   const SFHASH_HashSet* l,
   const SFHASH_HashSet* r,
   void* out,
-  bool shared,
   const char* out_name,
   const char* out_desc)
 {
   return hashset_dispatcher<DifferenceSetOp>(
-    l->info->hash_length, *l, *r, out, shared, out_name, out_desc
+    l->info->hash_length, *l, *r, out, out_name, out_desc
   ).release();
 }

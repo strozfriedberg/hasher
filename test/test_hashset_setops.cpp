@@ -78,7 +78,7 @@ auto make_test_hashset(
   );
 
   auto hset = make_unique_del(
-    sfhash_load_hashset_data(info.get(), beg, end, true, &err),
+    sfhash_load_hashset_data(info.get(), beg, end, &err),
     sfhash_destroy_hashset_data
   );
 
@@ -97,7 +97,7 @@ SCOPE_TEST(a_union_b_test) {
   const char odesc[] = "union of a and b";
 
   auto o = make_unique_del(
-    sfhash_union_hashsets(&a, &b, odata.get(), true, oname, odesc),
+    sfhash_union_hashsets(&a, &b, odata.get(), oname, odesc),
     sfhash_destroy_hashset
   );
 
@@ -128,7 +128,7 @@ SCOPE_TEST(b_union_a_test) {
   const char odesc[] = "union of b and a";
 
   auto o = make_unique_del(
-    sfhash_union_hashsets(&b, &a, odata.get(), true, oname, odesc),
+    sfhash_union_hashsets(&b, &a, odata.get(), oname, odesc),
     sfhash_destroy_hashset
   );
 
@@ -159,7 +159,7 @@ SCOPE_TEST(a_intersect_b_test) {
   const char odesc[] = "intersection of a and b";
 
   auto o = make_unique_del(
-    sfhash_intersect_hashsets(&a, &b, odata.get(), true, oname, odesc),
+    sfhash_intersect_hashsets(&a, &b, odata.get(), oname, odesc),
     sfhash_destroy_hashset
   );
 
@@ -190,7 +190,7 @@ SCOPE_TEST(b_intersect_a_test) {
   const char odesc[] = "intersection of b and a";
 
   auto o = make_unique_del(
-    sfhash_intersect_hashsets(&b, &a, odata.get(), true, oname, odesc),
+    sfhash_intersect_hashsets(&b, &a, odata.get(), oname, odesc),
     sfhash_destroy_hashset
   );
 
@@ -221,7 +221,7 @@ SCOPE_TEST(a_minus_b_test) {
   const char odesc[] = "a minus b";
 
   auto o = make_unique_del(
-    sfhash_difference_hashsets(&a, &b, odata.get(), true, oname, odesc),
+    sfhash_difference_hashsets(&a, &b, odata.get(), oname, odesc),
     sfhash_destroy_hashset
   );
 
@@ -252,7 +252,7 @@ SCOPE_TEST(b_minus_a_test) {
   const char odesc[] = "b minus a";
 
   auto o = make_unique_del(
-    sfhash_difference_hashsets(&b, &a, odata.get(), true, oname, odesc),
+    sfhash_difference_hashsets(&b, &a, odata.get(), oname, odesc),
     sfhash_destroy_hashset
   );
 

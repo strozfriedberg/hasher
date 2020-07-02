@@ -21,7 +21,7 @@ struct MakeHashSetData {
   }
 };
 
-HashSetData* load_hashset_data(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
+HashSetData* load_hashset_data(const HashSetInfo* hsinfo, const void* beg, const void* end) {
   THROW_IF(beg > end, "beg > end!");
 
   const size_t exp_len = hsinfo->hashset_size * hsinfo->hash_length;
@@ -31,7 +31,7 @@ HashSetData* load_hashset_data(const HashSetInfo* hsinfo, const void* beg, const
   THROW_IF(exp_len < act_len, "data trailing hashes");
 
   return hashset_dispatcher<MakeHashSetData>(
-    hsinfo->hash_length, beg, end, hsinfo->radius, shared
+    hsinfo->hash_length, beg, end, hsinfo->radius
   );
 }
 
@@ -39,11 +39,10 @@ HashSetData* sfhash_load_hashset_data(
   const HashSetInfo* hsinfo,
   const void* beg,
   const void* end,
-  bool shared,
   Error** err)
 {
   try {
-    return load_hashset_data(hsinfo, beg, end, shared);
+    return load_hashset_data(hsinfo, beg, end);
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());

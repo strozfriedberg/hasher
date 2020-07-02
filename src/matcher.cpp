@@ -41,10 +41,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   auto sizes = make_unique_del(new SizeSet, sfhash_destroy_sizeset);
   sizes->sizes.reserve(lines);
 
-  std::unique_ptr<std::array<uint8_t, 20>[]> hashes(
-    new std::array<uint8_t, 20>[lines]
-  );
-  std::array<uint8_t, 20>* hcur = hashes.get();
+  std::vector<std::array<uint8_t, 20>> hashes;
+  hashes.reserve(lines);
 
   const LG_KeyOptions kopts{1, 0, 0};
 
@@ -78,8 +76,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
       }
 
       if (t.flags & HAS_HASH) {
-        *hcur = t.hash;
-        ++hcur;
+        hashes.push_back(t.hash);
       }
     }
     catch (const std::runtime_error& e) {
@@ -114,15 +111,25 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
     return nullptr;
   }
 
-  std::sort(hashes.get(), hcur);
+  hashes.shrink_to_fit();
+  std::sort(hashes.begin(), hashes.end());
 
   auto hptr = make_unique_del(
-    make_hashset_data<20>(hashes.get(), hcur, std::numeric_limits<uint32_t>::max(), false),
+    make_hashset_data<20>(
+      hashes.data(),
+      hashes.data() + hashes.size(),
+      std::numeric_limits<uint32_t>::max()
+    ),
     sfhash_destroy_hashset_data
   );
 
   return std::unique_ptr<Matcher>(
-    new Matcher{std::move(sizes), std::move(hptr), std::move(prog)}
+    new Matcher{
+      std::move(sizes),
+      std::move(hashes),
+      std::move(hptr),
+      std::move(prog)
+    }
   );
 }
 

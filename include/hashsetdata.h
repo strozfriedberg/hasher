@@ -27,25 +27,14 @@ std::array<uint8_t, HashLength>* hash_ptr_cast(const void* ptr) {
 template <size_t HashLength>
 class HashSetDataImpl: public SFHASH_HashSetData {
 public:
-  HashSetDataImpl(const void* beg, const void* end, bool shared):
+  HashSetDataImpl(const void* beg, const void* end):
     HashesBeg(nullptr, nullptr)
   {
     auto b = hash_ptr_cast<HashLength>(beg);
     auto e = hash_ptr_cast<HashLength>(end);
 
-    if (shared) {
-      HashesBeg = {b, [](std::array<uint8_t, HashLength>*){}};
-      HashesEnd = e;
-    }
-    else {
-      const size_t count = e - b;
-      HashesBeg = {
-        new std::array<uint8_t, HashLength>[count],
-        [](std::array<uint8_t, HashLength>* h){ delete[] h; }
-      };
-      HashesEnd = HashesBeg.get() + count;
-      std::memcpy(HashesBeg.get(), b, count * HashLength);
-    }
+    HashesBeg = {b, [](std::array<uint8_t, HashLength>*){}};
+    HashesEnd = e;
   }
 
   virtual ~HashSetDataImpl() {}
@@ -74,10 +63,9 @@ public:
   HashSetDataRadiusImpl(
     const void* beg,
     const void* end,
-    bool shared,
     uint32_t radius
   ):
-    HashSetDataImpl<HashLength>(beg, end, shared), Radius(radius) {}
+    HashSetDataImpl<HashLength>(beg, end), Radius(radius) {}
 
   virtual ~HashSetDataRadiusImpl() {}
 
@@ -111,18 +99,18 @@ uint32_t compute_radius(
   return max_delta;
 }
 
-template <size_t N>
+template <size_t HashLength>
 SFHASH_HashSetData* make_hashset_data(
   const void* beg,
   const void* end,
-  uint32_t radius,
-  bool shared)
+  uint32_t radius)
 {
-  return new HashSetDataRadiusImpl<N>(
-    beg, end, shared,
+  return new HashSetDataRadiusImpl<HashLength>(
+    beg, end,
     radius == std::numeric_limits<uint32_t>::max() ?
-      compute_radius<N>(static_cast<const std::array<uint8_t, N>*>(beg),
-                        static_cast<const std::array<uint8_t, N>*>(end)) :
+      compute_radius<HashLength>(
+        static_cast<const std::array<uint8_t, HashLength>*>(beg),
+        static_cast<const std::array<uint8_t, HashLength>*>(end)) :
       radius
   );
 }
@@ -130,6 +118,5 @@ SFHASH_HashSetData* make_hashset_data(
 SFHASH_HashSetData* load_hashset_data(
   const SFHASH_HashSetInfo* hsinfo,
   const void* beg,
-  const void* end,
-  bool shared
+  const void* end
 );

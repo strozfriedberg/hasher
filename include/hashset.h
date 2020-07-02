@@ -13,7 +13,7 @@ struct SFHASH_HashSet {
   std::unique_ptr<SFHASH_HashSetInfo, void (*)(SFHASH_HashSetInfo*)> info;
   std::unique_ptr<SFHASH_HashSetData, void (*)(SFHASH_HashSetData*)> hset;
 
-  void load(const void* ptr, size_t len, bool shared);
+  void load(const void* ptr, size_t len);
 };
 
 char* to_iso8601(std::time_t tt);
