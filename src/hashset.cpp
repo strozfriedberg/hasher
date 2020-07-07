@@ -166,7 +166,6 @@ std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> set_op(
   const auto lbeg = reinterpret_cast<IItr<HashLength>>(l.hset->data());
   const auto rbeg = reinterpret_cast<IItr<HashLength>>(r.hset->data());
 
-// TODO: add a check that the operands are the same type of hash
   const auto lend = lbeg + l.info->hashset_size;
   const auto rend = rbeg + r.info->hashset_size;
 
