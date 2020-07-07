@@ -1,4 +1,5 @@
 #include "hasher/api.h"
+#include "error.h"
 #include "hashset.h"
 #include "hashsetdata.h"
 #include "hashsetinfo.h"
@@ -11,6 +12,7 @@
 #include <cstring>
 #include <ctime>
 #include <memory>
+#include <string>
 #include <type_traits>
 
 void SFHASH_HashSet::load(const void* ptr, size_t len) {
@@ -147,8 +149,18 @@ std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> set_op(
   const SFHASH_HashSet& r,
   void* outptr,
   const char* oname,
-  const char* odesc)
+  const char* odesc,
+  SFHASH_Error** err)
 {
+  if (l.info->hash_type != r.info->hash_type) {
+    fill_error(
+      err,
+      "Hash type mismatch: " + std::to_string(l.info->hash_type) +
+      " != " + std::to_string(r.info->hash_type)
+    );
+    return {nullptr, nullptr};
+  }
+
   auto out = reinterpret_cast<uint8_t*>(outptr);
 
   const auto lbeg = reinterpret_cast<IItr<HashLength>>(l.hset->data());
@@ -184,9 +196,10 @@ struct UnionSetOp {
     const SFHASH_HashSet& r,
     void* outptr,
     const char* oname,
-    const char* odesc) const
+    const char* odesc,
+    SFHASH_Error** err) const
   {
-    return set_op<N>(UnionOp(), l, r, outptr, oname, odesc);
+    return set_op<N>(UnionOp(), l, r, outptr, oname, odesc, err);
   }
 };
 
@@ -197,9 +210,10 @@ struct IntersectSetOp {
     const SFHASH_HashSet& r,
     void* outptr,
     const char* oname,
-    const char* odesc) const
+    const char* odesc,
+    SFHASH_Error** err) const
   {
-    return set_op<N>(IntersectOp(), l, r, outptr, oname, odesc);
+    return set_op<N>(IntersectOp(), l, r, outptr, oname, odesc, err);
   }
 };
 
@@ -210,9 +224,10 @@ struct DifferenceSetOp {
     const SFHASH_HashSet& r,
     void* outptr,
     const char* oname,
-    const char* odesc) const
+    const char* odesc,
+    SFHASH_Error** err) const
   {
-    return set_op<N>(DifferenceOp(), l, r, outptr, oname, odesc);
+    return set_op<N>(DifferenceOp(), l, r, outptr, oname, odesc, err);
   }
 };
 
@@ -221,10 +236,11 @@ SFHASH_HashSet* sfhash_union_hashsets(
   const SFHASH_HashSet* r,
   void* out,
   const char* out_name,
-  const char* out_desc)
+  const char* out_desc,
+  SFHASH_Error** err)
 {
   return hashset_dispatcher<UnionSetOp>(
-    l->info->hash_length, *l, *r, out, out_name, out_desc
+    l->info->hash_length, *l, *r, out, out_name, out_desc, err
   ).release();
 }
 
@@ -233,10 +249,11 @@ SFHASH_HashSet* sfhash_intersect_hashsets(
   const SFHASH_HashSet* r,
   void* out,
   const char* out_name,
-  const char* out_desc)
+  const char* out_desc,
+  SFHASH_Error** err)
 {
   return hashset_dispatcher<IntersectSetOp>(
-    l->info->hash_length, *l, *r, out, out_name, out_desc
+    l->info->hash_length, *l, *r, out, out_name, out_desc, err
   ).release();
 }
 
@@ -245,9 +262,10 @@ SFHASH_HashSet* sfhash_difference_hashsets(
   const SFHASH_HashSet* r,
   void* out,
   const char* out_name,
-  const char* out_desc)
+  const char* out_desc,
+  SFHASH_Error** err)
 {
   return hashset_dispatcher<DifferenceSetOp>(
-    l->info->hash_length, *l, *r, out, out_name, out_desc
+    l->info->hash_length, *l, *r, out, out_name, out_desc, err
   ).release();
 }

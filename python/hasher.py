@@ -258,17 +258,17 @@ _sfhash_destroy_hashset.restype = None
 
 # SFHASH_HashSet* sfhash_union_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, const char* out_name, const char* out_desc);
 _sfhash_union_hashsets = _hasher.sfhash_union_hashsets
-_sfhash_union_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p]
+_sfhash_union_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, POINTER(POINTER(HasherError))]
 _sfhash_union_hashsets.restype = c_void_p
 
 # SFHASH_HashSet* sfhash_intersect_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, const char* out_name, const char* out_desc);
 _sfhash_intersect_hashsets = _hasher.sfhash_intersect_hashsets
-_sfhash_intersect_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p]
+_sfhash_intersect_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, POINTER(POINTER(HasherError))]
 _sfhash_intersect_hashsets.restype = c_void_p
 
 # SFHASH_HashSet* sfhash_difference_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, const char* out_name, const char* out_desc);
 _sfhash_difference_hashsets = _hasher.sfhash_difference_hashsets
-_sfhash_difference_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p]
+_sfhash_difference_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, POINTER(POINTER(HasherError))]
 _sfhash_difference_hashsets.restype = c_void_p
 
 # SFHASH_SizeSet* sfhash_load_sizeset(SFHASH_HashSetInfo* hsinfo, const void* beg, const void* end, SFHASH_Error** err);
@@ -552,15 +552,27 @@ class HashSet(Handle):
 
     @classmethod
     def union(cls, left, right, obuf, oname, odesc):
-        return cls(_sfhash_union_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8')))
+        with Error() as err:
+            hs = cls(_sfhash_union_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8'), byref(err.get())))
+            if err:
+                raise RuntimeError(str(err))
+        return hs
 
     @classmethod
     def intersect(cls, left, right, obuf, oname, odesc):
-        return cls(_sfhash_intersect_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8')))
+        with Error() as err:
+            hs = cls(_sfhash_intersect_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8'), byref(err.get())))
+            if err:
+                raise RuntimeError(str(err))
+        return hs
 
     @classmethod
     def difference(cls, left, right, obuf, oname, odesc):
-        return cls(_sfhash_difference_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8')))
+        with Error() as err:
+            hs = cls(_sfhash_difference_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8'), byref(err.get())))
+            if err:
+                raise RuntimeError(str(err))
+        return hs
 
 
 class SizeSet(Handle):

@@ -53,26 +53,31 @@ const std::vector<std::array<uint8_t, 16>> MD5s{
   to_bytes<16>("e8e3e414fee160337703c8dcbee5a2f9")
 };
 
+template <size_t HashLength>
 void dump_test_hashset(const SFHASH_HashSet& hs) {
-  auto h = reinterpret_cast<const std::array<uint8_t, 16>*>(hs.hset->data());
+  auto h = reinterpret_cast<const std::array<uint8_t, HashLength>*>(
+    hs.hset->data()
+  );
   for (size_t i = 0; i < hs.info->hashset_size; ++i) {
     std::cout << to_hex(h[i]) << '\n';
   }
   std::cout << '\n';
 }
 
+template <size_t HashLength>
 auto make_test_hashset(
   const char* name,
   const char* desc,
-  const std::array<uint8_t, 16>* beg,
-  const std::array<uint8_t, 16>* end)
+  SFHASH_HashAlgorithm type,
+  const std::array<uint8_t, HashLength>* beg,
+  const std::array<uint8_t, HashLength>* end)
 {
   SFHASH_Error* err = nullptr;
 
   auto info = make_info(
       name,
       desc,
-      SFHASH_MD5,
+      type,
       beg,
       end
   );
@@ -88,18 +93,22 @@ auto make_test_hashset(
 }
 
 SCOPE_TEST(a_union_b_test) {
-  const auto a = make_test_hashset("a", "test set a", &MD5s[0], &MD5s[18]);
-  const auto b = make_test_hashset("b", "test set b", &MD5s[11], &MD5s[26]);
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
   std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + union_max_size(a, b)]};
 
   const char oname[] = "a u b";
   const char odesc[] = "union of a and b";
 
+  SFHASH_Error* err = nullptr;
+
   auto o = make_unique_del(
-    sfhash_union_hashsets(&a, &b, odata.get(), oname, odesc),
+    sfhash_union_hashsets(&a, &b, odata.get(), oname, odesc, &err),
     sfhash_destroy_hashset
   );
+
+  SCOPE_ASSERT(!err);
 
   // check the header
   SCOPE_ASSERT_EQUAL(1, o->info->version);
@@ -119,18 +128,22 @@ SCOPE_TEST(a_union_b_test) {
 }
 
 SCOPE_TEST(b_union_a_test) {
-  const auto a = make_test_hashset("a", "test set a", &MD5s[0], &MD5s[18]);
-  const auto b = make_test_hashset("b", "test set b", &MD5s[11], &MD5s[26]);
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
   std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + union_max_size(a, b)]};
 
   const char oname[] = "b u a";
   const char odesc[] = "union of b and a";
 
+  SFHASH_Error* err = nullptr;
+
   auto o = make_unique_del(
-    sfhash_union_hashsets(&b, &a, odata.get(), oname, odesc),
+    sfhash_union_hashsets(&b, &a, odata.get(), oname, odesc, &err),
     sfhash_destroy_hashset
   );
+
+  SCOPE_ASSERT(!err);
 
   // check the header
   SCOPE_ASSERT_EQUAL(1, o->info->version);
@@ -150,18 +163,22 @@ SCOPE_TEST(b_union_a_test) {
 }
 
 SCOPE_TEST(a_intersect_b_test) {
-  const auto a = make_test_hashset("a", "test set a", &MD5s[0], &MD5s[18]);
-  const auto b = make_test_hashset("b", "test set b", &MD5s[11], &MD5s[26]);
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
   std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + intersection_max_size(a, b)]};
 
   const char oname[] = "a n b";
   const char odesc[] = "intersection of a and b";
 
+  SFHASH_Error* err = nullptr;
+
   auto o = make_unique_del(
-    sfhash_intersect_hashsets(&a, &b, odata.get(), oname, odesc),
+    sfhash_intersect_hashsets(&a, &b, odata.get(), oname, odesc, &err),
     sfhash_destroy_hashset
   );
+
+  SCOPE_ASSERT(!err);
 
   // check the header
   SCOPE_ASSERT_EQUAL(1, o->info->version);
@@ -181,18 +198,22 @@ SCOPE_TEST(a_intersect_b_test) {
 }
 
 SCOPE_TEST(b_intersect_a_test) {
-  const auto a = make_test_hashset("a", "test set a", &MD5s[0], &MD5s[18]);
-  const auto b = make_test_hashset("b", "test set b", &MD5s[11], &MD5s[26]);
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
   std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + intersection_max_size(a, b)]};
 
   const char oname[] = "b n a";
   const char odesc[] = "intersection of b and a";
 
+  SFHASH_Error* err = nullptr;
+
   auto o = make_unique_del(
-    sfhash_intersect_hashsets(&b, &a, odata.get(), oname, odesc),
+    sfhash_intersect_hashsets(&b, &a, odata.get(), oname, odesc, &err),
     sfhash_destroy_hashset
   );
+
+  SCOPE_ASSERT(!err);
 
   // check the header
   SCOPE_ASSERT_EQUAL(1, o->info->version);
@@ -212,18 +233,22 @@ SCOPE_TEST(b_intersect_a_test) {
 }
 
 SCOPE_TEST(a_minus_b_test) {
-  const auto a = make_test_hashset("a", "test set a", &MD5s[0], &MD5s[18]);
-  const auto b = make_test_hashset("b", "test set b", &MD5s[11], &MD5s[26]);
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
   std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + difference_max_size(a, b)]};
 
   const char oname[] = "a - b";
   const char odesc[] = "a minus b";
 
+  SFHASH_Error* err = nullptr;
+
   auto o = make_unique_del(
-    sfhash_difference_hashsets(&a, &b, odata.get(), oname, odesc),
+    sfhash_difference_hashsets(&a, &b, odata.get(), oname, odesc, &err),
     sfhash_destroy_hashset
   );
+
+  SCOPE_ASSERT(!err);
 
   // check the header
   SCOPE_ASSERT_EQUAL(1, o->info->version);
@@ -243,18 +268,22 @@ SCOPE_TEST(a_minus_b_test) {
 }
 
 SCOPE_TEST(b_minus_a_test) {
-  const auto a = make_test_hashset("a", "test set a", &MD5s[0], &MD5s[18]);
-  const auto b = make_test_hashset("b", "test set b", &MD5s[11], &MD5s[26]);
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
   std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + difference_max_size(a, b)]};
 
   const char oname[] = "b - a";
   const char odesc[] = "b minus a";
 
+  SFHASH_Error* err = nullptr;
+
   auto o = make_unique_del(
-    sfhash_difference_hashsets(&b, &a, odata.get(), oname, odesc),
+    sfhash_difference_hashsets(&b, &a, odata.get(), oname, odesc, &err),
     sfhash_destroy_hashset
   );
+
+  SCOPE_ASSERT(!err);
 
   // check the header
   SCOPE_ASSERT_EQUAL(1, o->info->version);
@@ -271,4 +300,65 @@ SCOPE_TEST(b_minus_a_test) {
   // check the hashes
   const auto obeg = reinterpret_cast<const std::array<uint8_t, 16>*>(o->hset->data());
   SCOPE_ASSERT(std::equal(&MD5s[18], &MD5s[26], obeg, obeg + o->info->hashset_size));
+}
+
+const std::vector<std::array<uint8_t, 20>> SHA1s{
+  to_bytes<20>("0cd9677a02aa28cd16c83a8ff7645302ffff0000")
+};
+
+SCOPE_TEST(union_type_mismatch_test) {
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_SHA_1, &SHA1s[0], &SHA1s[1]);
+
+  std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + union_max_size(a, b)]};
+
+  const char oname[] = "a u b";
+  const char odesc[] = "union of a and b";
+
+  SFHASH_Error* err = nullptr;
+
+  auto o = make_unique_del(
+    sfhash_union_hashsets(&a, &b, odata.get(), oname, odesc, &err),
+    sfhash_destroy_hashset
+  );
+
+  SCOPE_ASSERT(err);
+}
+
+SCOPE_TEST(insersection_type_mismatch_test) {
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_SHA_1, &SHA1s[0], &SHA1s[1]);
+
+  std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + union_max_size(a, b)]};
+
+  const char oname[] = "a n b";
+  const char odesc[] = "intersection of a and b";
+
+  SFHASH_Error* err = nullptr;
+
+  auto o = make_unique_del(
+    sfhash_intersect_hashsets(&a, &b, odata.get(), oname, odesc, &err),
+    sfhash_destroy_hashset
+  );
+
+  SCOPE_ASSERT(err);
+}
+
+SCOPE_TEST(difference_type_mismatch_test) {
+  const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
+  const auto b = make_test_hashset("b", "test set b", SFHASH_SHA_1, &SHA1s[0], &SHA1s[1]);
+
+  std::unique_ptr<uint8_t[]> odata{new uint8_t[HASHSET_OFF + union_max_size(a, b)]};
+
+  const char oname[] = "a - b";
+  const char odesc[] = "a minus b";
+
+  SFHASH_Error* err = nullptr;
+
+  auto o = make_unique_del(
+    sfhash_intersect_hashsets(&a, &b, odata.get(), oname, odesc, &err),
+    sfhash_destroy_hashset
+  );
+
+  SCOPE_ASSERT(err);
 }

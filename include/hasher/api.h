@@ -176,7 +176,8 @@ SFHASH_HashSet* sfhash_union_hashsets(
   const SFHASH_HashSet* b,
   void* out,
   const char* out_name,
-  const char* out_desc
+  const char* out_desc,
+  SFHASH_Error** err
 );
 
 SFHASH_HashSet* sfhash_intersect_hashsets(
@@ -184,7 +185,8 @@ SFHASH_HashSet* sfhash_intersect_hashsets(
   const SFHASH_HashSet* b,
   void* out,
   const char* out_name,
-  const char* out_desc
+  const char* out_desc,
+  SFHASH_Error** err
 );
 
 SFHASH_HashSet* sfhash_difference_hashsets(
@@ -192,7 +194,8 @@ SFHASH_HashSet* sfhash_difference_hashsets(
   const SFHASH_HashSet* b,
   void* out,
   const char* out_name,
-  const char* out_desc
+  const char* out_desc,
+  SFHASH_Error** err
 );
 
 // Loads a sizeset
