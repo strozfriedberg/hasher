@@ -372,7 +372,8 @@ class TestHashSetAPI(unittest.TestCase):
                      hasher.HashSet.load(bbuf) as b:
 
                     # check union
-                    with open('a_union_b.hset', 'w+b') as of:
+                    outfile = 'a_union_b.hset'
+                    with open(outfile, 'w+b') as of:
                         omaxsize = 4096 + a.info().hashset_size * a.info().hash_length + b.info().hashset_size * b.info().hash_length
                         os.ftruncate(of.fileno(), omaxsize)
                         with mmap.mmap(of.fileno(), 0, access=mmap.ACCESS_WRITE) as obuf:
@@ -385,8 +386,11 @@ class TestHashSetAPI(unittest.TestCase):
 
                         os.ftruncate(of.fileno(), oactualsize)
 
+                    os.remove(outfile)
+
                     # check intersection
-                    with open('a_intersect_b.hset', 'w+b') as of:
+                    outfile = 'a_intersect_b.hset'
+                    with open(outfile, 'w+b') as of:
                         omaxsize = 4096 + max(a.info().hashset_size, b.info().hashset_size) * a.info().hash_length
                         os.ftruncate(of.fileno(), omaxsize)
                         with mmap.mmap(of.fileno(), 0, access=mmap.ACCESS_WRITE) as obuf:
@@ -398,8 +402,11 @@ class TestHashSetAPI(unittest.TestCase):
 
                         os.ftruncate(of.fileno(), oactualsize)
 
+                    os.remove(outfile)
+
                     # check difference
-                    with open('a_minus_b.hset', 'w+b') as of:
+                    outfile = 'a_minus_b.hset'
+                    with open(outfile, 'w+b') as of:
                         omaxsize = 4096 + a.info().hashset_size * a.info().hash_length
                         os.ftruncate(of.fileno(), omaxsize)
                         with mmap.mmap(of.fileno(), 0, access=mmap.ACCESS_WRITE) as obuf:
@@ -409,6 +416,8 @@ class TestHashSetAPI(unittest.TestCase):
                                 self.assertEqual(0, o.info().hashset_size)
 
                         os.ftruncate(of.fileno(), oactualsize)
+
+                    os.remove(outfile)
 
 
 class HashNameTest(unittest.TestCase):
