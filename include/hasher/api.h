@@ -157,8 +157,6 @@ void sfhash_destroy_hashset_data(SFHASH_HashSetData* hset);
 // Checks if a given hash is contained in a hashset
 bool sfhash_lookup_hashset_data(const SFHASH_HashSetData* hset, const void* hash);
 
-
-
 SFHASH_HashSet* sfhash_load_hashset(
   const void* beg,
   const void* end,
