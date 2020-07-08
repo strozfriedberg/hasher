@@ -3,9 +3,23 @@
 
 #include "hasher/api.h"
 
+__attribute__((target("default")))
 void to_hex(char* dst, const void* src, size_t slen) {
-  to_hex(dst, static_cast<const uint8_t*>(src),
-              static_cast<const uint8_t*>(src) + slen);
+  to_hex_table(dst, static_cast<const uint8_t*>(src), slen);
+}
+
+__attribute__((target("sse4.1")))
+void to_hex(char* dst, const void* src, size_t slen) {
+  to_hex_sse41(dst, static_cast<const uint8_t*>(src), slen);
+}
+
+__attribute__((target("avx2")))
+void to_hex(char* dst, const void* src, size_t slen) {
+  to_hex_avx2(dst, static_cast<const uint8_t*>(src), slen);
+}
+
+void to_hex_table(char* dst, const uint8_t* src, size_t slen) {
+  to_hex_table_impl(dst, src, src + slen);
 }
 
 uint8_t char_to_nibble(char c) {
@@ -32,8 +46,7 @@ void from_hex(uint8_t* dst, const char* src, size_t dlen) {
 }
 
 void sfhash_hex(char* dst, const void* src, size_t len) {
-  to_hex(dst, static_cast<const uint8_t*>(src),
-              static_cast<const uint8_t*>(src) + len);
+  to_hex(dst, src, len);
 }
 
 bool sfhash_unhex(uint8_t* dst, const char* src, size_t len) {

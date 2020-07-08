@@ -4,8 +4,35 @@
 #include <string>
 #include <type_traits>
 
+__attribute__((target("default")))
+void to_hex(char* dst, const void* src, size_t slen);
+
+__attribute__((target("sse4.1")))
+void to_hex(char* dst, const void* src, size_t slen);
+
+__attribute__((target("avx2")))
+void to_hex(char* dst, const void* src, size_t slen);
+
 template <typename C>
-void to_hex(char* dst, C beg, C end) {
+std::string to_hex(C beg, C end) {
+  std::string ret((end - beg) * 2, '\0');
+  to_hex(&ret[0], beg, end - beg);
+  return ret;
+}
+
+template <typename C>
+std::string to_hex(const C& c) {
+  return to_hex(&c[0], &c[c.size()]);
+}
+
+void to_hex_table(char* dst, const uint8_t* src, size_t slen);
+
+void to_hex_sse41(char* dst, const uint8_t* src, size_t len);
+
+void to_hex_avx2(char* dst, const uint8_t* src, size_t len);
+
+template <typename C>
+void to_hex_table_impl(char* dst, C beg, C end) {
   static constexpr char hex[] {
     '0', '1', '2', '3', '4', '5', '6', '7',
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
@@ -19,20 +46,6 @@ void to_hex(char* dst, C beg, C end) {
     *dst++ = hex[lo];
   }
 }
-
-template <typename C>
-std::string to_hex(C beg, C end) {
-  std::string ret((end - beg) * 2, '\0');
-  to_hex(&ret[0], beg, end);
-  return ret;
-}
-
-template <typename C>
-std::string to_hex(const C& c) {
-  return to_hex(&c[0], &c[c.size()]);
-}
-
-void to_hex(char* dst, const void* src, size_t slen);
 
 void from_hex(uint8_t* dst, const char* src, size_t dlen);
 
