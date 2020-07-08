@@ -141,8 +141,7 @@ SFHASH_HashSetInfo* sfhash_load_hashset_info(
 void sfhash_destroy_hashset_info(SFHASH_HashSetInfo* hsinfo);
 
 // Loads a hashset
-// The data is copied if shared is false; used directly if shared is true,
-// and caller remains responsible for freeing it.
+// The used directly and the caller remains responsible for freeing it.
 // Returns null on error and sets err to nonnull
 SFHASH_HashSetData* sfhash_load_hashset_data(
   const SFHASH_HashSetInfo* hsinfo,
