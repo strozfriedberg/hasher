@@ -129,20 +129,30 @@ typedef struct {
   char* hashset_desc;             // description of hashset
 } SFHASH_HashSetInfo;
 
-// Load hashset metadata
-// Returns null on error and sets err to nonnull
+/*
+ * Load hashset metadata
+ *
+ * Returns null on error and sets err to nonnull.
+ */
 SFHASH_HashSetInfo* sfhash_load_hashset_info(
   const void* beg,
   const void* end,
   SFHASH_Error** err
 );
 
-// Frees hashset metadata
+/*
+ * Free hashset metadata
+ */
 void sfhash_destroy_hashset_info(SFHASH_HashSetInfo* hsinfo);
 
-// Loads a hashset
-// The used directly and the caller remains responsible for freeing it.
-// Returns null on error and sets err to nonnull
+/*
+ * Load hashset data
+ *
+ * The buffer [beg, end) is used directly and the caller remains responsible
+ * for freeing it.
+ *
+ * Returns null on error and sets err to nonnull.
+ */
 SFHASH_HashSetData* sfhash_load_hashset_data(
   const SFHASH_HashSetInfo* hsinfo,
   const void* beg,
@@ -150,53 +160,124 @@ SFHASH_HashSetData* sfhash_load_hashset_data(
   SFHASH_Error** err
 );
 
-// Frees a hashset
+/*
+ * Free a hashset
+ *
+ * This does not free the buffer containing the hashset data; the caller
+ * remains responsible for freeeing that.
+ */
 void sfhash_destroy_hashset_data(SFHASH_HashSetData* hset);
 
-// Checks if a given hash is contained in a hashset
+/*
+ * Check if a given hash is contained in a hashset
+ */
 bool sfhash_lookup_hashset_data(const SFHASH_HashSetData* hset, const void* hash);
 
+/*
+ * Load a hashset
+ *
+ * The buffer [beg, end) is used directly and the caller remains responsible
+ * for freeing it.
+ *
+ * Returns null on error and sets err to nonnull.
+ */
 SFHASH_HashSet* sfhash_load_hashset(
   const void* beg,
   const void* end,
   SFHASH_Error** err
 );
 
+/*
+ * Get the metadata for a hashset
+ */
 const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset);
 
+/*
+ * Check if a given hash is contained in a hashset
+ */
 bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash);
 
+/*
+ * Free a hashset
+ *
+ * This does not free the buffer containing the hashset data; the caller
+ * remains responsible for freeing that.
+ */
 void sfhash_destroy_hashset(SFHASH_HashSet* hset);
 
+/*
+ *  Union of two hashsets
+ *
+ * out is a pointer to the buffer used by the resulting hashset; out must
+ * be large enough to hold the result, which could be as much as sum of the
+ * size of the hashset header and the sizes of the two hashsets.
+ *
+ * out_name is the name of the resulting hashset
+ *
+ * out_desc is the description of the resulting hashset
+ *
+ * Returns the union hashset, or null on error and sets err to nonnull.
+ */
 SFHASH_HashSet* sfhash_union_hashsets(
-  const SFHASH_HashSet* a,
-  const SFHASH_HashSet* b,
+  const SFHASH_HashSet* l,
+  const SFHASH_HashSet* r,
   void* out,
   const char* out_name,
   const char* out_desc,
   SFHASH_Error** err
 );
 
+/*
+ * Intersection of two hashsets
+ *
+ * out is a pointer to the buffer used by the resulting hashset; out must
+ * be large enough to hold the result, which could be as much as the sum of
+ * the size of the hashset header and size of the larger of the two hashsets.
+ *
+ * out_name is the name of the resulting hashset
+ *
+ * out_desc is the description of the resulting hashset
+ *
+ * Returns the intersection of two hashsets, or null on error and sets err to
+ * nonnull.
+ */
 SFHASH_HashSet* sfhash_intersect_hashsets(
-  const SFHASH_HashSet* a,
-  const SFHASH_HashSet* b,
+  const SFHASH_HashSet* l,
+  const SFHASH_HashSet* r,
   void* out,
   const char* out_name,
   const char* out_desc,
   SFHASH_Error** err
 );
 
+/*
+ * Difference of two hashsets
+ *
+ * out is a pointer to the buffer used by the resulting hashset; out must
+ * be large enough to hold the result, which could be as much as the sum of
+ * the size of the hashset header and the size of left hashset.
+ *
+ * out_name is the name of the resulting hashset
+ *
+ * out_desc is the description of the resulting hashset
+ *
+ * Returns the difference of two hashsets, or null on error and sets err to
+ * nonnull.
+ */
 SFHASH_HashSet* sfhash_difference_hashsets(
-  const SFHASH_HashSet* a,
-  const SFHASH_HashSet* b,
+  const SFHASH_HashSet* l,
+  const SFHASH_HashSet* r,
   void* out,
   const char* out_name,
   const char* out_desc,
   SFHASH_Error** err
 );
 
-// Loads a sizeset
-// Returns null on error and sets err to nonnull
+/*
+ * Load a sizeset
+ *
+ * Returns null on error and sets err to nonnull.
+ */
 SFHASH_SizeSet* sfhash_load_sizeset(
   SFHASH_HashSetInfo* hsinfo,
   const void* beg,
@@ -204,10 +285,14 @@ SFHASH_SizeSet* sfhash_load_sizeset(
   SFHASH_Error** err
 );
 
-// Frees a sizeset
+/*
+ * Free a sizeset
+ */
 void sfhash_destroy_sizeset(SFHASH_SizeSet* sset);
 
-// Checks if a given size is contained in a sizeset
+/*
+ * Check if a given size is contained in a sizeset
+ */
 bool sfhash_lookup_sizeset(const SFHASH_SizeSet* sset, uint64_t size);
 
 
