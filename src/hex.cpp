@@ -19,7 +19,19 @@ void to_hex(char* dst, const void* src, size_t slen) {
 }
 
 void to_hex_table(char* dst, const uint8_t* src, size_t slen) {
-  to_hex_table_impl(dst, src, src + slen);
+  static constexpr char hex[] {
+    '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+  };
+
+  const uint8_t* const end = src + slen;
+  for (const uint8_t* c = src; c != end; ++c) {
+    const uint8_t lo = *c & 0x0F;
+    const uint8_t hi = *c >> 4;
+
+    *dst++ = hex[hi];
+    *dst++ = hex[lo];
+  }
 }
 
 uint8_t char_to_nibble(char c) {

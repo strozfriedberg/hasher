@@ -31,22 +31,6 @@ void to_hex_sse41(char* dst, const uint8_t* src, size_t len);
 
 void to_hex_avx2(char* dst, const uint8_t* src, size_t len);
 
-template <typename C>
-void to_hex_table_impl(char* dst, C beg, C end) {
-  static constexpr char hex[] {
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
-  };
-
-  for (C c = beg; c != end; ++c) {
-    const uint8_t lo = *c & 0x0F;
-    const uint8_t hi = *c >> 4;
-
-    *dst++ = hex[hi];
-    *dst++ = hex[lo];
-  }
-}
-
 void from_hex(uint8_t* dst, const char* src, size_t dlen);
 
 template <size_t N, class = typename std::enable_if<N % 2 == 0>::type>
