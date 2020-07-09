@@ -34,7 +34,8 @@ src_libhasherint_la_SOURCES = \
 	src/matcher.cpp \
 	src/parser.cpp \
 	src/quick_hasher.cpp \
-	src/sizeset.cpp
+	src/sizeset.cpp \
+	src/util.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
