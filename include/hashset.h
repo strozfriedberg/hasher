@@ -26,17 +26,17 @@ std::unique_ptr<SFHASH_HashSetInfo, void(*)(SFHASH_HashSetInfo*)> make_info(
   const char* name,
   const char* desc,
   SFHASH_HashAlgorithm type,
-  Itr dbeg,
-  Itr dend)
+  Itr beg,
+  Itr end)
 {
-  const uint32_t radius = compute_radius(dbeg, dend);
+  const uint32_t radius = compute_radius(beg, end);
 
   auto hasher = make_unique_del(
     sfhash_create_hasher(SFHASH_SHA_2_256),
     sfhash_destroy_hasher
   );
 
-  sfhash_update_hasher(hasher.get(), dbeg, dend);
+  sfhash_update_hasher(hasher.get(), beg, end);
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
 
@@ -46,7 +46,7 @@ std::unique_ptr<SFHASH_HashSetInfo, void(*)(SFHASH_HashSetInfo*)> make_info(
         type,
         sfhash_hash_length(type),
         0,
-        static_cast<uint64_t>(dend - dbeg),
+        static_cast<uint64_t>(end - beg),
         HASHSET_OFF,
         0,
         radius,
@@ -63,7 +63,7 @@ std::unique_ptr<SFHASH_HashSetInfo, void(*)(SFHASH_HashSetInfo*)> make_info(
   info->hash_type = type;
   info->hash_length = sfhash_hash_length(type);
   info->flags = 0;
-  info->hashset_size = dend - dbeg;
+  info->hashset_size = end - beg;
   info->hashset_off = HASHSET_OFF;
   info->sizes_off = 0;
   info->radius = radius;
