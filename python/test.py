@@ -336,8 +336,8 @@ class TestHashSetAPI(unittest.TestCase):
     def test_hashset_info_good(self):
         with open('../test/test1.hset', 'rb') as f:
             with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as buf:
-                # check the info
-                with hasher.HashSetInfo(buf) as info:
+                with hasher.HashSet.load(buf) as hset:
+                    info = hset.info()
                     self.assertEqual(1, info.version)
                     self.assertEqual(hasher.SHA1, info.hash_type)
                     self.assertEqual(20, info.hash_length)
@@ -352,10 +352,9 @@ class TestHashSetAPI(unittest.TestCase):
                     self.assertEqual(b'These are test hashes.', info.hashset_desc)
 
                     # check the hashset
-                    with hasher.HashSetData(info, buf) as hset:
-                        self.assertTrue(bytes.fromhex('55250d55d5bb84d127e34bde24ea32d86a4d1584') in hset)
-                        self.assertTrue(bytes.fromhex('fc824043658c86424b5f2d480134dce7b004143d') in hset)
-                        self.assertFalse(bytes.fromhex('baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad') in hset)
+                    self.assertTrue(bytes.fromhex('55250d55d5bb84d127e34bde24ea32d86a4d1584') in hset)
+                    self.assertTrue(bytes.fromhex('fc824043658c86424b5f2d480134dce7b004143d') in hset)
+                    self.assertFalse(bytes.fromhex('baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad') in hset)
 
                     # check the sizeset
                     with hasher.SizeSet(info, buf) as sset:

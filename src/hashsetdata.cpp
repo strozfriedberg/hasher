@@ -8,9 +8,10 @@
 #include "throw.h"
 #include "util.h"
 
+#include <boost/endian/conversion.hpp>
+
 using Error = SFHASH_Error;
 using HashSetInfo = SFHASH_HashSetInfo;
-using HashSetData = SFHASH_HashSetData;
 
 // adaptor for use with hashset_dispatcher
 template <size_t HashLength>
@@ -35,27 +36,6 @@ HashSetData* load_hashset_data(const HashSetInfo* hsinfo, const void* beg, const
   );
 }
 
-HashSetData* sfhash_load_hashset_data(
-  const HashSetInfo* hsinfo,
-  const void* beg,
-  const void* end,
-  Error** err)
-{
-  try {
-    return load_hashset_data(hsinfo, beg, end);
-  }
-  catch (const std::exception& e) {
-    fill_error(err, e.what());
-    return nullptr;
-  }
-}
-
-void sfhash_destroy_hashset_data(HashSetData* hset) { delete hset; }
-
-bool sfhash_lookup_hashset_data(const HashSetData* hset, const void* hash) {
-  return hset->contains(static_cast<const uint8_t*>(hash));
-}
-
 uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
   /*
    * The expected index for a hash (assuming a uniform distribution) in
@@ -67,6 +47,8 @@ uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
    * we see that (high * set_size) fits into 64 bits without overflow, so
    * can compute the expected index as (high * set_size) >> 32.
    */
-  const uint64_t high32 = to_uint_be<uint32_t>(h);
+  const uint64_t high32 = boost::endian::native_to_big<uint32_t>(
+    *reinterpret_cast<const uint32_t*>(h)
+  );
   return static_cast<uint32_t>((high32 * set_size) >> 32);
 }

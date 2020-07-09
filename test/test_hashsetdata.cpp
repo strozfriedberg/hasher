@@ -252,8 +252,8 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   auto end = beg + hsinfo_act->hashset_size * hsinfo_act->hash_length;
 
   auto hs = make_unique_del(
-    sfhash_load_hashset_data(hsinfo_act.get(), beg, end, &err),
-    sfhash_destroy_hashset_data
+    sfhash_load_hashset(data.data(), data.data() + data.size(), &err),
+    sfhash_destroy_hashset
   );
   SCOPE_ASSERT(!err);
   SCOPE_ASSERT(hs);
@@ -274,14 +274,14 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   // ins are in
   for (const auto& p: ins) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(sfhash_lookup_hashset_data(hs.get(), hash.data()));
+    SCOPE_ASSERT(sfhash_lookup_hashset(hs.get(), hash.data()));
     SCOPE_ASSERT(sfhash_lookup_sizeset(ss.get(), size));
   }
 
   // outs are out
   for (const auto& p: outs) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(!sfhash_lookup_hashset_data(hs.get(), hash.data()));
+    SCOPE_ASSERT(!sfhash_lookup_hashset(hs.get(), hash.data()));
     SCOPE_ASSERT(!sfhash_lookup_sizeset(ss.get(), size));
   }
 }

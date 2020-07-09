@@ -110,7 +110,6 @@ void sfhash_destroy_hasher(SFHASH_Hasher* hasher);
 ******************************************************************************/
 
 struct SFHASH_HashSet;
-struct SFHASH_HashSetData;
 struct SFHASH_SizeSet;
 
 // Metadata from the hashset file header
@@ -144,34 +143,6 @@ SFHASH_HashSetInfo* sfhash_load_hashset_info(
  * Free hashset metadata
  */
 void sfhash_destroy_hashset_info(SFHASH_HashSetInfo* hsinfo);
-
-/*
- * Load hashset data
- *
- * The buffer [beg, end) is used directly and the caller remains responsible
- * for freeing it.
- *
- * Returns null on error and sets err to nonnull.
- */
-SFHASH_HashSetData* sfhash_load_hashset_data(
-  const SFHASH_HashSetInfo* hsinfo,
-  const void* beg,
-  const void* end,
-  SFHASH_Error** err
-);
-
-/*
- * Free a hashset
- *
- * This does not free the buffer containing the hashset data; the caller
- * remains responsible for freeeing that.
- */
-void sfhash_destroy_hashset_data(SFHASH_HashSetData* hset);
-
-/*
- * Check if a given hash is contained in a hashset
- */
-bool sfhash_lookup_hashset_data(const SFHASH_HashSetData* hset, const void* hash);
 
 /*
  * Load a hashset

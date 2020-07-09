@@ -11,7 +11,7 @@
 
 struct SFHASH_HashSet {
   std::unique_ptr<SFHASH_HashSetInfo, void (*)(SFHASH_HashSetInfo*)> info;
-  std::unique_ptr<SFHASH_HashSetData, void (*)(SFHASH_HashSetData*)> hset;
+  std::unique_ptr<HashSetData> hset;
 
   void load(const void* ptr, size_t len);
 };

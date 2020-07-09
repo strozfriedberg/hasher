@@ -29,14 +29,12 @@ void SFHASH_HashSet::load(const void* ptr, size_t len) {
   errptr.reset(err);
   THROW_IF(err, err->message);
 
-  hset = make_unique_del(
-    sfhash_load_hashset_data(
+  hset = std::unique_ptr<HashSetData>(
+    load_hashset_data(
       info.get(),
       p + info->hashset_off,
-      p + info->hashset_off + info->hashset_size * info->hash_length,
-      &err
-    ),
-    sfhash_destroy_hashset_data
+      p + info->hashset_off + info->hashset_size * info->hash_length
+    )
   );
 
   errptr.reset(err);
@@ -49,7 +47,7 @@ SFHASH_HashSet* sfhash_load_hashset(
   SFHASH_Error** err)
 {
   auto hset = make_unique_del(
-    new SFHASH_HashSet{{nullptr, nullptr}, {nullptr, nullptr}},
+    new SFHASH_HashSet{{nullptr, nullptr}, nullptr},
     sfhash_destroy_hashset
   );
 
@@ -173,17 +171,14 @@ std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> set_op(
   const auto oend = op(lbeg, lend, rbeg, rend, obeg);
 
   auto o = make_unique_del(
-    new SFHASH_HashSet{{nullptr, nullptr}, {nullptr, nullptr}},
+    new SFHASH_HashSet{{nullptr, nullptr}, nullptr},
     sfhash_destroy_hashset
   );
 
   o->info = make_info(oname, odesc, l.info->hash_type, obeg, oend);
   write_header(o->info.get(), out, out + HEADER_END);
 
-  o->hset = make_unique_del(
-    load_hashset_data(o->info.get(), obeg, oend),
-    sfhash_destroy_hashset_data
-  );
+  o->hset = std::unique_ptr<HashSetData>(load_hashset_data(o->info.get(), obeg, oend));
 
   return o;
 }

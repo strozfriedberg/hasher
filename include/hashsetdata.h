@@ -10,9 +10,9 @@
 #include <numeric>
 #include <string>
 
-class SFHASH_HashSetData {
+class HashSetData {
 public:
-  virtual ~SFHASH_HashSetData() {}
+  virtual ~HashSetData() {}
 
   virtual bool contains(const uint8_t* hash) const = 0;
 
@@ -25,7 +25,7 @@ std::array<uint8_t, HashLength>* hash_ptr_cast(const void* ptr) {
 }
 
 template <size_t HashLength>
-class HashSetDataImpl: public SFHASH_HashSetData {
+class HashSetDataImpl: public HashSetData {
 public:
   HashSetDataImpl(const void* beg, const void* end):
     HashesBeg(nullptr, nullptr)
@@ -100,7 +100,7 @@ uint32_t compute_radius(
 }
 
 template <size_t HashLength>
-SFHASH_HashSetData* make_hashset_data(
+HashSetData* make_hashset_data(
   const void* beg,
   const void* end,
   uint32_t radius)
@@ -115,7 +115,7 @@ SFHASH_HashSetData* make_hashset_data(
   );
 }
 
-SFHASH_HashSetData* load_hashset_data(
+HashSetData* load_hashset_data(
   const SFHASH_HashSetInfo* hsinfo,
   const void* beg,
   const void* end

@@ -221,21 +221,6 @@ _sfhash_destroy_hashset_info = _hasher.sfhash_destroy_hashset_info
 _sfhash_destroy_hashset_info.argtypes = [c_void_p]
 _sfhash_destroy_hashset_info.restype = None
 
-# SFHASH_HashSetData* sfhash_load_hashset_data(const SFHASH_HashSetInfo* hsinfo, const void* beg, const void* end, SFHASH_Error** err);
-_sfhash_load_hashset_data = _hasher.sfhash_load_hashset_data
-_sfhash_load_hashset_data.argtypes = [c_void_p, c_void_p, c_void_p, POINTER(POINTER(HasherError))]
-_sfhash_load_hashset_data.restype = c_void_p
-
-# void sfhash_destroy_hashset_data(SFHASH_HashSetData* hset)
-_sfhash_destroy_hashset_data = _hasher.sfhash_destroy_hashset_data
-_sfhash_destroy_hashset_data.argtypes = [c_void_p]
-_sfhash_destroy_hashset_data.restype = None
-
-# bool sfhash_lookup_hashset_data(const SFHASH_HashSetData* hset, const void* hash);
-_sfhash_lookup_hashset_data = _hasher.sfhash_lookup_hashset_data
-_sfhash_lookup_hashset_data.argtypes = [c_void_p, c_void_p]
-_sfhash_lookup_hashset_data.restype = c_bool
-
 # SFHASH_HashSet* sfhash_load_hashset(const void* beg, const void* end, SFHASH_Error** err);
 _sfhash_load_hashset = _hasher.sfhash_load_hashset
 _sfhash_load_hashset.argtypes = [c_void_p, c_void_p, POINTER(POINTER(HasherError))]
@@ -484,6 +469,8 @@ class Hasher(Handle):
         return h
 
 
+
+# HashSetInfo owns the underlying struct; WeakHashSetInfo doesn't
 class HashSetInfo(Handle):
     def __init__(self, buf):
         with Error() as err:
@@ -496,6 +483,11 @@ class HashSetInfo(Handle):
         super().destroy()
 
 
+class WeakHashSetInfo(Handle):
+    def __init__(self, info):
+        super().__init__(info)
+
+
 #
 # Reflect the fields of the C struct into our handle; yes, this is better
 # than listing them all out.
@@ -506,29 +498,11 @@ def make_pgetter(s):
 
 for f in HashSetInfoStruct._fields_:
     setattr(HashSetInfo, f[0], property(make_pgetter(f[0])))
-
-
-class HashSetData(Handle):
-    def __init__(self, info, buf):
-        # isolate the hashes in the buffer
-        hbeg = info.hashset_off
-        hend = hbeg + info.hashset_size * info.hash_length
-        hdata = memoryview(buf)[hbeg:hend]
-
-        with Error() as err:
-            super().__init__(_sfhash_load_hashset_data(info.get(), *buf_range(hdata, c_char), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
-
-    def destroy(self):
-        _sfhash_destroy_hashset_data(self.handle)
-        super().destroy()
-
-    def __contains__(self, h):
-        return _sfhash_lookup_hashset_data(self.get(), buf_beg(h, c_uint8))
+    setattr(WeakHashSetInfo, f[0], property(make_pgetter(f[0])))
 
 
 class HashSet(Handle):
+    # For internal use only. Use load() to load a hashset.
     def __init__(self, buf):
         super().__init__(buf)
 
@@ -537,7 +511,7 @@ class HashSet(Handle):
         super().destroy()
 
     def info(self):
-        return _sfhash_info_for_hashset(self.get()).contents
+        return WeakHashSetInfo(_sfhash_info_for_hashset(self.get()))
 
     def __contains__(self, h):
         return _sfhash_lookup_hashset(self.get(), buf_beg(h, c_uint8))

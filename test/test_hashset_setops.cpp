@@ -82,12 +82,9 @@ auto make_test_hashset(
       end
   );
 
-  auto hset = make_unique_del(
-    sfhash_load_hashset_data(info.get(), beg, end, &err),
-    sfhash_destroy_hashset_data
+  auto hset = std::unique_ptr<HashSetData>(
+    load_hashset_data(info.get(), beg, end)
   );
-
-  SCOPE_ASSERT(!err);
 
   return SFHASH_HashSet{std::move(info), std::move(hset)};
 }

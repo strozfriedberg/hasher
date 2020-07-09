@@ -25,7 +25,7 @@ SizeSet* load_sizeset(
 
   const uint8_t* cur = beg;
   while (cur < end) {
-    sset->sizes.insert(read_le<uint64_t>(beg, cur, end));
+    sset->sizes.insert(read_le_8(beg, cur, end));
   }
 
   return sset.release();

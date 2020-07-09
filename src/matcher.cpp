@@ -12,6 +12,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <utility>
 
 using Error = SFHASH_Error;
@@ -114,13 +115,12 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   hashes.shrink_to_fit();
   std::sort(hashes.begin(), hashes.end());
 
-  auto hptr = make_unique_del(
+  auto hptr = std::unique_ptr<HashSetData>(
     make_hashset_data<20>(
       hashes.data(),
       hashes.data() + hashes.size(),
       std::numeric_limits<uint32_t>::max()
-    ),
-    sfhash_destroy_hashset_data
+    )
   );
 
   return std::unique_ptr<Matcher>(
@@ -148,7 +148,7 @@ bool sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
 }
 
 bool sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
-  return sfhash_lookup_hashset_data(matcher->Hashes.get(), sha1);
+  return matcher->Hashes->contains(sha1);
 }
 
 void cb(void* userData, const LG_SearchHit* const) {
