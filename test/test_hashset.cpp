@@ -290,6 +290,19 @@ SCOPE_TEST(hashset_api_Test) {
   api_tester(test1_info, test1_data, test1_in, test1_out);
 }
 
+SCOPE_TEST(bogus_hashset_Test) {
+  const char bogus[] = "Not reall a hash set wrong wrong wrong";
+
+  SFHASH_Error* err = nullptr;
+
+  auto hs = make_unique_del(
+    sfhash_load_hashset(bogus, bogus + sizeof(bogus), &err),
+    sfhash_destroy_hashset
+  );
+
+  SCOPE_ASSERT(err);
+}
+
 /*
 SCOPE_TEST(nsrlTest) {
   char header[4096];

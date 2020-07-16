@@ -53,7 +53,14 @@ SFHASH_HashSet* sfhash_load_hashset(
 
   const size_t len = static_cast<const uint8_t*>(end) -
                      static_cast<const uint8_t*>(beg);
-  hset->load(beg, len);
+
+  try {
+    hset->load(beg, len);
+  }
+  catch (const std::exception& e) {
+    fill_error(err, e.what());
+    return nullptr;
+  }
 
   return hset.release();
 }
