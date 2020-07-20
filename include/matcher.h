@@ -7,11 +7,13 @@
 
 #include <lightgrep/api.h>
 
+#include "hashsetdata.h"
 #include "util.h"
 
 struct SFHASH_FileMatcher {
   std::unique_ptr<SFHASH_SizeSet, decltype(sfhash_destroy_sizeset)&> Sizes;
-  std::unique_ptr<SFHASH_HashSet, decltype(sfhash_destroy_hashset)&> Hashes;
+  std::vector<std::array<uint8_t, 20>> HashData;
+  std::unique_ptr<HashSetData> Hashes;
   std::unique_ptr<ProgramHandle, decltype(lg_destroy_program)&> Prog;
 };
 

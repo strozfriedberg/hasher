@@ -2,14 +2,8 @@
 
 #include "throw.h"
 
-#include <array>
 #include <memory>
 #include <type_traits>
-
-// TODO: eliminate these
-template <size_t N>
-using hash_t = std::array<uint8_t, N>;
-using sha1_t   = hash_t<20>;
 
 //
 // make_unique_del and helpers
@@ -38,53 +32,13 @@ std::unique_ptr<ArgOf<D>, D> make_unique_del(std::nullptr_t, D&& deleter) {
 }
 
 //
-// Templates for reading unsigned integers from raw bytes
+// Functions for reading unsigned integers from bytes
 //
 
-template <typename out_t, bool le, size_t i>
-out_t shifter(const uint8_t* x) {
-  return static_cast<out_t>(x[i]) << (8 * (le ? i : sizeof(out_t)-1-i));
-}
+uint64_t read_le_8(const uint8_t* beg, const uint8_t*& i, const uint8_t* end);
 
-template <typename out_t, bool le, size_t i>
-out_t orer(const uint8_t* x) {
-  return i == 0 ?
-    shifter<out_t, le, i>(x) :
-    (orer<out_t, le, i == 0 ? 0 : i-1>(x) | shifter<out_t, le, i>(x));
-}
+//
+// Functions for writing unsigned integers to bytes
+//
 
-template <typename out_t, bool le>
-out_t to_uint(const uint8_t* x) {
-  return orer<out_t, le, sizeof(out_t)-1>(x);
-}
-
-template <typename out_t>
-out_t to_uint_le(const uint8_t* x) {
-  return orer<out_t, true, sizeof(out_t)-1>(x);
-}
-
-template <typename out_t>
-out_t to_uint_be(const uint8_t* x) {
-  return orer<out_t, false, sizeof(out_t)-1>(x);
-}
-
-template <typename out_t, bool le>
-out_t read_uint(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
-  THROW_IF(
-    i + sizeof(out_t) > end,
-    "out of data reading " << sizeof(out_t) << " bytes at " << (i-beg)
-  );
-  const out_t r = to_uint<out_t, le>(i);
-  i += sizeof(out_t);
-  return r;
-}
-
-template <typename out_t>
-out_t read_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
-  return read_uint<out_t, true>(beg, i, end);
-}
-
-template <typename out_t>
-out_t read_be(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
-  return read_uint<out_t, false>(beg, i, end);
-}
+void write_le_8(uint64_t in, const uint8_t* beg, uint8_t*& out, const uint8_t* end);

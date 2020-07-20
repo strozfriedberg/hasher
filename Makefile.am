@@ -26,6 +26,7 @@ src_libhasherint_la_SOURCES = \
 	src/hash_types.cpp \
 	src/hasher.cpp \
 	src/hashset.cpp \
+	src/hashsetdata.cpp \
 	src/hashsetinfo.cpp \
 	src/hex.cpp \
 	src/libblake3_hasher.cpp \
@@ -33,7 +34,8 @@ src_libhasherint_la_SOURCES = \
 	src/matcher.cpp \
 	src/parser.cpp \
 	src/quick_hasher.cpp \
-	src/sizeset.cpp
+	src/sizeset.cpp \
+	src/util.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
@@ -75,6 +77,7 @@ test_test_SOURCES = \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
 	test/test_hashset.cpp \
+	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
 	test/test_matcher.cpp \
 	test/test_parser.cpp \

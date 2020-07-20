@@ -15,9 +15,9 @@ FuzzyMatcher* sfhash_create_fuzzy_matcher(const void* beg, const void* end) {
                             static_cast<const char*>(end)).release();
 }
 
-const FuzzyResult* sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher,
-                                                const void* beg,
-                                                const void* end) {
+FuzzyResult* sfhash_fuzzy_matcher_compare(FuzzyMatcher* matcher,
+                                          const void* beg,
+                                          const void* end) {
   return matcher->match(static_cast<const char*>(beg),
                         static_cast<const char*>(end)).release();
 }
@@ -37,7 +37,7 @@ int sfhash_fuzzy_result_score(const FuzzyResult* result, size_t i) {
   return result->score(i);
 }
 
-void sfhash_destroy_fuzzy_match(const FuzzyResult* result) {
+void sfhash_destroy_fuzzy_match(FuzzyResult* result) {
   delete result;
 }
 
@@ -205,8 +205,8 @@ void FuzzyMatcher::lookup_clusters(uint64_t blocksize,
   }
 }
 
-FuzzyResult::SFHASH_FuzzyResult(const std::string&& queryFilename,
-                                const std::vector<std::pair<std::string, int>>&& matches):
+FuzzyResult::SFHASH_FuzzyResult(std::string&& queryFilename,
+                                std::vector<std::pair<std::string, int>>&& matches):
   Matches(matches),
   QueryFilename(queryFilename)
 {}
@@ -295,18 +295,21 @@ std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
   return results;
 }
 
-std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const char* end) {
+std::unique_ptr<SFHASH_FuzzyMatcher, void (*)(SFHASH_FuzzyMatcher*)> load_fuzzy_hashset(const char* beg, const char* end) {
   LineIterator l(beg, end);
   const LineIterator lend(end, end);
   if (l == lend) {
-    return nullptr;
+    return {nullptr, nullptr};
   }
   const std::string firstLine(l->first, l->second - l->first);
   if (firstLine != "ssdeep,1.1--blocksize:hash:hash,filename") {
-    return nullptr;
+    return {nullptr, nullptr};
   }
 
-  std::unique_ptr<FuzzyMatcher> matcher(new FuzzyMatcher);
+  auto matcher = make_unique_del(
+    new FuzzyMatcher,
+    sfhash_destroy_fuzzy_matcher
+  );
   matcher->reserve_space(beg, end);
 
   int lineno = 2;
@@ -317,8 +320,9 @@ std::unique_ptr<SFHASH_FuzzyMatcher> load_fuzzy_hashset(const char* beg, const c
     }
 
     if (validate_hash(l->first, l->second)) {
-      return nullptr;
+      return {nullptr, nullptr};
     }
+
     matcher->add(FuzzyHash{l->first, l->second});
   }
   return matcher;

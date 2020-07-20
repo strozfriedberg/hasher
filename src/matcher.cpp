@@ -1,6 +1,6 @@
 #include "hasher/api.h"
 #include "error.h"
-#include "hashset.h"
+#include "hashsetdata.h"
 #include "matcher.h"
 #include "parser.h"
 #include "sizeset.h"
@@ -12,6 +12,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <utility>
 
 using Error = SFHASH_Error;
@@ -41,10 +42,8 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
   auto sizes = make_unique_del(new SizeSet, sfhash_destroy_sizeset);
   sizes->sizes.reserve(lines);
 
-  std::unique_ptr<std::array<uint8_t, 20>[]> hashes(
-    new std::array<uint8_t, 20>[lines]
-  );
-  std::array<uint8_t, 20>* hcur = hashes.get();
+  std::vector<std::array<uint8_t, 20>> hashes;
+  hashes.reserve(lines);
 
   const LG_KeyOptions kopts{1, 0, 0};
 
@@ -78,8 +77,7 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
       }
 
       if (t.flags & HAS_HASH) {
-        *hcur = t.hash;
-        ++hcur;
+        hashes.push_back(t.hash);
       }
     }
     catch (const std::runtime_error& e) {
@@ -114,15 +112,24 @@ std::unique_ptr<Matcher> load_hashset(const char* beg, const char* end, LG_Error
     return nullptr;
   }
 
-  std::sort(hashes.get(), hcur);
+  hashes.shrink_to_fit();
+  std::sort(hashes.begin(), hashes.end());
 
-  auto hptr = make_unique_del(
-    make_hashset<20>(hashes.get(), hcur, std::numeric_limits<uint32_t>::max(), false),
-    sfhash_destroy_hashset
+  auto hptr = std::unique_ptr<HashSetData>(
+    make_hashset_data<20>(
+      hashes.data(),
+      hashes.data() + hashes.size(),
+      std::numeric_limits<uint32_t>::max()
+    )
   );
 
   return std::unique_ptr<Matcher>(
-    new Matcher{std::move(sizes), std::move(hptr), std::move(prog)}
+    new Matcher{
+      std::move(sizes),
+      std::move(hashes),
+      std::move(hptr),
+      std::move(prog)
+    }
   );
 }
 
@@ -141,7 +148,7 @@ bool sfhash_matcher_has_size(const Matcher* matcher, uint64_t size) {
 }
 
 bool sfhash_matcher_has_hash(const Matcher* matcher, const uint8_t* sha1) {
-  return sfhash_lookup_hashset(matcher->Hashes.get(), sha1);
+  return matcher->Hashes->contains(sha1);
 }
 
 void cb(void* userData, const LG_SearchHit* const) {

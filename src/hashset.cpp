@@ -1,80 +1,272 @@
-#include <algorithm>
-#include <cstring>
-
 #include "hasher/api.h"
 #include "error.h"
 #include "hashset.h"
+#include "hashsetdata.h"
+#include "hashsetinfo.h"
+#include "hashset_util.h"
 #include "throw.h"
 #include "util.h"
 
-using Error = SFHASH_Error;
-using HashSet = SFHASH_HashSet;
-using HashSetInfo = SFHASH_HashSetInfo;
+#include <algorithm>
+#include <array>
+#include <cstring>
+#include <ctime>
+#include <memory>
+#include <string>
+#include <type_traits>
 
-HashSet* load_hashset(const HashSetInfo* hsinfo, const void* beg, const void* end, bool shared) {
-  THROW_IF(beg > end, "beg > end!");
+void SFHASH_HashSet::load(const void* ptr, size_t len) {
+  const uint8_t* p = static_cast<const uint8_t*>(ptr);
 
-  const size_t exp_len = hsinfo->hashset_size * hsinfo->hash_length;
-  const size_t act_len = static_cast<const char*>(end) - static_cast<const char*>(beg);
+  std::unique_ptr<SFHASH_Error> errptr;
+  SFHASH_Error* err = nullptr;
 
-  THROW_IF(exp_len > act_len, "out of data reading hashes");
-  THROW_IF(exp_len < act_len, "data trailing hashes");
+  info = make_unique_del(
+    sfhash_load_hashset_info(p, p + len, &err),
+    sfhash_destroy_hashset_info
+  );
 
-  switch (hsinfo->hash_length) {
-  case 4:
-    return make_hashset<4>(beg, end, hsinfo->radius, shared);
-  case 8:
-    return make_hashset<8>(beg, end, hsinfo->radius, shared);
-  case 16:
-    return make_hashset<16>(beg, end, hsinfo->radius, shared);
-  case 20:
-    return make_hashset<20>(beg, end, hsinfo->radius, shared);
-  case 28:
-    return make_hashset<28>(beg, end, hsinfo->radius, shared);
-  case 32:
-    return make_hashset<32>(beg, end, hsinfo->radius, shared);
-  case 48:
-    return make_hashset<48>(beg, end, hsinfo->radius, shared);
-  case 64:
-    return make_hashset<64>(beg, end, hsinfo->radius, shared);
-  default:
-    THROW("unsupported hash size " << hsinfo->hash_length);
-  }
+  errptr.reset(err);
+  THROW_IF(err, err->message);
+
+  hset = std::unique_ptr<HashSetData>(
+    load_hashset_data(
+      info.get(),
+      p + info->hashset_off,
+      p + info->hashset_off + info->hashset_size * info->hash_length
+    )
+  );
+
+  errptr.reset(err);
+  THROW_IF(err, err->message);
 }
 
-HashSet* sfhash_load_hashset(
-  const HashSetInfo* hsinfo,
+SFHASH_HashSet* sfhash_load_hashset(
   const void* beg,
   const void* end,
-  bool shared,
-  Error** err)
+  SFHASH_Error** err)
 {
+  auto hset = make_unique_del(
+    new SFHASH_HashSet{{nullptr, nullptr}, nullptr},
+    sfhash_destroy_hashset
+  );
+
+  const size_t len = static_cast<const uint8_t*>(end) -
+                     static_cast<const uint8_t*>(beg);
+
   try {
-    return load_hashset(hsinfo, beg, end, shared);
+    hset->load(beg, len);
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());
     return nullptr;
   }
+
+  return hset.release();
 }
 
-void sfhash_destroy_hashset(HashSet* hset) { delete hset; }
-
-bool sfhash_lookup_hashset(const HashSet* hset, const void* hash) {
-  return hset->contains(static_cast<const uint8_t*>(hash));
+const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset) {
+  return hset->info.get();
 }
 
-uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
-  /*
-   * The expected index for a hash (assuming a uniform distribution) in
-   * the hash set is hash/2^(hash length) * set_size. We assume that
-   * set_size fits in 32 bits, so nothing beyond the most significant 32
-   * bits of the hash can make a difference for the expected index. Hence,
-   * we can simplify the expected index to high/2^32 * set_size =
-   * (high * set_size)/2^32. Observing that (2^32-1)^2 < (2^32)^2 = 2^64,
-   * we see that (high * set_size) fits into 64 bits without overflow, so
-   * can compute the expected index as (high * set_size) >> 32.
-   */
-  const uint64_t high32 = to_uint_be<uint32_t>(h);
-  return static_cast<uint32_t>((high32 * set_size) >> 32);
+bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash) {
+  return hset->hset->contains(static_cast<const uint8_t*>(hash));
+}
+
+void sfhash_destroy_hashset(SFHASH_HashSet* hset) {
+  delete hset;
+}
+
+template <size_t HashLength>
+using IItr = const std::array<uint8_t, HashLength>*;
+
+template <size_t HashLength>
+using OItr = std::array<uint8_t, HashLength>*;
+
+char* to_iso8601(std::time_t tt) {
+  const size_t maxlen = sizeof("0000-00-00T00:00:00Z") + 1;
+  char* iso8601 = new char[maxlen];
+  std::strftime(iso8601, maxlen, "%FT%TZ", std::gmtime(&tt));
+  return iso8601;
+}
+
+struct UnionOp {
+  template <size_t HashLength>
+  OItr<HashLength> operator()(
+    IItr<HashLength> lbeg,
+    IItr<HashLength> lend,
+    IItr<HashLength> rbeg,
+    IItr<HashLength> rend,
+    OItr<HashLength> obeg) const
+  {
+    return std::set_union(lbeg, lend, rbeg, rend, obeg);
+  }
+
+  size_t max_size(const SFHASH_HashSet& l,
+                  const SFHASH_HashSet& r) const {
+    return HASHSET_OFF + l.info->hashset_size * l.info->hash_length +
+                         r.info->hashset_size * r.info->hash_length;
+  }
+};
+
+struct IntersectOp {
+  template <size_t HashLength>
+  OItr<HashLength> operator()(
+    IItr<HashLength> lbeg,
+    IItr<HashLength> lend,
+    IItr<HashLength> rbeg,
+    IItr<HashLength> rend,
+    OItr<HashLength> obeg) const
+  {
+    return std::set_intersection(lbeg, lend, rbeg, rend, obeg);
+  }
+
+  size_t max_size(const SFHASH_HashSet& l,
+                  const SFHASH_HashSet& r) const {
+    return HASHSET_OFF +
+      std::max(l.info->hashset_size, r.info->hashset_size) *
+      l.info->hash_length;
+  }
+};
+
+struct DifferenceOp {
+  template <size_t HashLength>
+  OItr<HashLength> operator()(
+    IItr<HashLength> lbeg,
+    IItr<HashLength> lend,
+    IItr<HashLength> rbeg,
+    IItr<HashLength> rend,
+    OItr<HashLength> obeg) const
+  {
+    return std::set_difference(lbeg, lend, rbeg, rend, obeg);
+  }
+
+  size_t max_size(const SFHASH_HashSet& l,
+                  const SFHASH_HashSet&) const {
+    return HASHSET_OFF + l.info->hashset_size * l.info->hash_length;
+  }
+};
+
+template <size_t HashLength, class Op>
+std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> set_op(
+  Op op,
+  const SFHASH_HashSet& l,
+  const SFHASH_HashSet& r,
+  void* outptr,
+  const char* oname,
+  const char* odesc,
+  SFHASH_Error** err)
+{
+  if (l.info->hash_type != r.info->hash_type) {
+    fill_error(
+      err,
+      "Hash type mismatch: " + std::to_string(l.info->hash_type) +
+      " != " + std::to_string(r.info->hash_type)
+    );
+    return {nullptr, nullptr};
+  }
+
+  auto out = reinterpret_cast<uint8_t*>(outptr);
+
+  const auto lbeg = reinterpret_cast<IItr<HashLength>>(l.hset->data());
+  const auto rbeg = reinterpret_cast<IItr<HashLength>>(r.hset->data());
+
+  const auto lend = lbeg + l.info->hashset_size;
+  const auto rend = rbeg + r.info->hashset_size;
+
+  auto obeg = reinterpret_cast<OItr<HashLength>>(out + HASHSET_OFF);
+  const auto oend = op(lbeg, lend, rbeg, rend, obeg);
+
+  auto o = make_unique_del(
+    new SFHASH_HashSet{{nullptr, nullptr}, nullptr},
+    sfhash_destroy_hashset
+  );
+
+  o->info = make_info(oname, odesc, l.info->hash_type, obeg, oend);
+  write_header(o->info.get(), out, out + HEADER_END);
+
+  o->hset = std::unique_ptr<HashSetData>(load_hashset_data(o->info.get(), obeg, oend));
+
+  return o;
+}
+
+template <size_t N>
+struct UnionSetOp {
+  std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> operator()(
+    const SFHASH_HashSet& l,
+    const SFHASH_HashSet& r,
+    void* outptr,
+    const char* oname,
+    const char* odesc,
+    SFHASH_Error** err) const
+  {
+    return set_op<N>(UnionOp(), l, r, outptr, oname, odesc, err);
+  }
+};
+
+template <size_t N>
+struct IntersectSetOp {
+  std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> operator()(
+    const SFHASH_HashSet& l,
+    const SFHASH_HashSet& r,
+    void* outptr,
+    const char* oname,
+    const char* odesc,
+    SFHASH_Error** err) const
+  {
+    return set_op<N>(IntersectOp(), l, r, outptr, oname, odesc, err);
+  }
+};
+
+template <size_t N>
+struct DifferenceSetOp {
+  std::unique_ptr<SFHASH_HashSet, void (*)(SFHASH_HashSet*)> operator()(
+    const SFHASH_HashSet& l,
+    const SFHASH_HashSet& r,
+    void* outptr,
+    const char* oname,
+    const char* odesc,
+    SFHASH_Error** err) const
+  {
+    return set_op<N>(DifferenceOp(), l, r, outptr, oname, odesc, err);
+  }
+};
+
+SFHASH_HashSet* sfhash_union_hashsets(
+  const SFHASH_HashSet* l,
+  const SFHASH_HashSet* r,
+  void* out,
+  const char* out_name,
+  const char* out_desc,
+  SFHASH_Error** err)
+{
+  return hashset_dispatcher<UnionSetOp>(
+    l->info->hash_length, *l, *r, out, out_name, out_desc, err
+  ).release();
+}
+
+SFHASH_HashSet* sfhash_intersect_hashsets(
+  const SFHASH_HashSet* l,
+  const SFHASH_HashSet* r,
+  void* out,
+  const char* out_name,
+  const char* out_desc,
+  SFHASH_Error** err)
+{
+  return hashset_dispatcher<IntersectSetOp>(
+    l->info->hash_length, *l, *r, out, out_name, out_desc, err
+  ).release();
+}
+
+SFHASH_HashSet* sfhash_difference_hashsets(
+  const SFHASH_HashSet* l,
+  const SFHASH_HashSet* r,
+  void* out,
+  const char* out_name,
+  const char* out_desc,
+  SFHASH_Error** err)
+{
+  return hashset_dispatcher<DifferenceSetOp>(
+    l->info->hash_length, *l, *r, out, out_name, out_desc, err
+  ).release();
 }

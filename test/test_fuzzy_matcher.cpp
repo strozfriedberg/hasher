@@ -1,4 +1,6 @@
 #include "fuzzy_matcher.h"
+#include "util.h"
+
 #include <scope/test.h>
 
 void check_decode_chunks(const std::string& hash, const std::vector<uint64_t>& e) {
@@ -140,16 +142,19 @@ void check_max_score(const std::string& data,
                      const std::string& sig,
                      int expected_count,
                      int expected_max) {
-  auto matcher        = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
-  const auto result   = sfhash_fuzzy_matcher_compare(matcher.get(),
-                                                   sig.c_str(),
-                                                   sig.c_str() + sig.length());
-  size_t result_count = sfhash_fuzzy_result_count(result);
+  auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
+  const auto result = make_unique_del(
+    sfhash_fuzzy_matcher_compare(
+      matcher.get(), sig.c_str(), sig.c_str() + sig.length()
+    ),
+    sfhash_destroy_fuzzy_match
+  );
+  size_t result_count = sfhash_fuzzy_result_count(result.get());
   SCOPE_ASSERT_EQUAL(expected_count, result_count);
 
   int max = 0;
   for (size_t i = 0; i < result_count; ++i) {
-    max = std::max(max, sfhash_fuzzy_result_score(result, i));
+    max = std::max(max, sfhash_fuzzy_result_score(result.get(), i));
   }
   SCOPE_ASSERT_EQUAL(expected_max, max);
 }
