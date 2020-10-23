@@ -2,3 +2,6 @@
 	path = vendors/scope
 	url = https://github.com/jonstewart/scope.git
   branch = master
+[submodule "vendors/BLAKE3"]
+	path = vendors/BLAKE3
+	url = https://github.com/BLAKE3-team/BLAKE3.git
