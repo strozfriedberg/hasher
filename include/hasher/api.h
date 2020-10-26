@@ -325,38 +325,6 @@ void sfhash_destroy_fuzzy_match(SFHASH_FuzzyResult* result);
 
 void sfhash_destroy_fuzzy_matcher(SFHASH_FuzzyMatcher* matcher);
 
-
-/******************************************************************************
-  Matcher
-******************************************************************************/
-
-/*
- * Input is a three-column tab-separated UTF-8 text file, where each line
- * is of the form:
- *
- *  Filename\tFilesize\tHash\n
- *
- */
-
-struct SFHASH_FileMatcher;
-
-SFHASH_FileMatcher* sfhash_create_matcher(
-  const void* beg,
-  const void* end,
-  SFHASH_Error** err
-);
-
-// returns nonzero if the given file size occurs in the hash set
-bool sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
-
-// returns nonzero if the given file hash occurrs in the hash set
-bool sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, const uint8_t* sha1);
-
-// returns nonzero if the given filename (in UTF-8) matches the hash set
-bool sfhash_matcher_has_filename(const SFHASH_FileMatcher* matcher, const char* filename);
-
-void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
-
 #ifdef __cplusplus
 }
 #endif

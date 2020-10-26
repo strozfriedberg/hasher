@@ -299,33 +299,6 @@ class TestFuzzyMatcher(unittest.TestCase):
             self.assertEqual([('c63e39ef408023b2aa0cee507f5f4e56', r'c:\MSOCache\All Users\Access.en-us\AccLR.cab', 100)], hits)
 
 
-class TestMatcher(unittest.TestCase):
-    def test_match_bad(self):
-        data = "bogus bogus\tbogus\tnonsense"
-        with self.assertRaises(RuntimeError):
-            with hasher.Matcher(data) as matcher:
-                pass
-
-
-    def test_match_good(self):
-        data = (
-            "Davout\t521\t375d38e640ae802b4d95468af1e8780ed7fbbf04\n"
-            "Soult\t768\te3cc51c54197fdcd477a73e7f8a0b6b55eaa8478\n"
-            "Ney\t12344565\t5e810a94c86ff057849bfa992bd176d8f743d160\n"
-        )
-
-        with hasher.Matcher(data) as matcher:
-            self.assertTrue(matcher.has_filename("Davout"))
-            self.assertFalse(matcher.has_filename("Bernadotte"))
-
-            self.assertTrue(matcher.has_size(12344565))
-            self.assertFalse(matcher.has_size(0))
-            self.assertFalse(matcher.has_size(522))
-
-            self.assertTrue(matcher.has_hash(bytes.fromhex('5e810a94c86ff057849bfa992bd176d8f743d160')))
-            self.assertFalse(matcher.has_hash(bytes.fromhex('0000000000000000000000000000000000000000')))
-
-
 class TestHashSetAPI(unittest.TestCase):
     def test_hashset_info_bad(self):
         data = "bogus bogus bogus nonsense".encode('utf-8')

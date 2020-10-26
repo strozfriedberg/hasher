@@ -31,7 +31,6 @@ src_libhasherint_la_SOURCES = \
 	src/hex.cpp \
 	src/libblake3_hasher.cpp \
 	src/libcrypto_hasher.cpp \
-	src/matcher.cpp \
 	src/parser.cpp \
 	src/quick_hasher.cpp \
 	src/sizeset.cpp \
@@ -59,12 +58,7 @@ src_hasher_SOURCES = \
 
 src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-src_matcher_SOURCES = \
-	src/matcher_main.cpp
-
-src_matcher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
-
-bin_PROGRAMS = src/fuzzy src/hasher src/matcher
+bin_PROGRAMS = src/fuzzy src/hasher
 
 check_PROGRAMS = test/test
 TESTS = \
@@ -79,7 +73,6 @@ test_test_SOURCES = \
 	test/test_hashset.cpp \
 	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
-	test/test_matcher.cpp \
 	test/test_parser.cpp \
 	test/test_util.cpp
 

@@ -51,7 +51,6 @@ PKG_PROG_PKG_CONFIG
 AS_IF([test "x$enable_shared" != "xyes"], [PKG_CONFIG="$PKG_CONFIG --static"])
 
 AX_PKG_CHECK_MODULES([CRYPTO], [], [libcrypto])
-AX_PKG_CHECK_MODULES([LIGHTGREP], [], [lightgrep])
 
 AX_CHECK_LIBRARY([FUZZY], [fuzzy.h], [fuzzy],
                  [FUZZY_LIBS=-lfuzzy],
@@ -202,7 +201,7 @@ AC_DEFUN([SF_APPEND], [{
 }])
 
 # collect the flags from everything which might set some
-for lib in BOOST CRYPTO LIGHTGREP FUZZY BLAKE3; do
+for lib in BOOST CRYPTO FUZZY BLAKE3; do
   # fold CFLAGS into CXXFLAGS since everything here is C++
   h="${lib}_CXXFLAGS"
   t=$(eval echo \"\$${lib}_CFLAGS\")
