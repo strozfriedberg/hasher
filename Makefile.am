@@ -6,6 +6,7 @@ AM_LDFLAGS = $(PROJECT_LDFLAGS)
 
 HASHER_LIB = src/libhasher.la
 HASHER_LIB_INT = src/libhasherint.la
+BLAKE3_LIB_INT = vendors/BLAKE3/c/libblake3int.la
 
 lib_LTLIBRARIES = $(HASHER_LIB)
 
@@ -16,7 +17,7 @@ src_libhasher_la_SOURCES =
 #endif
 nodist_EXTRA_src_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 
-noinst_LTLIBRARIES = $(HASHER_LIB_INT)
+noinst_LTLIBRARIES = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
 	src/entropy.cpp \
@@ -36,7 +37,7 @@ src_libhasherint_la_SOURCES = \
 	src/sizeset.cpp \
 	src/util.cpp
 
-src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(PROJECT_LIBS)
+src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
 src_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS) -avoid-version
 else
@@ -47,6 +48,31 @@ src_libhasher_ladir = $(includedir)
 
 src_libhasher_la_HEADERS = \
 	include/hasher/api.h
+
+vendors_BLAKE3_c_libblake3int_la_CPPFLAGS = $(AM_CPPFLAGS)
+
+vendors_BLAKE3_c_libblake3int_la_SOURCES = \
+	vendors/BLAKE3/c/blake3.c \
+	vendors/BLAKE3/c/blake3_dispatch.c \
+	vendors/BLAKE3/c/blake3_portable.c
+
+if HOST_32_BIT
+vendors_BLAKE3_c_libblake3int_la_CPPFLAGS += -DBLAKE_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512
+else
+if HOST_WINDOWS
+vendors_BLAKE3_c_libblake3int_la_SOURCES += \
+	vendors/BLAKE3/c/blake3_sse2_x86-64_windows_gnu.S \
+	vendors/BLAKE3/c/blake3_sse41_x86-64_windows_gnu.S \
+	vendors/BLAKE3/c/blake3_avx2_x86-64_windows_gnu.S \
+	vendors/BLAKE3/c/blake3_avx512_x86-64_windows_gnu.S
+else
+vendors_BLAKE3_c_libblake3int_la_SOURCES += \
+	vendors/BLAKE3/c/blake3_sse2_x86-64_unix.S \
+	vendors/BLAKE3/c/blake3_sse41_x86-64_unix.S \
+	vendors/BLAKE3/c/blake3_avx2_x86-64_unix.S \
+	vendors/BLAKE3/c/blake3_avx512_x86-64_unix.S
+endif
+endif
 
 src_fuzzy_SOURCES = \
         src/fuzzy_main.cpp
