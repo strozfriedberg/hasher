@@ -311,32 +311,6 @@ _sfhash_destroy_fuzzy_matcher = _hasher.sfhash_destroy_fuzzy_matcher
 _sfhash_destroy_fuzzy_matcher.argtypes = [c_void_p]
 _sfhash_destroy_fuzzy_matcher.restype = None
 
-# SFHASH_FileMatcher* sfhash_create_matcher(const void* beg, const void* end, SFHASH_Error** err);
-_sfhash_create_matcher = _hasher.sfhash_create_matcher
-_sfhash_create_matcher.argtypes = [c_void_p, c_void_p, POINTER(POINTER(HasherError))]
-_sfhash_create_matcher.restype = c_void_p
-
-# int sfhash_matcher_has_size(const SFHASH_FileMatcher* matcher, uint64_t size);
-_sfhash_matcher_has_size = _hasher.sfhash_matcher_has_size
-_sfhash_matcher_has_size.argtypes = [c_void_p, c_uint64]
-_sfhash_matcher_has_size.restype = c_bool
-
-# int sfhash_matcher_has_hash(const SFHASH_FileMatcher* matcher, const uint8_t* sha1);
-_sfhash_matcher_has_hash = _hasher.sfhash_matcher_has_hash
-_sfhash_matcher_has_hash.argtypes = [c_void_p, POINTER(c_uint8)]
-_sfhash_matcher_has_hash.restype = c_bool
-
-# int sfhash_matcher_has_filename(const SFHASH_FileMatcher* matcher, const char* filename);
-_sfhash_matcher_has_filename = _hasher.sfhash_matcher_has_filename
-_sfhash_matcher_has_filename.argtypes = [c_void_p, c_char_p]
-_sfhash_matcher_has_filename.restype = c_bool
-
-# void sfhash_destroy_matcher(SFHASH_FileMatcher* matcher);
-_sfhash_destroy_matcher = _hasher.sfhash_destroy_matcher
-_sfhash_destroy_matcher.argtypes = [c_void_p]
-_sfhash_destroy_matcher.restype = None
-
-
 c_ssize_p = POINTER(c_ssize_t)
 
 
@@ -608,25 +582,3 @@ class FuzzyMatcher(Handle):
         with FuzzyResult(_sfhash_fuzzy_matcher_compare(self.get(), *buf_range(sig_bytes, c_char))) as result:
             for i in range(result.count):
                 yield (result.filename(i), result.query_filename, result.score(i))
-
-
-class Matcher(Handle):
-    def __init__(self, lines):
-        buf = lines.encode('utf-8')
-        with Error() as err:
-            super().__init__(_sfhash_create_matcher(*buf_range(buf, c_char), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
-
-    def destroy(self):
-        _sfhash_destroy_matcher(self.handle)
-        super().destroy()
-
-    def has_size(self, size):
-        return _sfhash_matcher_has_size(self.get(), size)
-
-    def has_hash(self, h):
-        return _sfhash_matcher_has_hash(self.get(), *buf_range(h, c_uint8))
-
-    def has_filename(self, filename):
-        return _sfhash_matcher_has_filename(self.get(), filename.encode('utf-8'))
