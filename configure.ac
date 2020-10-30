@@ -12,6 +12,7 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.12 subdir-objects foreign])
 LT_INIT
 
+AM_PROG_AS
 AC_PROG_CXX
 AM_PROG_CC_C_O
 
@@ -56,11 +57,6 @@ AX_CHECK_LIBRARY([FUZZY], [fuzzy.h], [fuzzy],
                  [FUZZY_LIBS=-lfuzzy],
                  [AC_MSG_ERROR([Failed to find libfuzzy])])
 AC_SUBST([FUZZY_LIBS])
-
-AX_CHECK_LIBRARY([BLAKE3], [blake3.h], [blake3],
-                 [BLAKE3_LIBS=-lblake3],
-                 [AC_MSG_ERROR([Failed to find libblake3])])
-AC_SUBST([BLAKE3_LIBS])
 
 if test "x$with_boost" = "xno"; then
   AC_MSG_ERROR([--without-boost specified, but Boost is mandatory.])
@@ -135,6 +131,7 @@ fi
 # -static.
 if test "x$enable_shared" != "xyes"; then
   CXXLD="$CXX -all-static"
+  CCLD="$CXX -all-static"
 
   case "$host" in
   i686-*-mingw*)
@@ -144,6 +141,7 @@ if test "x$enable_shared" != "xyes"; then
   esac
 else
   CXXLD="$CXX"
+  CCLD="$CC"
 
   case "$host" in
   *-*-mingw*)
@@ -159,6 +157,10 @@ fi
 AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = "xyes" && echo "$host" | grep -q mingw])
 
 AC_SUBST([CXXLD])
+AC_SUBST([CCLD])
+
+AM_CONDITIONAL([HOST_32_BIT], [test "x$host_cpu" = "xi686"])
+AM_CONDITIONAL([HOST_WINDOWS], [echo "$host_os" | grep -q mingw])
 
 #
 # Fat or thin shared library?
@@ -201,7 +203,7 @@ AC_DEFUN([SF_APPEND], [{
 }])
 
 # collect the flags from everything which might set some
-for lib in BOOST CRYPTO FUZZY BLAKE3; do
+for lib in BOOST CRYPTO FUZZY; do
   # fold CFLAGS into CXXFLAGS since everything here is C++
   h="${lib}_CXXFLAGS"
   t=$(eval echo \"\$${lib}_CFLAGS\")

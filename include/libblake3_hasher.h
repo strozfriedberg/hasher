@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include <blake3.h>
+#include "vendors/BLAKE3/c/blake3.h"
 
 class Libblake3Hasher: public HasherImpl {
 public:
