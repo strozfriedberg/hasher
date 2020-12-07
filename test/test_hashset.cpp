@@ -225,7 +225,7 @@ SCOPE_TEST(expected_indexTest) {
 
 SCOPE_TEST(compute_radiusTest) {
   std::vector<std::array<uint8_t, 20>> hashes;
-  for (const auto p: test1_in) {
+  for (const auto& p: test1_in) {
     hashes.push_back(p.first);
   }
 
