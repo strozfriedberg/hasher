@@ -72,8 +72,6 @@ auto make_test_hashset(
   const std::array<uint8_t, HashLength>* beg,
   const std::array<uint8_t, HashLength>* end)
 {
-  SFHASH_Error* err = nullptr;
-
   auto info = make_info(
       name,
       desc,
