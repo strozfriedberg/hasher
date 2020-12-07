@@ -37,7 +37,7 @@ private:
   const char *Beg, *End;
 };
 
-class SFHASH_FuzzyMatcher {
+struct SFHASH_FuzzyMatcher {
 public:
   void reserve_space(const char* beg, const char* end);
   void add(FuzzyHash&& hash);
@@ -54,7 +54,7 @@ private:
   std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> ChunkMaps;
 };
 
-class SFHASH_FuzzyResult {
+struct SFHASH_FuzzyResult {
 public:
   SFHASH_FuzzyResult(std::string&& queryFilename,
                      std::vector<std::pair<std::string, int>>&& matches);
