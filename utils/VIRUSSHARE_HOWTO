@@ -1,0 +1,8 @@
+1. Download all the VirusShare files. They are cumulative, so if you've kept
+the previous ones, you need only download the new ones.
+
+curl -O https://virusshare.com/hashfiles/VirusShare_[00000-00389].md5
+
+2. To make the hashset:
+
+sed -e '/^#/d' VirusShare_* | sort -u | ./mkhashset.py MD5 'VirusShare 0-389' 'VirusShare 0-389, downloaded 2020-01-21' >virusshare-389.hset
