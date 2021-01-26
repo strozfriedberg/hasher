@@ -21,3 +21,5 @@ sort -mu modm leg >unified
 3. Upload the hashset to ~jenkins/vendors/testdata/untracked. (gzipping it
 reduces it by about 25%, so it's worth it doing that first if you have a
 slow connection.)
+
+4. Upload to the Windows build workers.
