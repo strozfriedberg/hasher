@@ -133,5 +133,5 @@ if __name__ == "__main__":
     parser.add_argument("hashset_name", help="Name of hash set")
     parser.add_argument("hashset_desc", help="Hash set description")
     args = parser.parse_args()
-    run(args.hash_type, args.hash_name, args.hash_desc, sys.stdin,
+    run(args.hash_type, args.hashset_name, args.hashset_desc, sys.stdin,
         sys.stdout.buffer)  # pylint: disable=no-value-for-parameter

@@ -1,0 +1,25 @@
+1. Download Modern RDS (minimal) and Legacy RDS: https://www.nist.gov/itl/ssd/software-quality-group/national-software-reference-library-nsrl/nsrl-download/current-rds
+
+2. 
+
+# Extract the Modern Minimal hashes 
+unzip rds_modernm.zip
+./nsrldump.py <rds_modernm/NSRLFile.txt >modm
+
+# Extract the Legacy hashes
+mkdir legacy
+7z x RDS_legacy.iso -olegacy
+unzip legacy/NSRLFile.txt.zip
+./nsrldump.py <NSRLFile.txt >leg
+
+# Merge the two hashsets
+sort -mu modm leg >unified
+
+# Create the hset
+./mkhashset.py sha1 'NSRL RDS 2.71' 'The NSRL RDS Modern Minimal + Legacy 2.71' <unified >rds_2.71_asdf_hashes.hset
+
+3. Upload the hashset to ~jenkins/vendors/testdata/untracked. (gzipping it
+reduces it by about 25%, so it's worth it doing that first if you have a
+slow connection.)
+
+4. Upload to the Windows build workers.
