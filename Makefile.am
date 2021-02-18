@@ -44,7 +44,7 @@ else
 src_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS)
 endif
 
-src_libhasher_ladir = $(includedir)
+src_libhasher_ladir = $(includedir)/hasher
 
 src_libhasher_la_HEADERS = \
 	include/hasher/api.h
