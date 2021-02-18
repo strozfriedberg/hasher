@@ -31,7 +31,7 @@ HasherInit{
 };
 
 // TODO: make a header for this class once hasher.h is empty
-class SFHASH_Hasher {
+struct SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
     for (uint32_t i = 0; i < HasherInit.size() && algs; algs >>= 1, ++i) {

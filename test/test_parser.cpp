@@ -205,7 +205,7 @@ SCOPE_TEST(iterateHashset2) {
 
   for (const auto& e: exp) {
     SCOPE_ASSERT(l != lend);
-    // SCOPE_ASSERT_EQUAL(parse_line(l->first, l->second), e);
+    SCOPE_ASSERT_EQUAL(parse_line(l->first, l->second), e);
     ++l;
   }
 

@@ -56,6 +56,6 @@ public:
 private:
   static const char* find_next(const char* cur, const char* end);
 
-  value_type Pos;
-  const char* const End;
+  value_type  Pos;
+  const char* End;
 };
