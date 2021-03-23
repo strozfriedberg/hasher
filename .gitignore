@@ -13,6 +13,7 @@
 /autom4te.cache
 /autoscan.log
 /config/
+/config.cache
 /config.h
 /config.h.in
 /config.h.in~
