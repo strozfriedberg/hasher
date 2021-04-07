@@ -74,11 +74,6 @@ else
   AX_BOOST_BASE([1.49.0],
     [],
     [AC_MSG_ERROR([Failed to find usable Boost headers.])])
-
-  # Treat manually specified boost as a system lib, to  ignore warnings
-  if test "x$with_boost" != "x"; then
-    BOOST_CPPFLAGS="-isystem $with_boost/include"
-  fi
 fi
 
 AX_BOOST_SYSTEM
@@ -91,12 +86,11 @@ AX_BOOST_FILESYSTEM
 AC_ARG_WITH([scope],
   [AS_HELP_STRING([--with-scope=ARG],
     [use Scope headers from the specified location])],
-  [SCOPE_PATH="$withval"],
-  [SCOPE_PATH="vendors/scope"])
+  [SCOPE_CPPFLAGS="-I$withval"],
+  [SCOPE_CPPFLAGS="-I$srcdir/vendors/scope"])
 
 if test "x$with_scope" != "xno"; then
   # test Scope without adding its path to CPPFLAGS generally
-  SCOPE_CPPFLAGS="-isystem `realpath $SCOPE_PATH`"
   CPPFLAGS_saved="$CPPFLAGS"
   CPPFLAGS="$SCOPE_CPPFLAGS"
   export CPPFLAGS
