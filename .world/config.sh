@@ -8,4 +8,8 @@ if [ "$Target" = 'macos' ]; then
   CONFIGURE="$CONFIGURE --with-boost=/usr/local"
 fi
 
+if [ "$Target" = 'windows' ]; then
+  LDFLAGS+=' -fstack-protector'
+fi
+
 configure_it
