@@ -9,7 +9,7 @@ if [ "$Target" = 'macos' ]; then
 fi
 
 if [ "$Target" = 'windows' ]; then
-  LDFLAGS+=' -fstack-protector'
+  LDFLAGS+=' -fstack-protector -lssp'
 fi
 
 configure_it
