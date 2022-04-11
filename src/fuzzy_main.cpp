@@ -7,14 +7,10 @@
 
 #include <sys/stat.h>
 
-#include <boost/filesystem.hpp>
-
 #include "hasher/api.h"
 #include "parser.h"
 #include "throw.h"
 #include "util.h"
-
-namespace fs = boost::filesystem;
 
 int main(int argc, char** argv) {
   if (argc != 3) {

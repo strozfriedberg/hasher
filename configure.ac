@@ -17,7 +17,7 @@ AC_PROG_CXX
 AM_PROG_CC_C_O
 
 AC_LANG([C++])
-AX_CXX_COMPILE_STDCXX_14([noext], [mandatory])
+AX_CXX_COMPILE_STDCXX_17([noext], [mandatory])
 
 AX_APPEND_COMPILE_FLAGS([-W -Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe -O3 -g], [PROJECT_CXXFLAGS])
 AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
@@ -75,9 +75,6 @@ else
     [],
     [AC_MSG_ERROR([Failed to find usable Boost headers.])])
 fi
-
-AX_BOOST_SYSTEM
-AX_BOOST_FILESYSTEM
 
 #
 # Test Dependencies

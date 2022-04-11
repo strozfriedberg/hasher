@@ -77,7 +77,7 @@ endif
 src_fuzzy_SOURCES = \
         src/fuzzy_main.cpp
 
-src_fuzzy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
+src_fuzzy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 src_hasher_SOURCES = \
 	src/hasher_main.cpp
