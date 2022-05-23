@@ -121,6 +121,7 @@ AC_SUBST([CCLD])
 
 AM_CONDITIONAL([HOST_32_BIT], [test "x$host_cpu" = "xi686"])
 AM_CONDITIONAL([HOST_WINDOWS], [echo "$host_os" | grep -q mingw])
+AM_CONDITIONAL([HOST_X86], [echo "$host_cpu" | grep -q x86_64])
 
 #
 # Fat or thin shared library?
