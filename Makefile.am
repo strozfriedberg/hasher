@@ -75,7 +75,7 @@ endif
 endif
 
 src_fuzzy_SOURCES = \
-        src/fuzzy_main.cpp
+	src/fuzzy_main.cpp
 
 src_fuzzy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
