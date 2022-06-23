@@ -1,5 +1,6 @@
 #include <scope/test.h>
 
+#include <cstring>
 #include <ostream>
 #include <stdexcept>
 #include <tuple>
