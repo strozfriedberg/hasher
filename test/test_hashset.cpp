@@ -58,7 +58,7 @@ std::ostream& operator<<(std::ostream& o, const HashSetInfo& h) {
   return o;
 }
 
-#include <scope/test.h>
+#include "catch.hpp"
 
 std::vector<char> read_file(const std::string& path) {
   std::ifstream in(path, std::ios_base::binary);
@@ -201,15 +201,15 @@ const std::vector<std::pair<std::array<uint8_t,20>, uint64_t>> test1_out{
 
 const std::vector<char> test1_data = read_file("test/test1.hset");
 
-SCOPE_TEST(parse_headerTest) {
+TEST_CASE("parse_headerTest") {
   auto beg = reinterpret_cast<const uint8_t*>(test1_data.data());
   auto end = beg + test1_data.size();
 
   auto act = make_unique_del(parse_header(beg, end), sfhash_destroy_hashset_info);
-  SCOPE_ASSERT_EQUAL(test1_info, *act);
+  REQUIRE(test1_info == *act);
 }
 
-SCOPE_TEST(expected_indexTest) {
+TEST_CASE("expected_indexTest") {
   const std::vector<std::tuple<std::array<uint8_t,20>, uint32_t, uint32_t>> tests{
     {to_bytes<20>("0000000000000000000000000000000000000000"), 1000,   0},
     {to_bytes<20>("7fffffffffffffffffffffffffffffffffffffff"), 1000, 499},
@@ -218,19 +218,19 @@ SCOPE_TEST(expected_indexTest) {
   };
 
   for (const auto& t: tests) {
-    SCOPE_ASSERT_EQUAL(std::get<2>(t),
+    REQUIRE(std::get<2>(t) ==
                        expected_index(std::get<0>(t).data(), std::get<1>(t)));
   }
 }
 
-SCOPE_TEST(compute_radiusTest) {
+TEST_CASE("compute_radiusTest") {
   std::vector<std::array<uint8_t, 20>> hashes;
   for (const auto& p: test1_in) {
     hashes.push_back(p.first);
   }
 
-  SCOPE_ASSERT_EQUAL(
-    test1_info.radius,
+  REQUIRE(
+    test1_info.radius ==
     compute_radius(hashes.data(), hashes.data() + hashes.size())
   );
 }
@@ -244,9 +244,9 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
     sfhash_destroy_hashset_info
   );
 
-  SCOPE_ASSERT(!err);
-  SCOPE_ASSERT(hsinfo_act);
-  SCOPE_ASSERT_EQUAL(hsinfo_exp, *hsinfo_act);
+  REQUIRE(!err);
+  REQUIRE(hsinfo_act);
+  REQUIRE(hsinfo_exp == *hsinfo_act);
 
   auto beg = data.data() + hsinfo_act->hashset_off;
   auto end = beg + hsinfo_act->hashset_size * hsinfo_act->hash_length;
@@ -255,8 +255,8 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
     sfhash_load_hashset(data.data(), data.data() + data.size(), &err),
     sfhash_destroy_hashset
   );
-  SCOPE_ASSERT(!err);
-  SCOPE_ASSERT(hs);
+  REQUIRE(!err);
+  REQUIRE(hs);
 
   beg = data.data() + hsinfo_act->sizes_off;
   end = beg + hsinfo_act->hashset_size * sizeof(uint64_t);
@@ -265,8 +265,8 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
     sfhash_load_sizeset(hsinfo_act.get(), beg, end, &err),
     sfhash_destroy_sizeset
   );
-  SCOPE_ASSERT(!err);
-  SCOPE_ASSERT(ss);
+  REQUIRE(!err);
+  REQUIRE(ss);
 
   std::array<uint8_t, 20> hash;
   uint64_t size;
@@ -274,23 +274,23 @@ void api_tester(const HashSetInfo& hsinfo_exp, const std::vector<char> data, con
   // ins are in
   for (const auto& p: ins) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(sfhash_lookup_hashset(hs.get(), hash.data()));
-    SCOPE_ASSERT(sfhash_lookup_sizeset(ss.get(), size));
+    REQUIRE(sfhash_lookup_hashset(hs.get(), hash.data()));
+    REQUIRE(sfhash_lookup_sizeset(ss.get(), size));
   }
 
   // outs are out
   for (const auto& p: outs) {
     std::tie(hash, size) = p;
-    SCOPE_ASSERT(!sfhash_lookup_hashset(hs.get(), hash.data()));
-    SCOPE_ASSERT(!sfhash_lookup_sizeset(ss.get(), size));
+    REQUIRE(!sfhash_lookup_hashset(hs.get(), hash.data()));
+    REQUIRE(!sfhash_lookup_sizeset(ss.get(), size));
   }
 }
 
-SCOPE_TEST(hashset_api_Test) {
+TEST_CASE("hashset_api_Test") {
   api_tester(test1_info, test1_data, test1_in, test1_out);
 }
 
-SCOPE_TEST(bogus_hashset_Test) {
+TEST_CASE("bogus_hashset_Test") {
   const char bogus[] = "Not reall a hash set wrong wrong wrong";
 
   SFHASH_Error* err = nullptr;
@@ -300,18 +300,18 @@ SCOPE_TEST(bogus_hashset_Test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(err);
+  REQUIRE(err);
 }
 
 /*
-SCOPE_TEST(nsrlTest) {
+TEST_CASE("nsrlTest") {
   char header[4096];
 
   int fd = open("test/nsrl.hset", O_RDONLY);
-  SCOPE_ASSERT(fd != -1);
+  REQUIRE(fd != -1);
 
   const ssize_t r = read(fd, header, sizeof(header));
-  SCOPE_ASSERT_EQUAL(sizeof(header), r);
+  REQUIRE(sizeof(header) == r);
 
   SFHASH_Error* err = nullptr;
 
@@ -320,26 +320,26 @@ SCOPE_TEST(nsrlTest) {
     sfhash_destroy_hashset_info
   );
 
-  SCOPE_ASSERT(!err);
-  SCOPE_ASSERT(hsinfo);
+  REQUIRE(!err);
+  REQUIRE(hsinfo);
 
   const size_t len = hsinfo->hashset_size * hsinfo->hash_length;
   void* beg = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, hsinfo->hashset_off);
   const void* end = static_cast<const char*>(beg) + len;
 
-  SCOPE_ASSERT(beg != MAP_FAILED);
+  REQUIRE(beg != MAP_FAILED);
 
   auto hs = make_unique_del(
     sfhash_load_hashset(hsinfo.get(), beg, end, true, &err),
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(!err);
-  SCOPE_ASSERT(hs);
+  REQUIRE(!err);
+  REQUIRE(hs);
 
   const auto start = std::chrono::system_clock::now();
-  SCOPE_ASSERT_EQUAL(
-    hsinfo->radius,
+  REQUIRE(
+    hsinfo->radius ==
     compute_radius<20>(static_cast<const std::array<uint8_t, 20>*>(beg),
                        static_cast<const std::array<uint8_t, 20>*>(end))
   );

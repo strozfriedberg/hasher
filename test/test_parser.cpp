@@ -1,4 +1,4 @@
-#include <scope/test.h>
+#include "catch.hpp"
 
 #include <cstring>
 #include <ostream>
@@ -23,95 +23,95 @@ bool operator==(const ParsedLine a, const ParsedLine b) {
   return a.flags == b.flags && a.name == b.name && a.size == b.size && a.hash == b.hash;
 }
 
-SCOPE_TEST(iterateLinesLF) {
+TEST_CASE("iterateLinesLF") {
   const char txt[] = "abc\ndef\ng\nhijk\n\nlmnop\n";
   //                  012 3456 78 90123 4 567890 1
 
   LineIterator i(txt, txt + std::strlen(txt));
   const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
 
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt + 3));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 4, txt + 7));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 8, txt + 9));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 10, txt + 14));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 15, txt + 15));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 16, txt + 21));
-  SCOPE_ASSERT(++i == end);
+  REQUIRE(i != end);
+  REQUIRE(*i == std::make_pair(txt, txt + 3));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 4, txt + 7));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 8, txt + 9));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 10, txt + 14));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 15, txt + 15));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 16, txt + 21));
+  REQUIRE(++i == end);
 }
 
-SCOPE_TEST(iterateLinesLFNoTerminalEOL) {
+TEST_CASE("iterateLinesLFNoTerminalEOL") {
   const char txt[] = "abc\ndef\ng\nhijk\n\nlmnop";
   //                  012 3456 78 90123 4 567890
 
   LineIterator i(txt, txt + std::strlen(txt));
   const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
 
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt + 3));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 4, txt + 7));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 8, txt + 9));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 10, txt + 14));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 15, txt + 15));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 16, txt + 21));
-  SCOPE_ASSERT(++i == end);
+  REQUIRE(i != end);
+  REQUIRE(*i == std::make_pair(txt, txt + 3));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 4, txt + 7));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 8, txt + 9));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 10, txt + 14));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 15, txt + 15));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 16, txt + 21));
+  REQUIRE(++i == end);
 }
 
-SCOPE_TEST(iterateLinesCRLF) {
+TEST_CASE("iterateLinesCRLF") {
   const char txt[] = "abc\r\ndef\r\ng\r\nhijk\r\n\r\nlmnop\r\n";
   //                  012 3 4567 8 90 1 23456 7 8 9 012345 6 7
 
   LineIterator i(txt, txt + std::strlen(txt));
   const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
 
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt + 3));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 5, txt + 8));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 10, txt + 11));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 13, txt + 17));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 19, txt + 19));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 21, txt + 26));
-  SCOPE_ASSERT(++i == end);
+  REQUIRE(i != end);
+  REQUIRE(*i == std::make_pair(txt, txt + 3));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 5, txt + 8));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 10, txt + 11));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 13, txt + 17));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 19, txt + 19));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 21, txt + 26));
+  REQUIRE(++i == end);
 }
 
-SCOPE_TEST(iterateLinesCRLFNoTerminalEOL) {
+TEST_CASE("iterateLinesCRLFNoTerminalEOL") {
   const char txt[] = "abc\r\ndef\r\ng\r\nhijk\r\n\r\nlmnop";
   //                  012 3 4567 8 90 1 23456 7 8 9 012345
 
   LineIterator i(txt, txt + std::strlen(txt));
   const LineIterator end(txt + std::strlen(txt), txt + std::strlen(txt));
 
-  SCOPE_ASSERT(i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt, txt + 3));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 5, txt + 8));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 10, txt + 11));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 13, txt + 17));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 19, txt + 19));
-  SCOPE_ASSERT(++i != end);
-  SCOPE_ASSERT_EQUAL(*i, std::make_pair(txt + 21, txt + 26));
-  SCOPE_ASSERT(++i == end);
+  REQUIRE(i != end);
+  REQUIRE(*i == std::make_pair(txt, txt + 3));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 5, txt + 8));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 10, txt + 11));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 13, txt + 17));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 19, txt + 19));
+  REQUIRE(++i != end);
+  REQUIRE(*i == std::make_pair(txt + 21, txt + 26));
+  REQUIRE(++i == end);
 }
 
-SCOPE_TEST(iterateHashset1) {
+TEST_CASE("iterateHashset1") {
   const char
     HSET[] = "a\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b2\n"
              "b\t456789\t3937e80075fc5a0f219c7d68e5e171ec7fe6dee3\n"
@@ -157,15 +157,15 @@ SCOPE_TEST(iterateHashset1) {
   const LineIterator lend(HSET + std::strlen(HSET), HSET + std::strlen(HSET));
 
   for (const auto& e: exp) {
-    SCOPE_ASSERT(l != lend);
-    SCOPE_ASSERT_EQUAL(parse_line(l->first, l->second), e);
+    REQUIRE(l != lend);
+    REQUIRE(parse_line(l->first, l->second) == e);
     ++l;
   }
 
-  SCOPE_ASSERT(l == lend);
+  REQUIRE(l == lend);
 }
 
-SCOPE_TEST(iterateHashsetBad) {
+TEST_CASE("iterateHashsetBad") {
   const char
     HSET[] = "too short\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6b\n"
              "too long\t123\t1eb328edc1794050fa64c6c62d6656d5c6b1b6bbb\n"
@@ -183,14 +183,14 @@ SCOPE_TEST(iterateHashsetBad) {
   const LineIterator lend(HSET + std::strlen(HSET), HSET + std::strlen(HSET));
 
   for (int i = 0; i < 11; ++i, ++l) {
-    SCOPE_ASSERT(l != lend);
-    SCOPE_EXPECT(parse_line(l->first, l->second), std::runtime_error);
+    REQUIRE(l != lend);
+    REQUIRE_THROWS_AS(parse_line(l->first, l->second), std::runtime_error);
   }
 
-  SCOPE_ASSERT(++l == lend);
+  REQUIRE(++l == lend);
 }
 
-SCOPE_TEST(iterateHashset2) {
+TEST_CASE("iterateHashset2") {
   const char HSET[] = "filename with spaces\t0\tda39a3ee5e6b4b0d3255bfef95601890afd80709\r\n"
                       "filename êèðèëëèöà\t1\t7f8fc202eb553370d4a05b446e57fef1734eca8f\r\n";
 
@@ -205,10 +205,10 @@ SCOPE_TEST(iterateHashset2) {
   const LineIterator lend(HSET + std::strlen(HSET), HSET + std::strlen(HSET));
 
   for (const auto& e: exp) {
-    SCOPE_ASSERT(l != lend);
-    SCOPE_ASSERT_EQUAL(parse_line(l->first, l->second), e);
+    REQUIRE(l != lend);
+    REQUIRE(parse_line(l->first, l->second) == e);
     ++l;
   }
 
-  SCOPE_ASSERT(l == lend);
+  REQUIRE(l == lend);
 }

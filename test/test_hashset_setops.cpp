@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include <scope/test.h>
+#include "catch.hpp"
 
 size_t union_max_size(const SFHASH_HashSet& a, const SFHASH_HashSet& b) {
   return HASHSET_OFF + a.info->hashset_size * a.info->hash_length +
@@ -87,7 +87,7 @@ auto make_test_hashset(
   return SFHASH_HashSet{std::move(info), std::move(hset)};
 }
 
-SCOPE_TEST(a_union_b_test) {
+TEST_CASE("a_union_b_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
@@ -103,26 +103,26 @@ SCOPE_TEST(a_union_b_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(!err);
+  REQUIRE(!err);
 
   // check the header
-  SCOPE_ASSERT_EQUAL(1, o->info->version);
-  SCOPE_ASSERT_EQUAL(SFHASH_MD5, o->info->hash_type);
-  SCOPE_ASSERT_EQUAL(16, o->info->hash_length);
-  SCOPE_ASSERT_EQUAL(0, o->info->flags);
-  SCOPE_ASSERT_EQUAL(26, o->info->hashset_size);
-  SCOPE_ASSERT_EQUAL(HASHSET_OFF, o->info->hashset_off);
-  SCOPE_ASSERT_EQUAL(0, o->info->sizes_off);
-  SCOPE_ASSERT_EQUAL(7, o->info->radius);
-  SCOPE_ASSERT_EQUAL(oname, std::string(o->info->hashset_name));
-  SCOPE_ASSERT_EQUAL(odesc, std::string(o->info->hashset_desc));
+  REQUIRE(1 == o->info->version);
+  REQUIRE(SFHASH_MD5 == o->info->hash_type);
+  REQUIRE(16 == o->info->hash_length);
+  REQUIRE(0 == o->info->flags);
+  REQUIRE(26 == o->info->hashset_size);
+  REQUIRE(HASHSET_OFF == o->info->hashset_off);
+  REQUIRE(0 == o->info->sizes_off);
+  REQUIRE(7 == o->info->radius);
+  REQUIRE(oname == std::string(o->info->hashset_name));
+  REQUIRE(odesc == std::string(o->info->hashset_desc));
 
   // check the hashes
   const auto obeg = reinterpret_cast<const std::array<uint8_t, 16>*>(o->hset->data());
-  SCOPE_ASSERT(std::equal(MD5s.begin(), MD5s.end(), obeg, obeg + o->info->hashset_size));
+  REQUIRE(std::equal(MD5s.begin(), MD5s.end(), obeg, obeg + o->info->hashset_size));
 }
 
-SCOPE_TEST(b_union_a_test) {
+TEST_CASE("b_union_a_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
@@ -138,26 +138,26 @@ SCOPE_TEST(b_union_a_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(!err);
+  REQUIRE(!err);
 
   // check the header
-  SCOPE_ASSERT_EQUAL(1, o->info->version);
-  SCOPE_ASSERT_EQUAL(SFHASH_MD5, o->info->hash_type);
-  SCOPE_ASSERT_EQUAL(16, o->info->hash_length);
-  SCOPE_ASSERT_EQUAL(0, o->info->flags);
-  SCOPE_ASSERT_EQUAL(26, o->info->hashset_size);
-  SCOPE_ASSERT_EQUAL(HASHSET_OFF, o->info->hashset_off);
-  SCOPE_ASSERT_EQUAL(0, o->info->sizes_off);
-  SCOPE_ASSERT_EQUAL(7, o->info->radius);
-  SCOPE_ASSERT_EQUAL(oname, std::string(o->info->hashset_name));
-  SCOPE_ASSERT_EQUAL(odesc, std::string(o->info->hashset_desc));
+  REQUIRE(1 == o->info->version);
+  REQUIRE(SFHASH_MD5 == o->info->hash_type);
+  REQUIRE(16 == o->info->hash_length);
+  REQUIRE(0 == o->info->flags);
+  REQUIRE(26 == o->info->hashset_size);
+  REQUIRE(HASHSET_OFF == o->info->hashset_off);
+  REQUIRE(0 == o->info->sizes_off);
+  REQUIRE(7 == o->info->radius);
+  REQUIRE(oname == std::string(o->info->hashset_name));
+  REQUIRE(odesc == std::string(o->info->hashset_desc));
 
   // check the hashes
   const auto obeg = reinterpret_cast<const std::array<uint8_t, 16>*>(o->hset->data());
-  SCOPE_ASSERT(std::equal(MD5s.begin(), MD5s.end(), obeg, obeg + o->info->hashset_size));
+  REQUIRE(std::equal(MD5s.begin(), MD5s.end(), obeg, obeg + o->info->hashset_size));
 }
 
-SCOPE_TEST(a_intersect_b_test) {
+TEST_CASE("a_intersect_b_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
@@ -173,26 +173,26 @@ SCOPE_TEST(a_intersect_b_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(!err);
+  REQUIRE(!err);
 
   // check the header
-  SCOPE_ASSERT_EQUAL(1, o->info->version);
-  SCOPE_ASSERT_EQUAL(SFHASH_MD5, o->info->hash_type);
-  SCOPE_ASSERT_EQUAL(16, o->info->hash_length);
-  SCOPE_ASSERT_EQUAL(0, o->info->flags);
-  SCOPE_ASSERT_EQUAL(7, o->info->hashset_size);
-  SCOPE_ASSERT_EQUAL(HASHSET_OFF, o->info->hashset_off);
-  SCOPE_ASSERT_EQUAL(0, o->info->sizes_off);
-  SCOPE_ASSERT_EQUAL(3, o->info->radius);
-  SCOPE_ASSERT_EQUAL(oname, std::string(o->info->hashset_name));
-  SCOPE_ASSERT_EQUAL(odesc, std::string(o->info->hashset_desc));
+  REQUIRE(1 == o->info->version);
+  REQUIRE(SFHASH_MD5 == o->info->hash_type);
+  REQUIRE(16 == o->info->hash_length);
+  REQUIRE(0 == o->info->flags);
+  REQUIRE(7 == o->info->hashset_size);
+  REQUIRE(HASHSET_OFF == o->info->hashset_off);
+  REQUIRE(0 == o->info->sizes_off);
+  REQUIRE(3 == o->info->radius);
+  REQUIRE(oname == std::string(o->info->hashset_name));
+  REQUIRE(odesc == std::string(o->info->hashset_desc));
 
   // check the hashes
   const auto obeg = reinterpret_cast<const std::array<uint8_t, 16>*>(o->hset->data());
-  SCOPE_ASSERT(std::equal(&MD5s[11], &MD5s[18], obeg, obeg + o->info->hashset_size));
+  REQUIRE(std::equal(&MD5s[11], &MD5s[18], obeg, obeg + o->info->hashset_size));
 }
 
-SCOPE_TEST(b_intersect_a_test) {
+TEST_CASE("b_intersect_a_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
@@ -208,26 +208,26 @@ SCOPE_TEST(b_intersect_a_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(!err);
+  REQUIRE(!err);
 
   // check the header
-  SCOPE_ASSERT_EQUAL(1, o->info->version);
-  SCOPE_ASSERT_EQUAL(SFHASH_MD5, o->info->hash_type);
-  SCOPE_ASSERT_EQUAL(16, o->info->hash_length);
-  SCOPE_ASSERT_EQUAL(0, o->info->flags);
-  SCOPE_ASSERT_EQUAL(7, o->info->hashset_size);
-  SCOPE_ASSERT_EQUAL(HASHSET_OFF, o->info->hashset_off);
-  SCOPE_ASSERT_EQUAL(0, o->info->sizes_off);
-  SCOPE_ASSERT_EQUAL(3, o->info->radius);
-  SCOPE_ASSERT_EQUAL(oname, std::string(o->info->hashset_name));
-  SCOPE_ASSERT_EQUAL(odesc, std::string(o->info->hashset_desc));
+  REQUIRE(1 == o->info->version);
+  REQUIRE(SFHASH_MD5 == o->info->hash_type);
+  REQUIRE(16 == o->info->hash_length);
+  REQUIRE(0 == o->info->flags);
+  REQUIRE(7 == o->info->hashset_size);
+  REQUIRE(HASHSET_OFF == o->info->hashset_off);
+  REQUIRE(0 == o->info->sizes_off);
+  REQUIRE(3 == o->info->radius);
+  REQUIRE(oname == std::string(o->info->hashset_name));
+  REQUIRE(odesc == std::string(o->info->hashset_desc));
 
   // check the hashes
   const auto obeg = reinterpret_cast<const std::array<uint8_t, 16>*>(o->hset->data());
-  SCOPE_ASSERT(std::equal(&MD5s[11], &MD5s[18], obeg, obeg + o->info->hashset_size));
+  REQUIRE(std::equal(&MD5s[11], &MD5s[18], obeg, obeg + o->info->hashset_size));
 }
 
-SCOPE_TEST(a_minus_b_test) {
+TEST_CASE("a_minus_b_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
@@ -243,26 +243,26 @@ SCOPE_TEST(a_minus_b_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(!err);
+  REQUIRE(!err);
 
   // check the header
-  SCOPE_ASSERT_EQUAL(1, o->info->version);
-  SCOPE_ASSERT_EQUAL(SFHASH_MD5, o->info->hash_type);
-  SCOPE_ASSERT_EQUAL(16, o->info->hash_length);
-  SCOPE_ASSERT_EQUAL(0, o->info->flags);
-  SCOPE_ASSERT_EQUAL(11, o->info->hashset_size);
-  SCOPE_ASSERT_EQUAL(HASHSET_OFF, o->info->hashset_off);
-  SCOPE_ASSERT_EQUAL(0, o->info->sizes_off);
-  SCOPE_ASSERT_EQUAL(6, o->info->radius);
-  SCOPE_ASSERT_EQUAL(oname, std::string(o->info->hashset_name));
-  SCOPE_ASSERT_EQUAL(odesc, std::string(o->info->hashset_desc));
+  REQUIRE(1 == o->info->version);
+  REQUIRE(SFHASH_MD5 == o->info->hash_type);
+  REQUIRE(16 == o->info->hash_length);
+  REQUIRE(0 == o->info->flags);
+  REQUIRE(11 == o->info->hashset_size);
+  REQUIRE(HASHSET_OFF == o->info->hashset_off);
+  REQUIRE(0 == o->info->sizes_off);
+  REQUIRE(6 == o->info->radius);
+  REQUIRE(oname == std::string(o->info->hashset_name));
+  REQUIRE(odesc == std::string(o->info->hashset_desc));
 
   // check the hashes
   const auto obeg = reinterpret_cast<const std::array<uint8_t, 16>*>(o->hset->data());
-  SCOPE_ASSERT(std::equal(&MD5s[0], &MD5s[11], obeg, obeg + o->info->hashset_size));
+  REQUIRE(std::equal(&MD5s[0], &MD5s[11], obeg, obeg + o->info->hashset_size));
 }
 
-SCOPE_TEST(b_minus_a_test) {
+TEST_CASE("b_minus_a_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_MD5, &MD5s[11], &MD5s[26]);
 
@@ -278,30 +278,30 @@ SCOPE_TEST(b_minus_a_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(!err);
+  REQUIRE(!err);
 
   // check the header
-  SCOPE_ASSERT_EQUAL(1, o->info->version);
-  SCOPE_ASSERT_EQUAL(SFHASH_MD5, o->info->hash_type);
-  SCOPE_ASSERT_EQUAL(16, o->info->hash_length);
-  SCOPE_ASSERT_EQUAL(0, o->info->flags);
-  SCOPE_ASSERT_EQUAL(8, o->info->hashset_size);
-  SCOPE_ASSERT_EQUAL(HASHSET_OFF, o->info->hashset_off);
-  SCOPE_ASSERT_EQUAL(0, o->info->sizes_off);
-  SCOPE_ASSERT_EQUAL(4, o->info->radius);
-  SCOPE_ASSERT_EQUAL(oname, std::string(o->info->hashset_name));
-  SCOPE_ASSERT_EQUAL(odesc, std::string(o->info->hashset_desc));
+  REQUIRE(1 == o->info->version);
+  REQUIRE(SFHASH_MD5 == o->info->hash_type);
+  REQUIRE(16 == o->info->hash_length);
+  REQUIRE(0 == o->info->flags);
+  REQUIRE(8 == o->info->hashset_size);
+  REQUIRE(HASHSET_OFF == o->info->hashset_off);
+  REQUIRE(0 == o->info->sizes_off);
+  REQUIRE(4 == o->info->radius);
+  REQUIRE(oname == std::string(o->info->hashset_name));
+  REQUIRE(odesc == std::string(o->info->hashset_desc));
 
   // check the hashes
   const auto obeg = reinterpret_cast<const std::array<uint8_t, 16>*>(o->hset->data());
-  SCOPE_ASSERT(std::equal(&MD5s[18], &MD5s[26], obeg, obeg + o->info->hashset_size));
+  REQUIRE(std::equal(&MD5s[18], &MD5s[26], obeg, obeg + o->info->hashset_size));
 }
 
 const std::vector<std::array<uint8_t, 20>> SHA1s{
   to_bytes<20>("0cd9677a02aa28cd16c83a8ff7645302ffff0000")
 };
 
-SCOPE_TEST(union_type_mismatch_test) {
+TEST_CASE("union_type_mismatch_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_SHA_1, &SHA1s[0], &SHA1s[1]);
 
@@ -317,10 +317,10 @@ SCOPE_TEST(union_type_mismatch_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(err);
+  REQUIRE(err);
 }
 
-SCOPE_TEST(insersection_type_mismatch_test) {
+TEST_CASE("insersection_type_mismatch_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_SHA_1, &SHA1s[0], &SHA1s[1]);
 
@@ -336,10 +336,10 @@ SCOPE_TEST(insersection_type_mismatch_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(err);
+  REQUIRE(err);
 }
 
-SCOPE_TEST(difference_type_mismatch_test) {
+TEST_CASE("difference_type_mismatch_test") {
   const auto a = make_test_hashset("a", "test set a", SFHASH_MD5, &MD5s[0], &MD5s[18]);
   const auto b = make_test_hashset("b", "test set b", SFHASH_SHA_1, &SHA1s[0], &SHA1s[1]);
 
@@ -355,5 +355,5 @@ SCOPE_TEST(difference_type_mismatch_test) {
     sfhash_destroy_hashset
   );
 
-  SCOPE_ASSERT(err);
+  REQUIRE(err);
 }
