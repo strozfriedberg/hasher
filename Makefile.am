@@ -102,8 +102,6 @@ test_test_SOURCES = \
 	test/test_parser.cpp \
 	test/test_util.cpp
 
-test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
-
 test_test_LDADD = $(HASHER_LIB) $(TEST_LIBS)
 
 FORMAT_COMMAND := tools/git-clang-format -f --style=file

@@ -1,122 +1,122 @@
 #include "fuzzy_matcher.h"
 #include "util.h"
 
-#include <scope/test.h>
+#include "catch.hpp"
 
 void check_decode_chunks(const std::string& hash, const std::vector<uint64_t>& e) {
   const auto a = decode_chunks(hash);
-  SCOPE_ASSERT_EQUAL(e.size(), a.size());
+  REQUIRE(e.size() == a.size());
 
   auto epos       = std::begin(e);
   const auto eend = std::end(e);
 
   for (; epos != eend; ++epos) {
     const auto search = a.find(*epos);
-    SCOPE_ASSERT(search != a.end());
+    REQUIRE(search != a.end());
   }
 }
 
-SCOPE_TEST(test_remove_duplicates_empty) {
+TEST_CASE("test_remove_duplicates_empty") {
   const std::string test     = "";
   const std::string expected = "";
 
-  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+  REQUIRE(expected == removeDuplicates(test));
 }
 
-SCOPE_TEST(test_remove_duplicates_none) {
+TEST_CASE("test_remove_duplicates_none") {
   const std::string test     = "abcdefghijkl";
   const std::string expected = "abcdefghijkl";
 
-  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+  REQUIRE(expected == removeDuplicates(test));
 }
 
-SCOPE_TEST(test_remove_duplicates_prefix) {
+TEST_CASE("test_remove_duplicates_prefix") {
   const std::string test     = "AAAAbbbcd";
   const std::string expected = "AAAbbbcd";
 
-  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+  REQUIRE(expected == removeDuplicates(test));
 }
 
-SCOPE_TEST(test_remove_duplicates_suffix) {
+TEST_CASE("test_remove_duplicates_suffix") {
   const std::string test     = "aaabbbcccdddd";
   const std::string expected = "aaabbbcccddd";
 
-  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+  REQUIRE(expected == removeDuplicates(test));
 }
 
-SCOPE_TEST(test_remove_duplicates) {
+TEST_CASE("test_remove_duplicates") {
   const std::string test     = "AAAbbbbbbbbbbbbccccccccccccdd";
   const std::string expected = "AAAbbbcccdd";
 
-  SCOPE_ASSERT_EQUAL(expected, removeDuplicates(test));
+  REQUIRE(expected == removeDuplicates(test));
 }
 
-SCOPE_TEST(test_hash_filename) {
+TEST_CASE("test_hash_filename") {
   const std::string
     sig           = "786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
-  SCOPE_ASSERT_EQUAL(":\\MSOCache\\All Users\\Access.en-us\\AccLR.ca", hash.filename());
+  REQUIRE(":\\MSOCache\\All Users\\Access.en-us\\AccLR.ca" == hash.filename());
 }
 
-SCOPE_TEST(test_parse_valid_sig) {
+TEST_CASE("test_parse_valid_sig") {
   const std::string
     sig           = "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure\"\"\".ac\"";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
 
-  SCOPE_ASSERT_EQUAL(0, validate_hash(beg, end));
-  SCOPE_ASSERT_EQUAL(192, hash.blocksize());
-  SCOPE_ASSERT_EQUAL("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV", hash.block());
-  SCOPE_ASSERT_EQUAL("R4qzN+idbyboj19xRRZE2IkWO/5Z", hash.double_block());
-  SCOPE_ASSERT_EQUAL("configure\"\"\".ac", hash.filename());
+  REQUIRE(0 == validate_hash(beg, end));
+  REQUIRE(192 == hash.blocksize());
+  REQUIRE("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV" == hash.block());
+  REQUIRE("R4qzN+idbyboj19xRRZE2IkWO/5Z" == hash.double_block());
+  REQUIRE("configure\"\"\".ac" == hash.filename());
 }
 
-SCOPE_TEST(test_parse_valid_sig_no_filename) {
+TEST_CASE("test_parse_valid_sig_no_filename") {
   const std::string
     sig           = "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
 
-  SCOPE_ASSERT_EQUAL(1, validate_hash(beg, end));
-  SCOPE_ASSERT_EQUAL(192, hash.blocksize());
-  SCOPE_ASSERT_EQUAL("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV", hash.block());
-  SCOPE_ASSERT_EQUAL("R4qzN+idbyboj19xRRZE2IkWO/5Z", hash.double_block());
-  SCOPE_ASSERT_EQUAL("", hash.filename());
+  REQUIRE(1 == validate_hash(beg, end));
+  REQUIRE(192 == hash.blocksize());
+  REQUIRE("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV" == hash.block());
+  REQUIRE("R4qzN+idbyboj19xRRZE2IkWO/5Z" == hash.double_block());
+  REQUIRE("" == hash.filename());
 }
 
-SCOPE_TEST(test_parse_invalid_sig) {
+TEST_CASE("test_parse_invalid_sig") {
   const std::vector<std::string> tests = {"abcd", "6:abcd:defg,\"no_trailing_quote", ""};
   for (const auto& s: tests) {
-    SCOPE_ASSERT_EQUAL(1, validate_hash(s.c_str(), s.c_str() + s.length()));
+    REQUIRE(1 == validate_hash(s.c_str(), s.c_str() + s.length()));
   }
 }
 
-SCOPE_TEST(test_decode_small_chunk) {
+TEST_CASE("test_decode_small_chunk") {
   const std::string hash               = "SNsFov";
   const std::vector<uint64_t> expected = {2718292808};
   check_decode_chunks(hash, expected);
 }
 
-SCOPE_TEST(test_decode_empty) {
+TEST_CASE("test_decode_empty") {
   const std::string hash               = "";
   const std::vector<uint64_t> expected = {0};
   check_decode_chunks(hash, expected);
 }
 
-SCOPE_TEST(test_decode_single_character) {
+TEST_CASE("test_decode_single_character") {
   const std::string hash               = "t";
   const std::vector<uint64_t> expected = {180};
   check_decode_chunks(hash, expected);
 }
 
-SCOPE_TEST(test_decode_padding) {
+TEST_CASE("test_decode_padding") {
   const std::string hash               = "sWEyn";
   const std::vector<uint64_t> expected = {2620547505};
   check_decode_chunks(hash, expected);
 }
 
-SCOPE_TEST(test_decode_chunks) {
+TEST_CASE("test_decode_chunks") {
   const std::string hash               = "HEI9Xg7+P9yImaNk3qrDwpXe9gf5xkIZ";
   const std::vector<uint64_t> expected = {
     61710615068,   822542307088, 978982065443, 1099381307637, 945966419550, 150182281091,
@@ -128,14 +128,14 @@ SCOPE_TEST(test_decode_chunks) {
   check_decode_chunks(hash, expected);
 }
 
-SCOPE_TEST(test_load_fuzzy) {
+TEST_CASE("test_load_fuzzy") {
   std::string
     data = "ssdeep,1.1--blocksize:hash:hash,filename\n"
            "192:RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV:R4qzN+idbyboj19xRRZE2IkWO/5Z,\"configure.ac\"\n"
            "6144:Ux9sXthkMmK4C4VRp7Q8QPTxoToVLGv8Hde2w7i9grh+B8Q+pDKHTvKWNpYrXYnL:oIbG4zHdizhHib9iBMoW,\"configure\"";
 
   auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
-  SCOPE_ASSERT(matcher.get());
+  REQUIRE(matcher.get());
 }
 
 void check_max_score(const std::string& data,
@@ -150,16 +150,16 @@ void check_max_score(const std::string& data,
     sfhash_destroy_fuzzy_match
   );
   size_t result_count = sfhash_fuzzy_result_count(result.get());
-  SCOPE_ASSERT_EQUAL(expected_count, result_count);
+  REQUIRE(expected_count == result_count);
 
   int max = 0;
   for (size_t i = 0; i < result_count; ++i) {
     max = std::max(max, sfhash_fuzzy_result_score(result.get(), i));
   }
-  SCOPE_ASSERT_EQUAL(expected_max, max);
+  REQUIRE(expected_max == max);
 }
 
-SCOPE_TEST(test_find_match) {
+TEST_CASE("test_find_match") {
   const std::string
     data = "ssdeep,1.1--blocksize:hash:hash,filename\n"
            "6:S+W9pdFFwj+Q4HRhOhahxlA/FG65WOCWn9Q6Wg9r939:TmAgxho/r5Wun9Q6p9r9t,\"a.txt\"\n"
@@ -182,7 +182,7 @@ SCOPE_TEST(test_find_match) {
   check_max_score(data, sig, 15, 80);
 }
 
-SCOPE_TEST(test_find_match_suffix) {
+TEST_CASE("test_find_match_suffix") {
   // Hash blocks have a common suffix
   const std::string
     data = "ssdeep,1.1--blocksize:hash:hash,filename\n"

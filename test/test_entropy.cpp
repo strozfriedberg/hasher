@@ -1,4 +1,4 @@
-#include <scope/test.h>
+#include "catch.hpp"
 
 #include "hasher/api.h"
 #include "util.h"
@@ -6,17 +6,17 @@
 #include <algorithm>
 #include <numeric>
 
-SCOPE_TEST(entropyNoUpdate) {
+TEST_CASE("entropyNoUpdate") {
   auto hasher = make_unique_del(
     sfhash_create_hasher(SFHASH_ENTROPY), sfhash_destroy_hasher
   );
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
+  REQUIRE(0.0 == hashes.Entropy);
 }
 
-SCOPE_TEST(entropyEmptyUpdate) {
+TEST_CASE("entropyEmptyUpdate") {
   auto hasher = make_unique_del(
     sfhash_create_hasher(SFHASH_ENTROPY), sfhash_destroy_hasher
   );
@@ -25,10 +25,10 @@ SCOPE_TEST(entropyEmptyUpdate) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
+  REQUIRE(0.0 == hashes.Entropy);
 }
 
-SCOPE_TEST(entropyAll00) {
+TEST_CASE("entropyAll00") {
   auto hasher = make_unique_del(
     sfhash_create_hasher(SFHASH_ENTROPY), sfhash_destroy_hasher
   );
@@ -39,10 +39,10 @@ SCOPE_TEST(entropyAll00) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
+  REQUIRE(0.0 == hashes.Entropy);
 }
 
-SCOPE_TEST(entropyAllFF) {
+TEST_CASE("entropyAllFF") {
   auto hasher = make_unique_del(
     sfhash_create_hasher(SFHASH_ENTROPY), sfhash_destroy_hasher
   );
@@ -54,10 +54,10 @@ SCOPE_TEST(entropyAllFF) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(0.0, hashes.Entropy);
+  REQUIRE(0.0 == hashes.Entropy);
 }
 
-SCOPE_TEST(entropyEqual) {
+TEST_CASE("entropyEqual") {
   auto hasher = make_unique_del(
     sfhash_create_hasher(SFHASH_ENTROPY), sfhash_destroy_hasher
   );
@@ -71,5 +71,5 @@ SCOPE_TEST(entropyEqual) {
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
-  SCOPE_ASSERT_EQUAL(8.0, hashes.Entropy);
+  REQUIRE(8.0 == hashes.Entropy);
 }
