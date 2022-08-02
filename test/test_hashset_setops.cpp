@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 size_t union_max_size(const SFHASH_HashSet& a, const SFHASH_HashSet& b) {
   return HASHSET_OFF + a.info->hashset_size * a.info->hash_length +

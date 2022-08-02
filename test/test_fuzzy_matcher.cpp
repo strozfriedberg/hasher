@@ -1,7 +1,7 @@
 #include "fuzzy_matcher.h"
 #include "util.h"
 
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 void check_decode_chunks(const std::string& hash, const std::vector<uint64_t>& e) {
   const auto a = decode_chunks(hash);
