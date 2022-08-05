@@ -58,7 +58,7 @@ std::ostream& operator<<(std::ostream& o, const HashSetInfo& h) {
   return o;
 }
 
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 std::vector<char> read_file(const std::string& path) {
   std::ifstream in(path, std::ios_base::binary);

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 const std::vector<std::pair<std::string, std::vector<uint8_t>>> tests{
   { "", { } },

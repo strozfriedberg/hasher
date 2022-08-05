@@ -77,6 +77,12 @@ else
 fi
 
 #
+# Test Dependencies
+#
+
+AX_PKG_CHECK_MODULES([CATCH2], [], [catch2-with-main])
+
+#
 # Linking
 #
 

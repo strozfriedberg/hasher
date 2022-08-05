@@ -92,7 +92,6 @@ TESTS = \
 	python/test.sh
 
 test_test_SOURCES = \
-	test/test.cpp \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
@@ -102,7 +101,9 @@ test_test_SOURCES = \
 	test/test_parser.cpp \
 	test/test_util.cpp
 
-test_test_LDADD = $(HASHER_LIB) $(TEST_LIBS)
+test_test_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
+
+test_test_LDADD = $(HASHER_LIB) $(TEST_LIBS) $(CATCH2_LIBS)
 
 FORMAT_COMMAND := tools/git-clang-format -f --style=file
 
