@@ -140,7 +140,7 @@ TEST_CASE("test_load_fuzzy") {
 
 void check_max_score(const std::string& data,
                      const std::string& sig,
-                     int expected_count,
+                     size_t expected_count,
                      int expected_max) {
   auto matcher = load_fuzzy_hashset(data.c_str(), data.c_str() + data.length());
   const auto result = make_unique_del(
@@ -149,7 +149,7 @@ void check_max_score(const std::string& data,
     ),
     sfhash_destroy_fuzzy_match
   );
-  size_t result_count = sfhash_fuzzy_result_count(result.get());
+  const size_t result_count = sfhash_fuzzy_result_count(result.get());
   REQUIRE(expected_count == result_count);
 
   int max = 0;
