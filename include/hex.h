@@ -4,26 +4,26 @@
 #include <string>
 #include <type_traits>
 
-template <typename C>
-void to_hex(char* dst, C beg, C end) {
-  static constexpr char hex[] {
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
-  };
+#if defined(_WIN32) || defined(WIN32)
+void to_hex(char* dst, const void* src, size_t slen);
+#else
+__attribute__((target("default")))
+void to_hex(char* dst, const void* src, size_t slen);
 
-  for (C c = beg; c != end; ++c) {
-    const uint8_t lo = *c & 0x0F;
-    const uint8_t hi = *c >> 4;
+__attribute__((target("sse4.1")))
+void to_hex(char* dst, const void* src, size_t slen);
 
-    *dst++ = hex[hi];
-    *dst++ = hex[lo];
-  }
-}
+__attribute__((target("avx2")))
+void to_hex(char* dst, const void* src, size_t slen);
+#endif
 
 template <typename C>
+#if !defined(_WIN32) && !defined(WIN32)
+__attribute__((target_clones("avx2", "sse4.1", "default")))
+#endif
 std::string to_hex(C beg, C end) {
   std::string ret((end - beg) * 2, '\0');
-  to_hex(&ret[0], beg, end);
+  to_hex(&ret[0], beg, end - beg);
   return ret;
 }
 
@@ -32,7 +32,11 @@ std::string to_hex(const C& c) {
   return to_hex(&c[0], &c[c.size()]);
 }
 
-void to_hex(char* dst, const void* src, size_t slen);
+void to_hex_table(char* dst, const uint8_t* src, size_t slen);
+
+void to_hex_sse41(char* dst, const uint8_t* src, size_t len);
+
+void to_hex_avx2(char* dst, const uint8_t* src, size_t len);
 
 void from_hex(uint8_t* dst, const char* src, size_t dlen);
 

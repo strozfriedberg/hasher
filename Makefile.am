@@ -30,6 +30,8 @@ src_libhasherint_la_SOURCES = \
 	src/hashsetdata.cpp \
 	src/hashsetinfo.cpp \
 	src/hex.cpp \
+	src/hex_avx2.cpp \
+	src/hex_sse41.cpp \
 	src/libblake3_hasher.cpp \
 	src/libcrypto_hasher.cpp \
 	src/parser.cpp \
@@ -86,7 +88,8 @@ src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 bin_PROGRAMS = src/fuzzy src/hasher
 
-check_PROGRAMS = test/test
+check_PROGRAMS = test/test test/bench_hex
+
 TESTS = \
 	$(check_PROGRAMS) \
 	python/test.sh
@@ -104,6 +107,12 @@ test_test_SOURCES = \
 test_test_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
 
 test_test_LDADD = $(HASHER_LIB) $(TEST_LIBS) $(CATCH2_LIBS)
+
+test_bench_hex_SOURCES = \
+	test/bench_hex.cpp
+
+test_bench_hex_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
+test_bench_hex_LDADD = $(HASHER_LIB) $(TEST_LIBS) $(CATCH2_LIBS)
 
 FORMAT_COMMAND := tools/git-clang-format -f --style=file
 

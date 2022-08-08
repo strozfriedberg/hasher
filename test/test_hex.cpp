@@ -9,6 +9,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <iostream>
+
 const std::vector<std::pair<std::string, std::vector<uint8_t>>> tests{
   { "", { } },
   { "0a", { 0x0A } },
@@ -75,38 +77,41 @@ const std::vector<std::pair<std::string, std::vector<uint8_t>>> tests{
   }
 };
 
-TEST_CASE("to_hexTest") {
+template <typename Func>
+void hexTester(Func func) {
   for (const auto& t: tests) {
     std::string exp = std::get<0>(t);
     // output is lowercased, so we lowercase the expected values
     std::transform(exp.begin(), exp.end(), exp.begin(), ::tolower);
     const auto& src = std::get<1>(t);
     std::string dst(2*src.size(), '\0');
-    to_hex(&dst[0], &src[0], src.size());
+    func(&dst[0], &src[0], src.size());
     REQUIRE(exp == dst);
   }
+}
+
+TEST_CASE("to_hex_tableTest") {
+  hexTester(to_hex_table);
+}
+
+TEST_CASE("to_hex_sse41Test") {
+  if (__builtin_cpu_supports("sse4.1")) {
+    hexTester(to_hex_sse41);
+  }
+}
+
+TEST_CASE("to_hex_avx2Test") {
+  if (__builtin_cpu_supports("avx2")) {
+    hexTester(to_hex_avx2);
+  }
+}
+
+TEST_CASE("to_hexTest") {
+  hexTester(static_cast<void(*)(char*, const void*, size_t)>(to_hex));
 }
 
 TEST_CASE("sfhash_hexTest") {
-  for (const auto& t: tests) {
-    std::string exp = std::get<0>(t);
-    // output is lowercased, so we lowercase the expected values
-    std::transform(exp.begin(), exp.end(), exp.begin(), ::tolower);
-    const auto& src = std::get<1>(t);
-    std::string dst(2*src.size(), '\0');
-    sfhash_hex(&dst[0], &src[0], src.size());
-    REQUIRE(exp == dst);
-  }
-}
-
-TEST_CASE("from_hexTest") {
-  for (const auto& t: tests) {
-    const auto& exp = std::get<1>(t);
-    const auto& src = std::get<0>(t);
-    std::vector<uint8_t> dst(exp.size(), 0);
-    from_hex(&dst[0], &src[0], dst.size());
-    REQUIRE(exp == dst);
-  }
+  hexTester(sfhash_hex);
 }
 
 TEST_CASE("sfhash_unhexTest") {
