@@ -9,6 +9,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <iostream>
+
 const std::vector<std::pair<std::string, std::vector<uint8_t>>> tests{
   { "", { } },
   { "0a", { 0x0A } },

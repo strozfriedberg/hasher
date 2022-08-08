@@ -4,6 +4,9 @@
 #include <string>
 #include <type_traits>
 
+#if defined(_WIN32) || defined(WIN32)
+void to_hex(char* dst, const void* src, size_t slen);
+#else
 __attribute__((target("default")))
 void to_hex(char* dst, const void* src, size_t slen);
 
@@ -12,9 +15,12 @@ void to_hex(char* dst, const void* src, size_t slen);
 
 __attribute__((target("avx2")))
 void to_hex(char* dst, const void* src, size_t slen);
+#endif
 
 template <typename C>
+#if !defined(_WIN32) && !defined(WIN32)
 __attribute__((target_clones("avx2", "sse4.1", "default")))
+#endif
 std::string to_hex(C beg, C end) {
   std::string ret((end - beg) * 2, '\0');
   to_hex(&ret[0], beg, end - beg);
