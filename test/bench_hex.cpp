@@ -6,7 +6,7 @@
 
 #include "hex.h"
 
-TEST_CASE("select_to_hex") {
+TEST_CASE("to_hex") {
   // fill a buffer with random data
   uint8_t src[1024];
 
