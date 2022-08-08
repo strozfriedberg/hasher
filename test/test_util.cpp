@@ -18,7 +18,7 @@ TEST_CASE("test_read_le_8") {
 }
 
 TEST_CASE("test_write_le_8") {
-  uint8_t buf[16];
+  uint8_t buf[16] = { 0 };
   uint8_t* out = buf;
 
   write_le_8(0x0123456789ABCDEF, buf, out, buf + sizeof(buf));
