@@ -44,11 +44,11 @@ auto half_hull(Itr point, Itr end) {
 }
 
 // Precondition: points is sorted by x
-auto upper_ch(const std::vector<Point>& points) {
+std::vector<Point> upper_ch(const std::vector<Point>& points) {
   return half_hull(points.begin(), points.end());
 }
 
 // Precondition: points is sorted by x
-auto lower_ch(const std::vector<Point>& points) {
+std::vector<Point> lower_ch(const std::vector<Point>& points) {
   return half_hull(points.rbegin(), points.rend());
 }

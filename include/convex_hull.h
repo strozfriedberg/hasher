@@ -15,7 +15,7 @@ bool operator!=(const Point& a, const Point& b);
 std::ostream& operator<<(std::ostream& out, const Point& p);
 
 // Precondition: points is sorted by x
-auto upper_ch(const std::vector<Point>& points); 
+std::vector<Point> upper_ch(const std::vector<Point>& points);
 
 // Precondition: points is sorted by x
-auto lower_ch(const std::vector<Point>& points);
+std::vector<Point> lower_ch(const std::vector<Point>& points);
