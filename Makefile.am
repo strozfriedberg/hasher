@@ -20,6 +20,7 @@ nodist_EXTRA_src_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 noinst_LTLIBRARIES = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
+	src/convex_hull.cpp \
 	src/entropy.cpp \
 	src/error.cpp \
 	src/fuzzy_hasher.cpp \
@@ -95,6 +96,7 @@ TESTS = \
 	python/test.sh
 
 test_test_SOURCES = \
+	test/test_convex_hull.cpp \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
