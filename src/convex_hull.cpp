@@ -1,5 +1,13 @@
 #include "convex_hull.h"
 
+bool operator==(const Point& a, const Point& b) {
+  return a.x == b.x && a.y == b.y;
+}
+
+bool operator!=(const Point& a, const Point& b) {
+  return a.x != b.x || a.y != b.y;
+}
+
 // check for right turn with cross product
 bool right_turn(const Point& a, const Point& b, const Point& c) {
   // Are the vectors ab and bc a right turn?
