@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iosfwd>
 #include <vector>
 
 struct Point {
@@ -10,6 +11,8 @@ struct Point {
 bool operator==(const Point& a, const Point& b);
 
 bool operator!=(const Point& a, const Point& b);
+
+std::ostream& operator<<(std::ostream& out, const Point& p);
 
 // Precondition: points is sorted by x
 auto upper_ch(const std::vector<Point>& points); 
