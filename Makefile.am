@@ -77,7 +77,8 @@ if HOST_X86
         endif
     endif
 else
-    # vendors_BLAKE3_c_libblake3int_la_CPPFLAGS += -DBLAKE3_USE_NEON=1
+	vendors_BLAKE3_c_libblake3int_la_SOURCES += \
+		vendors/BLAKE3/c/blake3_neon.c
 endif
 
 src_fuzzy_SOURCES = \
