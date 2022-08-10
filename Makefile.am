@@ -56,8 +56,7 @@ vendors_BLAKE3_c_libblake3int_la_CPPFLAGS = $(AM_CPPFLAGS)
 vendors_BLAKE3_c_libblake3int_la_SOURCES = \
 	vendors/BLAKE3/c/blake3.c \
 	vendors/BLAKE3/c/blake3_dispatch.c \
-	vendors/BLAKE3/c/blake3_portable.c \
-	vendors/BLAKE3/c/blake3_neon.c
+	vendors/BLAKE3/c/blake3_portable.c
 
 if HOST_X86
     if HOST_32_BIT
@@ -78,6 +77,8 @@ if HOST_X86
         endif
     endif
 else
+    vendors_BLAKE3_c_libblake3int_la_SOURCES += \
+		vendors/BLAKE3/c/blake3_neon.c
 endif
 
 src_fuzzy_SOURCES = \
