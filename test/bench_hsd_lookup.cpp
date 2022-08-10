@@ -1,8 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
 
+#include <array>
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <vector>
 
 #include "hasher/api.h"
@@ -61,3 +63,29 @@ auto load_header(void *beg, void* end) {
   return hsinfo;
 }
 
+struct RNG {
+  std::mt19937 re{std::random_device{}()};
+  std::uniform_int_distribution<uint32_t> dist;
+
+  uint32_t operator()() {
+    return dist(re);
+  }
+};
+
+// generate some random hashes
+template <
+  size_t HashLength
+>
+auto make_random_hashes(RNG& rng, size_t count) {
+  std::vector<std::array<uint8_t, HashLength>> hashes(count);
+
+  for (auto& h: hashes) {
+    // there should be a better way to do this; relies on all hash lengths
+    // being multiples of 4
+    for (int i = 0; i < static_cast<int>(HashLength / sizeof(uint32_t)); ++i) {
+      *reinterpret_cast<uint32_t*>(&h[i*sizeof(uint32_t)]) = rng();
+    }
+  }
+
+  return hashes;
+}
