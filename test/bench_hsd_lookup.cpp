@@ -5,10 +5,12 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <string>
 #include <vector>
 
 #include "hasher/api.h"
 
+#include "hashsetdata.h"
 #include "util.h"
 
 const std::filesystem::path VS{"test/virusshare-389.hset"};
@@ -89,3 +91,76 @@ auto make_random_hashes(RNG& rng, size_t count) {
 
   return hashes;
 }
+
+// make a HashSetDataImpl from hashset data 
+template <
+  size_t HashLength,
+  class Holder
+>
+auto make_std_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
+  return std::unique_ptr<HashSetData>{
+    std::make_unique<HashSetDataImpl<HashLength>>(
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off,
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length
+    )
+  };
+}
+
+// make a HashSetDataRadiusImpl from hashset data 
+template <
+  size_t HashLength,
+  class Holder
+>
+auto make_radius_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
+  return std::unique_ptr<HashSetData>{
+    std::make_unique<HashSetDataRadiusImpl<HashLength>>(
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off,
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length,
+      hsinfo.radius
+    )
+  };
+}
+
+template <
+  class LookupList
+>
+bool lookup_func(const HashSetData& hsd, const LookupList& hashes) {
+  bool r = false;
+  for (const auto& h: hashes) {
+    // XOR is sensitive to all inputs, so cannot be optimized out
+    r ^= hsd.contains(h.data());
+  }
+  return r;
+}
+
+template <
+  class LookupList
+>
+void do_check(const std::string& name, const HashSetData& hsd, const LookupList& hashes) {
+  const std::string tag = std::to_string(hashes[0].size()) + " x " + std::to_string(hashes.size());
+
+  BENCHMARK(tag + " " + name) {
+    return lookup_func(hsd, hashes);
+  };
+}
+
+template <
+  class LookupList,
+  class SetList
+>
+void do_some_lookups(const LookupList& ll, const SetList& sets) {
+  for (const auto& [name, hs]: sets) {
+    do_check(name, *hs, ll);
+  }
+}
+
+template <
+  class HashGenerator,
+  class SetList
+>
+void do_some_lookups(HashGenerator& gen, const SetList& sets, size_t min, size_t max, size_t mult) {
+  for (size_t i = min; i <= max; i *= mult) {
+    do_some_lookups(gen(i), sets);
+  }
+}
+
