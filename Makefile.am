@@ -58,27 +58,29 @@ vendors_BLAKE3_c_libblake3int_la_SOURCES = \
 	vendors/BLAKE3/c/blake3_dispatch.c \
 	vendors/BLAKE3/c/blake3_portable.c
 
-if HOST_X86
-    if HOST_32_BIT
-        vendors_BLAKE3_c_libblake3int_la_CPPFLAGS += -DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512
-    else
-        if HOST_WINDOWS
-            vendors_BLAKE3_c_libblake3int_la_SOURCES += \
-                vendors/BLAKE3/c/blake3_sse2_x86-64_windows_gnu.S \
-                vendors/BLAKE3/c/blake3_sse41_x86-64_windows_gnu.S \
-                vendors/BLAKE3/c/blake3_avx2_x86-64_windows_gnu.S \
-                vendors/BLAKE3/c/blake3_avx512_x86-64_windows_gnu.S
-        else
-            vendors_BLAKE3_c_libblake3int_la_SOURCES += \
-                vendors/BLAKE3/c/blake3_sse2_x86-64_unix.S \
-                vendors/BLAKE3/c/blake3_sse41_x86-64_unix.S \
-                vendors/BLAKE3/c/blake3_avx2_x86-64_unix.S \
-                vendors/BLAKE3/c/blake3_avx512_x86-64_unix.S
-        endif
-    endif
-else
-    vendors_BLAKE3_c_libblake3int_la_SOURCES += \
-		vendors/BLAKE3/c/blake3_neon.c
+if HOST_NO_SIMD
+vendors_BLAKE3_c_libblake3int_la_CPPFLAGS += -DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512
+endif
+
+if HOST_WINDOWS_X86_64
+vendors_BLAKE3_c_libblake3int_la_SOURCES += \
+	vendors/BLAKE3/c/blake3_sse2_x86-64_windows_gnu.S \
+	vendors/BLAKE3/c/blake3_sse41_x86-64_windows_gnu.S \
+	vendors/BLAKE3/c/blake3_avx2_x86-64_windows_gnu.S \
+	vendors/BLAKE3/c/blake3_avx512_x86-64_windows_gnu.S
+endif
+
+if HOST_UNIX_X86_64
+vendors_BLAKE3_c_libblake3int_la_SOURCES += \
+	vendors/BLAKE3/c/blake3_sse2_x86-64_unix.S \
+	vendors/BLAKE3/c/blake3_sse41_x86-64_unix.S \
+	vendors/BLAKE3/c/blake3_avx2_x86-64_unix.S \
+	vendors/BLAKE3/c/blake3_avx512_x86-64_unix.S
+endif
+
+if HOST_ARM
+vendors_BLAKE3_c_libblake3int_la_SOURCES += \
+	vendors/BLAKE3/c/blake3_neon.c
 endif
 
 src_fuzzy_SOURCES = \

@@ -28,21 +28,36 @@ AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 # AC_CANONICAL_HOST is needed to access the 'host_os' variable
 AC_CANONICAL_HOST
 
-# Detect the target system
+# Detect the system being targeted (hilarously, not $target_*)
 case "${host_os}" in
-    linux*)
-        AC_DEFINE([_LINUX], [1], [Linux platform])
-        ;;
-    cygwin*|mingw*)
-        AC_DEFINE([_WIN32], [1], [Windows platform])
-        ;;
-    darwin*)
-        AC_DEFINE([_MACOSX], [1], [Macosx platform])
-        ;;
-    *)
-        AC_MSG_ERROR(["OS $host_os is not supported"])
-        ;;
+linux*)
+  AC_DEFINE([_LINUX], [1], [Linux platform])
+  ;;
+cygwin*|mingw*)
+  AC_DEFINE([_WIN32], [1], [Windows platform])
+  is_windows = 'yes'
+  ;;
+darwin*)
+  AC_DEFINE([_MACOSX], [1], [Macosx platform])
+  ;;
+*)
+  AC_MSG_ERROR(["OS $host_os is not supported"])
+  ;;
 esac
+
+case "${host_cpu}" in
+x86_64)
+  is_x86_64 = 'yes'
+  ;;
+aarch*|arm*)
+  is_arm = 'yes'
+  ;;
+esac
+
+AM_CONDITIONAL([HOST_UNIX_X86_64], [test "x${is_x86_64}" = 'xyes' && test "x${is_windows}" != 'xyes' ])
+AM_CONDITIONAL([HOST_WINDOWS_X86_64], [test "x${is_x86_64}" = 'xyes' && test "x${is_windows}" = 'xyes' ])
+AM_CONDITIONAL([HOST_ARM], [test "x${is_arm}" = 'xyes'])
+AM_CONDITIONAL([HOST_NO_SIMD], [test "x${is_arm}" != 'xyes' && test "x${is_x86_64}" != 'xyes'])
 
 #
 # Dependencies
@@ -114,14 +129,10 @@ else
   esac
 fi
 
-AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = "xyes" && echo "$host" | grep -q mingw])
+AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = "xyes" -a "x$host_windows" = 'xyes'])
 
 AC_SUBST([CXXLD])
 AC_SUBST([CCLD])
-
-AM_CONDITIONAL([HOST_32_BIT], [test "x$host_cpu" = "xi686"])
-AM_CONDITIONAL([HOST_WINDOWS], [echo "$host_os" | grep -q mingw])
-AM_CONDITIONAL([HOST_X86], [echo "$host_cpu" | grep -q x86_64])
 
 #
 # Fat or thin shared library?
