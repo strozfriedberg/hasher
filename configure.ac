@@ -129,7 +129,7 @@ else
   esac
 fi
 
-AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = "xyes" -a "x$host_windows" = 'xyes'])
+AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = 'xyes' && test "x$is_windows" = 'xyes'])
 
 AC_SUBST([CXXLD])
 AC_SUBST([CCLD])
