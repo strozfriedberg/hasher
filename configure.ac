@@ -35,7 +35,7 @@ linux*)
   ;;
 cygwin*|mingw*)
   AC_DEFINE([_WIN32], [1], [Windows platform])
-  is_windows = 'yes'
+  is_windows=yes
   ;;
 darwin*)
   AC_DEFINE([_MACOSX], [1], [Macosx platform])
@@ -47,10 +47,10 @@ esac
 
 case "$host_cpu" in
 x86_64)
-  is_x86_64 = 'yes'
+  is_x86_64=yes
   ;;
 aarch*|arm*)
-  is_arm = 'yes'
+  is_arm=yes
   ;;
 esac
 
