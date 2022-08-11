@@ -29,7 +29,7 @@ AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 AC_CANONICAL_HOST
 
 # Detect the system being targeted (hilarously, not $target_*)
-case "${host_os}" in
+case "$host_os" in
 linux*)
   AC_DEFINE([_LINUX], [1], [Linux platform])
   ;;
@@ -45,7 +45,7 @@ darwin*)
   ;;
 esac
 
-case "${host_cpu}" in
+case "$host_cpu" in
 x86_64)
   is_x86_64 = 'yes'
   ;;
@@ -54,10 +54,10 @@ aarch*|arm*)
   ;;
 esac
 
-AM_CONDITIONAL([HOST_UNIX_X86_64], [test "x${is_x86_64}" = 'xyes' && test "x${is_windows}" != 'xyes' ])
-AM_CONDITIONAL([HOST_WINDOWS_X86_64], [test "x${is_x86_64}" = 'xyes' && test "x${is_windows}" = 'xyes' ])
-AM_CONDITIONAL([HOST_ARM], [test "x${is_arm}" = 'xyes'])
-AM_CONDITIONAL([HOST_NO_SIMD], [test "x${is_arm}" != 'xyes' && test "x${is_x86_64}" != 'xyes'])
+AM_CONDITIONAL([HOST_UNIX_X86_64], [test "x$is_x86_64" = 'xyes' && test "x$is_windows" != 'xyes' ])
+AM_CONDITIONAL([HOST_WINDOWS_X86_64], [test "x$is_x86_64" = 'xyes' && test "x$is_windows" = 'xyes' ])
+AM_CONDITIONAL([HOST_ARM], [test "x$is_arm" = 'xyes'])
+AM_CONDITIONAL([HOST_NO_SIMD], [test "x$is_arm" != 'xyes' && test "x$is_x86_64" != 'xyes'])
 
 #
 # Dependencies
