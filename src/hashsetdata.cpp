@@ -2,7 +2,6 @@
 #include <cstring>
 
 #include "hasher/api.h"
-#include "error.h"
 #include "hashsetdata.h"
 #include "hashset_util.h"
 #include "throw.h"
