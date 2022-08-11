@@ -96,6 +96,7 @@ TESTS = \
 	python/test.sh
 
 test_test_SOURCES = \
+	test/helper.cpp \
 	test/test_convex_hull.cpp \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
