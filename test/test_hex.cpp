@@ -9,8 +9,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <iostream>
-
 const std::vector<std::pair<std::string, std::vector<uint8_t>>> tests{
   { "", { } },
   { "0a", { 0x0A } },
@@ -95,13 +93,13 @@ TEST_CASE("to_hex_tableTest") {
 }
 
 TEST_CASE("to_hex_sse41Test") {
-  if (__builtin_cpu_supports("sse4.1")) {
+  CHECKED_IF(__builtin_cpu_supports("sse4.1")) {
     hexTester(to_hex_sse41);
   }
 }
 
 TEST_CASE("to_hex_avx2Test") {
-  if (__builtin_cpu_supports("avx2")) {
+  CHECKED_IF(__builtin_cpu_supports("avx2")) {
     hexTester(to_hex_avx2);
   }
 }

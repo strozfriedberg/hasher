@@ -1,9 +1,13 @@
+#include <catch2/catch_test_macros.hpp>
+
 #include "hasher/api.h"
 
 #include "hashsetdata.h"
 #include "hashsetinfo.h"
 #include "hex.h"
 #include "util.h"
+
+#include "helper.h"
 
 /*
 #include <fcntl.h>
@@ -17,8 +21,7 @@
 #include <iostream>
 
 #include <cstring>
-#include <fstream>
-#include <iterator>
+#include <utility>
 #include <vector>
 
 using HashSetInfo = SFHASH_HashSetInfo;
@@ -56,14 +59,6 @@ std::ostream& operator<<(std::ostream& o, const HashSetInfo& h) {
     << '"' << h.hashset_desc << "\""
     << '}';
   return o;
-}
-
-#include <catch2/catch_test_macros.hpp>
-
-std::vector<char> read_file(const std::string& path) {
-  std::ifstream in(path, std::ios_base::binary);
-  return std::vector<char>(std::istreambuf_iterator<char>(in),
-                           std::istreambuf_iterator<char>());
 }
 
 char test1_name[] = "Some test hashes";

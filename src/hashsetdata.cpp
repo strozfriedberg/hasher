@@ -2,7 +2,6 @@
 #include <cstring>
 
 #include "hasher/api.h"
-#include "error.h"
 #include "hashsetdata.h"
 #include "hashset_util.h"
 #include "throw.h"
@@ -10,7 +9,6 @@
 
 #include <boost/endian/conversion.hpp>
 
-using Error = SFHASH_Error;
 using HashSetInfo = SFHASH_HashSetInfo;
 
 // adaptor for use with hashset_dispatcher

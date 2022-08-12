@@ -20,6 +20,7 @@ nodist_EXTRA_src_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 noinst_LTLIBRARIES = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
+	src/convex_hull.cpp \
 	src/entropy.cpp \
 	src/error.cpp \
 	src/fuzzy_hasher.cpp \
@@ -88,13 +89,17 @@ src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 bin_PROGRAMS = src/fuzzy src/hasher
 
-check_PROGRAMS = test/test test/bench_hex
+check_PROGRAMS = test/test
+
+noinst_PROGRAMS = test/bench_hex test_bench_hsd
 
 TESTS = \
 	$(check_PROGRAMS) \
 	python/test.sh
 
 test_test_SOURCES = \
+	test/helper.cpp \
+	test/test_convex_hull.cpp \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
@@ -113,6 +118,12 @@ test_bench_hex_SOURCES = \
 
 test_bench_hex_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
 test_bench_hex_LDADD = $(HASHER_LIB) $(TEST_LIBS) $(CATCH2_LIBS)
+
+test_bench_hsd_SOURCES = \
+	test/bench_hsd_lookup.cpp
+
+test_bench_hsd_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
+test_bench_hsd_LDADD = $(HASHER_LIB) $(TEST_LIBS) $(CATCH2_LIBS)
 
 FORMAT_COMMAND := tools/git-clang-format -f --style=file
 
