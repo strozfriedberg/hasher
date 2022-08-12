@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CPPFLAGS = -I$(srcdir)/include $(PROJECT_CPPFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/vendors/parallel-hashmap $(PROJECT_CPPFLAGS)
 AM_CXXFLAGS = $(PROJECT_CXXFLAGS)
 AM_LDFLAGS = $(PROJECT_LDFLAGS)
 
