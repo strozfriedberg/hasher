@@ -89,7 +89,9 @@ src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 bin_PROGRAMS = src/fuzzy src/hasher
 
-check_PROGRAMS = test/test test/bench_hex test/bench_hsd
+check_PROGRAMS = test/test
+
+noinst_PROGRAMS = test/bench_hex test_bench_hsd
 
 TESTS = \
 	$(check_PROGRAMS) \
