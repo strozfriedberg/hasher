@@ -3,10 +3,27 @@
 
 #include "hasher/api.h"
 
-#if defined (_WIN32) || defined(WIN32)
+#if defined(_LINUX)
+
+__attribute__((target("default")))
+void to_hex(char* dst, const void* src, size_t slen) {
+  to_hex_table(dst, static_cast<const uint8_t*>(src), slen);
+}
+
+__attribute__((target("sse4.1")))
+void to_hex(char* dst, const void* src, size_t slen) {
+  to_hex_sse41(dst, static_cast<const uint8_t*>(src), slen);
+}
+
+__attribute__((target("avx2")))
+void to_hex(char* dst, const void* src, size_t slen) {
+  to_hex_avx2(dst, static_cast<const uint8_t*>(src), slen);
+}
+
+#else
 
 // NB: All of this crap will cease to be necessary as soon as compilers
-// support ifunc for Windows targets...
+// support ifunc for non-ELF targets...
 
 using to_hex_ptr = void (*)(char*, const uint8_t*, size_t);
 
@@ -27,23 +44,6 @@ const to_hex_ptr TO_HEX = select_to_hex();
 
 void to_hex(char* dst, const void* src, size_t slen) {
   TO_HEX(dst, static_cast<const uint8_t*>(src), slen);
-}
-
-#else
-
-__attribute__((target("default")))
-void to_hex(char* dst, const void* src, size_t slen) {
-  to_hex_table(dst, static_cast<const uint8_t*>(src), slen);
-}
-
-__attribute__((target("sse4.1")))
-void to_hex(char* dst, const void* src, size_t slen) {
-  to_hex_sse41(dst, static_cast<const uint8_t*>(src), slen);
-}
-
-__attribute__((target("avx2")))
-void to_hex(char* dst, const void* src, size_t slen) {
-  to_hex_avx2(dst, static_cast<const uint8_t*>(src), slen);
 }
 
 #endif
