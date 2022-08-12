@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <sparsepp/spp.h>
+#include <parallel_hashmap/phmap.h>
 
 #include "hasher/api.h"
 
@@ -51,7 +51,7 @@ private:
 
   std::vector<FuzzyHash> Hashes;
   // blocksize -> (hash_substring_int -> hash_index)
-  std::vector<spp::sparse_hash_map<uint64_t, std::vector<uint32_t>>> ChunkMaps;
+  std::vector<phmap::flat_hash_map<uint64_t, std::vector<uint32_t>>> ChunkMaps;
 };
 
 struct SFHASH_FuzzyResult {

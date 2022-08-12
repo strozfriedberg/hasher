@@ -2,3 +2,6 @@
 	path = vendors/BLAKE3
 	url = https://github.com/BLAKE3-team/BLAKE3.git
 	ignore = untracked
+[submodule "vendors/parallel-hashmap"]
+	path = vendors/parallel-hashmap
+	url = https://github.com/greg7mdp/parallel-hashmap.git
