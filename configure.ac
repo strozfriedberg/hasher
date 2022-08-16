@@ -22,6 +22,11 @@ AX_CXX_COMPILE_STDCXX_17([noext], [mandatory])
 AX_APPEND_COMPILE_FLAGS([-W -Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe -O3 -g], [PROJECT_CXXFLAGS])
 AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 
+# Ensure that our config.h is never multiply included
+AH_TOP([#ifndef HASHER_CONFIG_H_
+#define HASHER_CONFIG_H_])
+AH_BOTTOM([#endif])
+
 #
 # Define platform macroses
 #
@@ -30,18 +35,8 @@ AC_CANONICAL_HOST
 
 # Detect the system being targeted (hilarously, not $target_*)
 case "$host_os" in
-linux*)
-  AC_DEFINE([_LINUX], [1], [Linux platform])
-  ;;
 cygwin*|mingw*)
-  AC_DEFINE([_WIN32], [1], [Windows platform])
   is_windows=yes
-  ;;
-darwin*)
-  AC_DEFINE([_MACOSX], [1], [Macosx platform])
-  ;;
-*)
-  AC_MSG_ERROR(["OS $host_os is not supported"])
   ;;
 esac
 
@@ -54,10 +49,17 @@ aarch*|arm*)
   ;;
 esac
 
-AM_CONDITIONAL([HOST_UNIX_X86_64], [test "x$is_x86_64" = 'xyes' && test "x$is_windows" != 'xyes' ])
-AM_CONDITIONAL([HOST_WINDOWS_X86_64], [test "x$is_x86_64" = 'xyes' && test "x$is_windows" = 'xyes' ])
+AM_CONDITIONAL([HOST_WINDOWS], [test "x$is_windows" = 'xyes' ])
+
+AM_CONDITIONAL([HOST_X86_64], [test "x$is_x86_64" = 'xyes'])
 AM_CONDITIONAL([HOST_ARM], [test "x$is_arm" = 'xyes'])
+
 AM_CONDITIONAL([HOST_NO_SIMD], [test "x$is_arm" != 'xyes' && test "x$is_x86_64" != 'xyes'])
+
+AX_GCC_FUNC_ATTRIBUTE([target])
+AX_GCC_FUNC_ATTRIBUTE([target_clones])
+AX_GCC_X86_CPU_SUPPORTS([sse4.1])
+AX_GCC_X86_CPU_SUPPORTS([avx2])
 
 #
 # Dependencies

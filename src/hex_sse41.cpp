@@ -1,3 +1,7 @@
+#include "config.h"
+
+#ifdef HAVE_SSE4_1_INSTRUCTIONS
+
 #include <x86intrin.h>
 
 #include "hex.h"
@@ -33,3 +37,5 @@ void to_hex_sse41(char* dst, const uint8_t* src, size_t len) {
   // convert the tail
   to_hex_table(dst + (vectLen << 4), src + (vectLen << 3), tailLen);
 }
+
+#endif
