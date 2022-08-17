@@ -1,6 +1,6 @@
 #include "config.h"
 
-#ifdef HAVE_SSE4_1_INSTRUCTIONS
+#ifdef HAVE_X86INTRIN_H
 
 #include <x86intrin.h>
 

@@ -59,15 +59,28 @@ AM_CONDITIONAL([HOST_NO_SIMD], [test "x$is_arm" != 'xyes' && test "x$is_x86_64" 
 AX_GCC_FUNC_ATTRIBUTE([target])
 AX_GCC_FUNC_ATTRIBUTE([target_clones])
 
-AX_GCC_BUILTIN([__builtin_cpu_init])
-AX_GCC_BUILTIN([__builtin_cpu_supports])
-AS_IF(
-  [test "x$ax_cv_have___builtin_cpu_init" = 'xyes' && test "x$ax_cv_have___builtin_cpu_supports" = 'xyes'],
-  [
-    AX_GCC_X86_CPU_SUPPORTS([sse4.1])
-    AX_GCC_X86_CPU_SUPPORTS([avx2])
-  ]
+AC_CACHE_CHECK(
+  [for __builtin_cpu_supports],
+  [ax_cv_have___builtin_cpu_supports],
+  [AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM(
+      [],
+      [__builtin_cpu_supports("whatever");]
+    )],
+    [ax_cv_have___builtin_cpu_supports=yes],
+    [ax_cv_have___builtin_cpu_supports=no]
+  )]
 )
+
+if test "x$ax_cv_have___builtin_cpu_supports" = 'xyes' ; then
+  AC_DEFINE(
+    [HAVE___BUILTIN_CPU_SUPPORTS],
+    [1],
+    [Define to 1 if the __builtin_cpu_supports function is available]
+  )
+fi
+
+AC_CHECK_HEADERS([x86intrin.h])
 
 #
 # Dependencies

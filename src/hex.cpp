@@ -10,14 +10,12 @@ void to_hex(char* dst, const void* src, size_t slen) {
   to_hex_table(dst, static_cast<const uint8_t*>(src), slen);
 }
 
-#ifdef HAVE_SSE4_1_INSTRUCTIONS
+#ifdef HAVE_X86INTRIN_H
 __attribute__((target("sse4.1")))
 void to_hex(char* dst, const void* src, size_t slen) {
   to_hex_sse41(dst, static_cast<const uint8_t*>(src), slen);
 }
-#endif
 
-#ifdef HAVE_AVX2_INSTRUCTIONS
 __attribute__((target("avx2")))
 void to_hex(char* dst, const void* src, size_t slen) {
   to_hex_avx2(dst, static_cast<const uint8_t*>(src), slen);
@@ -34,13 +32,11 @@ using to_hex_ptr = void (*)(char*, const uint8_t*, size_t);
 to_hex_ptr select_to_hex() { 
   // Select the appropriate to_hex implementation
 
-#ifdef HAVE_AVX2_INSTRUCTIONS
+#if defined(HAVE___BUILTIN_CPU_SUPPORTS) && defined(HAVE_X86INTRIN_H)
   if (__builtin_cpu_supports("avx2")) {
     return to_hex_avx2;
   }
-#endif
 
-#ifdef HAVE_SSE4_1_INSTRUCTIONS
   if (__builtin_cpu_supports("sse4.1")) {
     return to_hex_sse41;
   }

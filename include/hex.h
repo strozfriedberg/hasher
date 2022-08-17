@@ -10,12 +10,10 @@
 __attribute__((target("default")))
 void to_hex(char* dst, const void* src, size_t slen);
 
-#ifdef HAVE_SSE4_1_INSTRUCTIONS
+#ifdef HAVE_X86INTRIN_H
 __attribute__((target("sse4.1")))
 void to_hex(char* dst, const void* src, size_t slen);
-#endif
 
-#ifdef HAVE_AVX2_INSTRUCTIONS
 __attribute__((target("avx2")))
 void to_hex(char* dst, const void* src, size_t slen);
 #endif
@@ -41,11 +39,9 @@ std::string to_hex(const C& c) {
 
 void to_hex_table(char* dst, const uint8_t* src, size_t slen);
 
-#ifdef HAVE_SSE4_1_INSTRUCTIONS
+#ifdef HAVE_X86INTRIN_H
 void to_hex_sse41(char* dst, const uint8_t* src, size_t len);
-#endif
 
-#ifdef HAVE_AVX2_INSTRUCTIONS
 void to_hex_avx2(char* dst, const uint8_t* src, size_t len);
 #endif
 
