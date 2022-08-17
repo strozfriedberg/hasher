@@ -198,7 +198,7 @@ AC_DEFUN([AX_GCC_FUNC_ATTRIBUTE], [
                     void foo( void ) __attribute__(($1("default")));
                 ],
                 [target_clones], [
-                    void foo( void ) __attribute__(($1("default")));
+                    void foo( void ) __attribute__(($1("default", "popcnt")));
                 ],
                 [unused], [
                     int foo( void ) __attribute__(($1));
