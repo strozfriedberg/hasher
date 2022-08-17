@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
 
@@ -26,6 +28,7 @@ TEST_CASE("to_hex") {
     return dst;
   };
 
+#if defined(HAVE___BUILTIN_CPU_SUPPORTS) && defined(HAVE_X86INTRIN_H)
   BENCHMARK("to_hex_sse41") {
     to_hex_sse41(dst, src, sizeof(src));
     return dst;
@@ -35,4 +38,5 @@ TEST_CASE("to_hex") {
     to_hex_avx2(dst, src, sizeof(src));
     return dst;
   };
+#endif
 }

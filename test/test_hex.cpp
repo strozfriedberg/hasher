@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "hasher/api.h"
 #include "hex.h"
 
@@ -94,6 +96,7 @@ TEST_CASE("to_hex_tableTest") {
   hexTester(to_hex_table);
 }
 
+#if defined(HAVE___BUILTIN_CPU_SUPPORTS) && defined(HAVE_X86INTRIN_H)
 TEST_CASE("to_hex_sse41Test") {
   if (__builtin_cpu_supports("sse4.1")) {
     hexTester(to_hex_sse41);
@@ -105,6 +108,7 @@ TEST_CASE("to_hex_avx2Test") {
     hexTester(to_hex_avx2);
   }
 }
+#endif
 
 TEST_CASE("to_hexTest") {
   hexTester(static_cast<void(*)(char*, const void*, size_t)>(to_hex));
