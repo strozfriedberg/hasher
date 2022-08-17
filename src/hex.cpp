@@ -3,7 +3,7 @@
 
 #include "hasher/api.h"
 
-#ifdef HAVE_FUNC_ATTRIBUTE_TARGET
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET)
 
 __attribute__((target("default")))
 void to_hex(char* dst, const void* src, size_t slen) {

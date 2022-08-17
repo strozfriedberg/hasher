@@ -56,6 +56,7 @@ AM_CONDITIONAL([HOST_ARM], [test "x$is_arm" = 'xyes'])
 
 AM_CONDITIONAL([HOST_NO_SIMD], [test "x$is_arm" != 'xyes' && test "x$is_x86_64" != 'xyes'])
 
+AX_GCC_FUNC_ATTRIBUTE([ifunc])
 AX_GCC_FUNC_ATTRIBUTE([target])
 AX_GCC_FUNC_ATTRIBUTE([target_clones])
 

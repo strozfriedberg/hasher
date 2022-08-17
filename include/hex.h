@@ -6,7 +6,7 @@
 #include <string>
 #include <type_traits>
 
-#ifdef HAVE_FUNC_ATTRIBUTE_TARGET
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET)
 __attribute__((target("default")))
 void to_hex(char* dst, const void* src, size_t slen);
 
@@ -23,7 +23,7 @@ void to_hex(char* dst, const void* src, size_t slen);
 #endif
 
 template <typename C>
-#ifdef HAVE_FUNC_ATTRIBUTE_TARGET_CLONES
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET_CLONES)
 __attribute__((target_clones("avx2", "sse4.1", "default")))
 #endif
 std::string to_hex(C beg, C end) {
