@@ -6,7 +6,6 @@
 
 #include "hex.h"
 
-__attribute__((target("sse4.1")))
 void to_hex_sse41(char* dst, const uint8_t* src, size_t len) {
   static const __m128i HEX_LUTR = _mm_setr_epi8(
     '0', '1', '2', '3', '4', '5', '6', '7',

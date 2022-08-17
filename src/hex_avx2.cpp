@@ -6,7 +6,6 @@
 
 #include "hex.h"
 
-__attribute__((target("avx2")))
 void to_hex_avx2(char* dst, const uint8_t* src, size_t len) {
   static const __m256i HEX_LUTR_256 = _mm256_setr_epi8(
     '0', '1', '2', '3', '4', '5', '6', '7',
