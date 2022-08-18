@@ -1,3 +1,7 @@
+#include "config.h"
+
+#ifdef HAVE_X86INTRIN_H
+
 #include <x86intrin.h>
 
 #include "hex.h"
@@ -35,3 +39,5 @@ void to_hex_avx2(char* dst, const uint8_t* src, size_t len) {
   // convert the tail
   to_hex_sse41(dst + (vectLen << 5), src + (vectLen << 4), tailLen);
 }
+
+#endif

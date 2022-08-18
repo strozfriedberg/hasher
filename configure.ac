@@ -22,27 +22,66 @@ AX_CXX_COMPILE_STDCXX_17([noext], [mandatory])
 AX_APPEND_COMPILE_FLAGS([-W -Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe -O3 -g], [PROJECT_CXXFLAGS])
 AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])
 
+# Ensure that our config.h is never multiply included
+AH_TOP([#ifndef HASHER_CONFIG_H_
+#define HASHER_CONFIG_H_])
+AH_BOTTOM([#endif])
+
 #
 # Define platform macroses
 #
 # AC_CANONICAL_HOST is needed to access the 'host_os' variable
 AC_CANONICAL_HOST
 
-# Detect the target system
-case "${host_os}" in
-    linux*)
-        AC_DEFINE([_LINUX], [1], [Linux platform])
-        ;;
-    cygwin*|mingw*)
-        AC_DEFINE([_WIN32], [1], [Windows platform])
-        ;;
-    darwin*)
-        AC_DEFINE([_MACOSX], [1], [Macosx platform])
-        ;;
-    *)
-        AC_MSG_ERROR(["OS $host_os is not supported"])
-        ;;
+# Detect the system being targeted (hilarously, not $target_*)
+case "$host_os" in
+cygwin*|mingw*)
+  is_windows=yes
+  ;;
 esac
+
+case "$host_cpu" in
+x86_64)
+  is_x86_64=yes
+  ;;
+aarch*|arm*)
+  is_arm=yes
+  ;;
+esac
+
+AM_CONDITIONAL([HOST_WINDOWS], [test "x$is_windows" = 'xyes' ])
+
+AM_CONDITIONAL([HOST_X86_64], [test "x$is_x86_64" = 'xyes'])
+AM_CONDITIONAL([HOST_ARM], [test "x$is_arm" = 'xyes'])
+
+AM_CONDITIONAL([HOST_NO_SIMD], [test "x$is_arm" != 'xyes' && test "x$is_x86_64" != 'xyes'])
+
+AX_GCC_FUNC_ATTRIBUTE([ifunc])
+AX_GCC_FUNC_ATTRIBUTE([target])
+AX_GCC_FUNC_ATTRIBUTE([target_clones])
+
+AC_CACHE_CHECK(
+  [for __builtin_cpu_supports],
+  [ax_cv_have___builtin_cpu_supports],
+  [AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM(
+      [],
+      [__builtin_cpu_supports("whatever");]
+    )],
+    [ax_cv_have___builtin_cpu_supports=yes],
+    [ax_cv_have___builtin_cpu_supports=no]
+  )]
+)
+
+if test "x$ax_cv_have___builtin_cpu_supports" = 'xyes' ; then
+  AC_DEFINE(
+    [HAVE___BUILTIN_CPU_SUPPORTS],
+    [1],
+    [Define to 1 if the __builtin_cpu_supports function is available]
+  )
+fi
+
+AC_CHECK_HEADERS([x86intrin.h])
 
 #
 # Dependencies
@@ -114,13 +153,10 @@ else
   esac
 fi
 
-AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = "xyes" && echo "$host" | grep -q mingw])
+AM_CONDITIONAL([BUILD_DLL], [test "x$enable_shared" = 'xyes' && test "x$is_windows" = 'xyes'])
 
 AC_SUBST([CXXLD])
 AC_SUBST([CCLD])
-
-AM_CONDITIONAL([HOST_32_BIT], [test "x$host_cpu" = "xi686"])
-AM_CONDITIONAL([HOST_WINDOWS], [echo "$host_os" | grep -q mingw])
 
 #
 # Fat or thin shared library?

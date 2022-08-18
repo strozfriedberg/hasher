@@ -1,15 +1,16 @@
 #pragma once
 
+#include "config.h"
+
 #include <array>
 #include <string>
 #include <type_traits>
 
-#if defined(_WIN32) || defined(WIN32)
-void to_hex(char* dst, const void* src, size_t slen);
-#else
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET)
 __attribute__((target("default")))
 void to_hex(char* dst, const void* src, size_t slen);
 
+#ifdef HAVE_X86INTRIN_H
 __attribute__((target("sse4.1")))
 void to_hex(char* dst, const void* src, size_t slen);
 
@@ -17,8 +18,12 @@ __attribute__((target("avx2")))
 void to_hex(char* dst, const void* src, size_t slen);
 #endif
 
+#else
+void to_hex(char* dst, const void* src, size_t slen);
+#endif
+
 template <typename C>
-#if !defined(_WIN32) && !defined(WIN32)
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET_CLONES)
 __attribute__((target_clones("avx2", "sse4.1", "default")))
 #endif
 std::string to_hex(C beg, C end) {
@@ -34,9 +39,11 @@ std::string to_hex(const C& c) {
 
 void to_hex_table(char* dst, const uint8_t* src, size_t slen);
 
+#ifdef HAVE_X86INTRIN_H
 void to_hex_sse41(char* dst, const uint8_t* src, size_t len);
 
 void to_hex_avx2(char* dst, const uint8_t* src, size_t len);
+#endif
 
 void from_hex(uint8_t* dst, const char* src, size_t dlen);
 

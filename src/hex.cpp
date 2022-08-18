@@ -3,39 +3,14 @@
 
 #include "hasher/api.h"
 
-#if defined (_WIN32) || defined(WIN32)
-
-// NB: All of this crap will cease to be necessary as soon as compilers
-// support ifunc for Windows targets...
-
-using to_hex_ptr = void (*)(char*, const uint8_t*, size_t);
-
-to_hex_ptr select_to_hex() { 
-  // Select the appropriate to_hex implementation
-  if (__builtin_cpu_supports("avx2")) {
-    return to_hex_avx2;
-  }
-  else if (__builtin_cpu_supports("sse4.1")) {
-    return to_hex_sse41;
-  }
-  else {
-    return to_hex_table;
-  }
-}
-
-const to_hex_ptr TO_HEX = select_to_hex();
-
-void to_hex(char* dst, const void* src, size_t slen) {
-  TO_HEX(dst, static_cast<const uint8_t*>(src), slen);
-}
-
-#else
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET)
 
 __attribute__((target("default")))
 void to_hex(char* dst, const void* src, size_t slen) {
   to_hex_table(dst, static_cast<const uint8_t*>(src), slen);
 }
 
+#ifdef HAVE_X86INTRIN_H
 __attribute__((target("sse4.1")))
 void to_hex(char* dst, const void* src, size_t slen) {
   to_hex_sse41(dst, static_cast<const uint8_t*>(src), slen);
@@ -44,6 +19,36 @@ void to_hex(char* dst, const void* src, size_t slen) {
 __attribute__((target("avx2")))
 void to_hex(char* dst, const void* src, size_t slen) {
   to_hex_avx2(dst, static_cast<const uint8_t*>(src), slen);
+}
+#endif
+
+#else
+
+// NB: All of this crap will cease to be necessary as soon as compilers
+// support ifunc for non-ELF targets...
+
+using to_hex_ptr = void (*)(char*, const uint8_t*, size_t);
+
+to_hex_ptr select_to_hex() { 
+  // Select the appropriate to_hex implementation
+
+#if defined(HAVE___BUILTIN_CPU_SUPPORTS) && defined(HAVE_X86INTRIN_H)
+  if (__builtin_cpu_supports("avx2")) {
+    return to_hex_avx2;
+  }
+
+  if (__builtin_cpu_supports("sse4.1")) {
+    return to_hex_sse41;
+  }
+#endif
+
+  return to_hex_table;
+}
+
+const to_hex_ptr TO_HEX = select_to_hex();
+
+void to_hex(char* dst, const void* src, size_t slen) {
+  TO_HEX(dst, static_cast<const uint8_t*>(src), slen);
 }
 
 #endif
