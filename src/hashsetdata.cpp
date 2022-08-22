@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstring>
+#include <limits>
 
 #include "hasher/api.h"
 #include "hashsetdata.h"
@@ -7,9 +8,27 @@
 #include "throw.h"
 #include "util.h"
 
+#include "hsd_impls/radius_hsd.h"
+
 #include <boost/endian/conversion.hpp>
 
 using HashSetInfo = SFHASH_HashSetInfo;
+
+template <size_t HashLength>
+HashSetData* make_hashset_data(
+  const void* beg,
+  const void* end,
+  uint32_t radius)
+{
+  return new RadiusHashSetDataImpl<HashLength>(
+    beg, end,
+    radius == std::numeric_limits<uint32_t>::max() ?
+      compute_radius<HashLength>(
+        static_cast<const std::array<uint8_t, HashLength>*>(beg),
+        static_cast<const std::array<uint8_t, HashLength>*>(end)) :
+      radius
+  );
+}
 
 // adaptor for use with hashset_dispatcher
 template <size_t HashLength>

@@ -21,6 +21,9 @@
 #include "throw.h"
 #include "util.h"
 
+#include "hsd_impls/basic_hsd.h"
+#include "hsd_impls/radius_hsd.h"
+
 const std::filesystem::path VS{"test/virusshare-389.hset"};
 const size_t VS_HLEN = 16;
 
@@ -123,23 +126,23 @@ template <
   size_t HashLength,
   class Holder
 >
-auto make_std_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
+auto make_basic_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
   return std::unique_ptr<HashSetData>{
-    std::make_unique<HashSetDataImpl<HashLength>>(
+    std::make_unique<BasicHashSetDataImpl<HashLength>>(
       static_cast<const char*>(h.beg) + hsinfo.hashset_off,
       static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length
     )
   };
 }
 
-// make a HashSetDataRadiusImpl from hashset data 
+// make a RadiusHashSetDataImpl from hashset data
 template <
   size_t HashLength,
   class Holder
 >
 auto make_radius_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
   return std::unique_ptr<HashSetData>{
-    std::make_unique<HashSetDataRadiusImpl<HashLength>>(
+    std::make_unique<RadiusHashSetDataImpl<HashLength>>(
       static_cast<const char*>(h.beg) + hsinfo.hashset_off,
       static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length,
       hsinfo.radius
@@ -284,7 +287,7 @@ auto make_hsds(const Holder& h) {
 
   std::vector<std::pair<std::string, std::unique_ptr<HashSetData>>> hsds;
 // TODO: why can't these go into an intializer list?
-  hsds.emplace_back("std", make_std_hsd<HashLength>(h, *hsinfo));
+  hsds.emplace_back("basic", make_basic_hsd<HashLength>(h, *hsinfo));
   hsds.emplace_back("radius", make_radius_hsd<HashLength>(h, *hsinfo));
 
   return hsds;
