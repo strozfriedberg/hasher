@@ -41,4 +41,3 @@ protected:
   std::unique_ptr<std::array<uint8_t, HashLength>[], void(*)(std::array<uint8_t, HashLength>*)> HashesBeg;
   std::array<uint8_t, HashLength>* HashesEnd;
 };
-
