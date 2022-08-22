@@ -23,6 +23,7 @@
 
 #include "hsd_impls/basic_hsd.h"
 #include "hsd_impls/block_hsd.h"
+#include "hsd_impls/hsd_utils.h"
 #include "hsd_impls/radius_hsd.h"
 #include "hsd_impls/range_hsd.h"
 

@@ -7,6 +7,8 @@
 #include "hex.h"
 #include "util.h"
 
+#include "hsd_impls/radius_hsd.h"
+
 #include "helper.h"
 
 /*
@@ -202,20 +204,6 @@ TEST_CASE("parse_headerTest") {
 
   auto act = make_unique_del(parse_header(beg, end), sfhash_destroy_hashset_info);
   REQUIRE(test1_info == *act);
-}
-
-TEST_CASE("expected_indexTest") {
-  const std::vector<std::tuple<std::array<uint8_t,20>, uint32_t, uint32_t>> tests{
-    {to_bytes<20>("0000000000000000000000000000000000000000"), 1000,   0},
-    {to_bytes<20>("7fffffffffffffffffffffffffffffffffffffff"), 1000, 499},
-    {to_bytes<20>("8000000000000000000000000000000000000000"), 1000, 500},
-    {to_bytes<20>("ffffffffffffffffffffffffffffffffffffffff"), 1000, 999}
-  };
-
-  for (const auto& t: tests) {
-    REQUIRE(std::get<2>(t) ==
-                       expected_index(std::get<0>(t).data(), std::get<1>(t)));
-  }
 }
 
 TEST_CASE("compute_radiusTest") {

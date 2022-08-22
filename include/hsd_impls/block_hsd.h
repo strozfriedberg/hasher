@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hsd_impls/basic_hsd.h"
+#include "hsd_impls/hsd_utils.h"
 
 template <
   size_t HashLength,

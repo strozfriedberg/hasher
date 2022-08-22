@@ -10,8 +10,6 @@
 
 #include "hsd_impls/radius_hsd.h"
 
-#include <boost/endian/conversion.hpp>
-
 using HashSetInfo = SFHASH_HashSetInfo;
 
 template <size_t HashLength>
@@ -20,14 +18,7 @@ HashSetData* make_hashset_data(
   const void* end,
   uint32_t radius)
 {
-  return new RadiusHashSetDataImpl<HashLength>(
-    beg, end,
-    radius == std::numeric_limits<uint32_t>::max() ?
-      compute_radius<HashLength>(
-        static_cast<const std::array<uint8_t, HashLength>*>(beg),
-        static_cast<const std::array<uint8_t, HashLength>*>(end)) :
-      radius
-  );
+  return make_radius_hashset_data<HashLength>(beg, end, radius);
 }
 
 // adaptor for use with hashset_dispatcher
@@ -51,21 +42,4 @@ HashSetData* load_hashset_data(const HashSetInfo* hsinfo, const void* beg, const
   return hashset_dispatcher<MakeHashSetData>(
     hsinfo->hash_length, beg, end, hsinfo->radius
   );
-}
-
-uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
-  /*
-   * The expected index for a hash (assuming a uniform distribution) in
-   * the hash set is hash/2^(hash length) * set_size. We assume that
-   * set_size fits in 32 bits, so nothing beyond the most significant 32
-   * bits of the hash can make a difference for the expected index. Hence,
-   * we can simplify the expected index to high/2^32 * set_size =
-   * (high * set_size)/2^32. Observing that (2^32-1)^2 < (2^32)^2 = 2^64,
-   * we see that (high * set_size) fits into 64 bits without overflow, so
-   * can compute the expected index as (high * set_size) >> 32.
-   */
-  const uint64_t high32 = boost::endian::native_to_big<uint32_t>(
-    *reinterpret_cast<const uint32_t*>(h)
-  );
-  return static_cast<uint32_t>((high32 * set_size) >> 32);
 }

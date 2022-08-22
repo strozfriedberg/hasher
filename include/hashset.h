@@ -5,6 +5,8 @@
 #include "hashsetinfo.h"
 #include "util.h"
 
+#include "hsd_impls/radius_hsd.h"
+
 #include <ctime>
 #include <cstring>
 #include <memory>
