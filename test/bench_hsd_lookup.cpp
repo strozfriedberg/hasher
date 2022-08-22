@@ -425,3 +425,15 @@ TEST_CASE("MemoryLookupCheckNSRL") {
   const auto hsds = make_hsds<NSRL_HLEN>(h);
   do_agreement_check<NSRL_HLEN>(h, hsds);
 }
+
+TEST_CASE("MemoryLookupBenchVirusShare") {
+  MemoryHolder h{read_file(VS)};
+  const auto hsds = make_hsds<VS_HLEN>(h);
+  do_benchmark<VS_HLEN>(h, hsds);
+}
+
+TEST_CASE("MemoryLookupBenchNSRL") {
+  MemoryHolder h{read_file(NSRL)};
+  const auto hsds = make_hsds<NSRL_HLEN>(h);
+  do_benchmark<NSRL_HLEN>(h, hsds);
+}
