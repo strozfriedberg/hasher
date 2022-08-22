@@ -20,7 +20,6 @@ nodist_EXTRA_src_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 noinst_LTLIBRARIES = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT)
 
 src_libhasherint_la_SOURCES = \
-	src/convex_hull.cpp \
 	src/entropy.cpp \
 	src/error.cpp \
 	src/fuzzy_hasher.cpp \
@@ -39,6 +38,7 @@ src_libhasherint_la_SOURCES = \
 	src/quick_hasher.cpp \
 	src/sizeset.cpp \
 	src/util.cpp \
+	src/hsd_impls/convex_hull.cpp \
 	src/hsd_impls/hsd_utils.cpp
 
 src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT) $(PROJECT_LIBS)
