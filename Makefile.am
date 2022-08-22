@@ -100,7 +100,7 @@ bin_PROGRAMS = src/fuzzy src/hasher
 
 check_PROGRAMS = test/test
 
-noinst_PROGRAMS = test/bench_hex test_bench_hsd
+noinst_PROGRAMS = test/bench_hex test/bench_hsd
 
 TESTS = \
 	$(check_PROGRAMS) \
