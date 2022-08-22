@@ -1,7 +1,6 @@
 #pragma once
 
 #include "hashsetdata.h"
-#include "hashsetdata_util.h"
 
 #include <algorithm>
 #include <array>
