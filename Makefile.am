@@ -4,53 +4,53 @@ AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/vendors/parallel-hashmap $(PROJECT
 AM_CXXFLAGS = $(PROJECT_CXXFLAGS)
 AM_LDFLAGS = $(PROJECT_LDFLAGS)
 
-HASHER_LIB = src/libhasher.la
-HASHER_LIB_INT = src/libhasherint.la
+HASHER_LIB = src/lib/libhasher.la
+HASHER_LIB_INT = src/lib/libhasherint.la
 BLAKE3_LIB_INT = vendors/BLAKE3/c/libblake3int.la
 
 lib_LTLIBRARIES = $(HASHER_LIB)
 
 #if BUILD_DLL
-#src_libhasher_la_SOURCES = src/version.rc
+#src_lib_libhasher_la_SOURCES = src/lib/version.rc
 #else
-src_libhasher_la_SOURCES =
+src_lib_libhasher_la_SOURCES =
 #endif
-nodist_EXTRA_src_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
+nodist_EXTRA_src_lib_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 
 noinst_LTLIBRARIES = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT)
 
-src_libhasherint_la_SOURCES = \
-	src/entropy.cpp \
-	src/error.cpp \
-	src/fuzzy_hasher.cpp \
-	src/fuzzy_matcher.cpp \
-	src/hash_types.cpp \
-	src/hasher.cpp \
-	src/hashset.cpp \
-	src/hashsetdata.cpp \
-	src/hashsetinfo.cpp \
-	src/hex.cpp \
-	src/hex_avx2.cpp \
-	src/hex_sse41.cpp \
-	src/libblake3_hasher.cpp \
-	src/libcrypto_hasher.cpp \
-	src/parser.cpp \
-	src/quick_hasher.cpp \
-	src/sizeset.cpp \
-	src/util.cpp \
-	src/hsd_impls/convex_hull.cpp \
-	src/hsd_impls/hsd_utils.cpp
+src_lib_libhasherint_la_SOURCES = \
+	src/lib/entropy.cpp \
+	src/lib/error.cpp \
+	src/lib/fuzzy_hasher.cpp \
+	src/lib/fuzzy_matcher.cpp \
+	src/lib/hash_types.cpp \
+	src/lib/hasher.cpp \
+	src/lib/hashset.cpp \
+	src/lib/hashsetdata.cpp \
+	src/lib/hashsetinfo.cpp \
+	src/lib/hex.cpp \
+	src/lib/hex_avx2.cpp \
+	src/lib/hex_sse41.cpp \
+	src/lib/libblake3_hasher.cpp \
+	src/lib/libcrypto_hasher.cpp \
+	src/lib/parser.cpp \
+	src/lib/quick_hasher.cpp \
+	src/lib/sizeset.cpp \
+	src/lib/util.cpp \
+	src/lib/hsd_impls/convex_hull.cpp \
+	src/lib/hsd_impls/hsd_utils.cpp
 
-src_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT) $(PROJECT_LIBS)
+src_lib_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
-src_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS) -avoid-version
+src_lib_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS) -avoid-version
 else
-src_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS)
+src_lib_libhasher_la_LDFLAGS = $(AM_LDFLAGS) $(HASHER_LIB_LDFLAGS)
 endif
 
-src_libhasher_ladir = $(includedir)/hasher
+src_lib_libhasher_ladir = $(includedir)/hasher
 
-src_libhasher_la_HEADERS = \
+src_lib_libhasher_la_HEADERS = \
 	include/hasher/api.h
 
 vendors_BLAKE3_c_libblake3int_la_CPPFLAGS = $(AM_CPPFLAGS)
@@ -87,17 +87,17 @@ if HOST_NO_SIMD
 vendors_BLAKE3_c_libblake3int_la_CPPFLAGS += -DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512
 endif
 
-src_fuzzy_SOURCES = \
-	src/fuzzy_main.cpp
+src_fuzzy_fuzzy_SOURCES = \
+	src/fuzzy/fuzzy_main.cpp
 
-src_fuzzy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
+src_fuzzy_fuzzy_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-src_hasher_SOURCES = \
-	src/hasher_main.cpp
+src_hasher_hasher_SOURCES = \
+	src/hasher/hasher_main.cpp
 
-src_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
+src_hasher_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-bin_PROGRAMS = src/fuzzy src/hasher
+bin_PROGRAMS = src/fuzzy/fuzzy src/hasher/hasher
 
 check_PROGRAMS = test/test
 
@@ -143,9 +143,9 @@ format:
 	@$(FORMAT_COMMAND)
 
 pkgconfigdir = $(libdir)/pkgconfig
-nodist_pkgconfig_DATA = src/hasher.pc
+nodist_pkgconfig_DATA = src/lib/hasher.pc
 
-src/hasher.pc: src/hasher.pc.in Makefile
+src/lib/hasher.pc: src/lib/hasher.pc.in Makefile
 	sed -e 's![@]prefix[@]!$(prefix)!g' \
       -e 's![@]exec_prefix[@]!$(exec_prefix)!g' \
       -e 's![@]includedir[@]!$(includedir)!g' \
@@ -153,7 +153,7 @@ src/hasher.pc: src/hasher.pc.in Makefile
       -e 's![@]PACKAGE_VERSION[@]!$(PACKAGE_VERSION)!g' \
       $< >$@
 
-CLEANFILES = src/hasher.pc
+CLEANFILES = src/lib/hasher.pc
 
 install-exec-hook:
-	$(RM) $(DESTDIR)$(libdir)/libhasher.la
+	$(RM) $(DESTDIR)$(libdir)/lib/libhasher.la
