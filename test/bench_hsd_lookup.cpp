@@ -229,10 +229,9 @@ void do_some_lookups(HashGenerator& gen, const SetList& sets, size_t min, size_t
 
 template <
   size_t HashLength,
-  class Holder,
   class SetList
 >
-void do_benchmark(const Holder& h, const SetList& hsds) {
+void do_benchmark(const SetList& hsds) {
   RNG rng;
   auto gen = [&rng](size_t count) {
     return make_random_hashes<HashLength>(rng, count);
@@ -430,11 +429,11 @@ TEST_CASE("MemoryLookupCheckNSRL") {
 TEST_CASE("MemoryLookupBenchVirusShare") {
   MemoryHolder h{read_file(VS)};
   const auto hsds = make_hsds<VS_HLEN>(h);
-  do_benchmark<VS_HLEN>(h, hsds);
+  do_benchmark<VS_HLEN>(hsds);
 }
 
 TEST_CASE("MemoryLookupBenchNSRL") {
   MemoryHolder h{read_file(NSRL)};
   const auto hsds = make_hsds<NSRL_HLEN>(h);
-  do_benchmark<NSRL_HLEN>(h, hsds);
+  do_benchmark<NSRL_HLEN>(hsds);
 }
