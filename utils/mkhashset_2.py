@@ -37,85 +37,71 @@ def nonempty_lines(src):
             yield line
 
 
-def write_cstring(b, field_width, buf):
-    wlen = buf.write(b)
-    wlen += buf.write(b'\0' * (field_width - len(b)))
+def write_pstring(s, out):
+    b = s.encode('UTF-8')
+    wlen = write_le_u16(len(b), out)
+    wlen += out.write(b)
     return wlen
 
 
-def write_le_u64(i, buf):
-    return buf.write(i.to_bytes(8, 'little', signed=False))
+def write_le_u16(i, out):
+    return out.write(i.to_bytes(2, 'little', signed=False))
 
 
-def write_chunk(chunk_type, chunk_bytes, outbuf):
-    wlen = write_le_u64(len(chunk_bytes), outbuf)
-    wlen += outbuf.write(chunk_type)
-    wlen += outbuf.write(chunk_bytes)
-    
+def write_le_u64(i, out):
+    return out.write(i.to_bytes(8, 'little', signed=False))
+
+
+def write_chunk(chunk_type, chunk_bytes, out):
+    wlen = write_le_u64(len(chunk_bytes), out)
+    wlen += out.write(chunk_type)
+    wlen += out.write(chunk_bytes)
+
     hasher = hashlib.sha256()
     hasher.update(chunk_bytes)
-    wlen += outbuf.write(hasher.digest())
+    wlen += out.write(hasher.digest())
 
     return wlen
 
 
-def write_magic(outbuf):
-    return outbuf.write(b'SetOHash')
+def write_magic(out):
+    return out.write(b'SetOHash')
 
 
-def write_fhdr(version, hashset_name, hashset_name_field_len, hashset_desc, hashset_desc_field_len, timestamp, timestamp_field_len, outbuf):
+def write_fhdr(version, hashset_name, hashset_desc, timestamp, out):
     chbuf = io.BytesIO()
     write_le_u64(version, chbuf)
-    write_cstring(hashset_name, hashset_name_field_len, chbuf)
-    write_cstring(timestamp, timestamp_field_len, chbuf)
-    write_cstring(hashset_desc, hashset_desc_field_len, chbuf)
+    write_pstring(hashset_name, chbuf)
+    write_pstring(timestamp, chbuf)
+    write_pstring(hashset_desc, chbuf)
 
-    return write_chunk(b'FHDR', chbuf.getbuffer(), outbuf)
+    return write_chunk(b'FHDR', chbuf.getbuffer(), out)
 
 
-def write_hhdr(hash_type, hash_type_name, hash_type_name_field_len, hash_length, hash_count, outbuf):
+def write_hhdr(hash_type, hash_type_name, hash_length, hash_count, out):
     chbuf = io.BytesIO()
     write_le_u64(hash_type, chbuf)
-    write_cstring(hash_type_name, hash_type_name_field_len, chbuf)
+    write_pstring(hash_type_name, chbuf)
     write_le_u64(hash_length, chbuf)
     write_le_u64(hash_count, chbuf)
-    
-    return write_chunk(b'HHDR', chbuf.getbuffer(), outbuf)
+
+    return write_chunk(b'HHDR', chbuf.getbuffer(), out)
 
 
-def write_hdat(hashes, outbuf):
-    return write_chunk(b'HDAT', b''.join(hashes), outbuf)
+def write_hdat(hashes, out):
+    return write_chunk(b'HDAT', b''.join(hashes), out)
 
 
-def write_fend(outbuf):
-    return write_chunk(b'FEND', b'', outbuf)
+def write_fend(out):
+    return write_chunk(b'FEND', b'', out)
 
 
-def run(hash_type_name, hashset_name, hashset_desc, inlines, outbuf):
+def run(hash_type_name, hashset_name, hashset_desc, inlines, out):
     hash_type = HASH_TYPE.get(hash_type_name, HASH_TYPE['other'])
-
-    hashset_name = hashset_name.encode('UTF-8')
-    hashset_desc = hashset_desc.encode('UTF-8')
-    hash_type_name = hash_type_name.encode('UTF-8')
-
-# TODO: use variable-length strings?
-    hashset_name_field_len = 96
-    hashset_desc_field_len = 512
-    hash_type_name_field_len = 64 
-
-    # reject overlong strings before we do any work
-    if len(hashset_name) + 1 > hashset_name_field_len:
-        raise RuntimeError('hashset name too long')
-
-    if len(hashset_desc) + 1 > hashset_desc_field_len:
-        raise RuntimeError('hashset description too long')
-
-    if len(hash_type_name) + 1 > hashset_desc_field_len:
-        raise RuntimeError('hashset type name too long')
 
     version = 2
 
-    # read the input 
+    # read the input
     hashes = []
     sizes = []
 
@@ -127,45 +113,42 @@ def run(hash_type_name, hashset_name, hashset_desc, inlines, outbuf):
 
     if len(hashes) != len(sizes) and sizes:
         raise RuntimeError('some sizes missing')
-    
+
     hash_length = len(hashes[0])
 
     # set the timestamp
-    timestamp = datetime.datetime.now().isoformat(timespec='microseconds').encode('UTF-8')
-    timestamp_field_len = 40
+    timestamp = datetime.datetime.now().isoformat(timespec='microseconds')
 
     pos = 0
 
     # Magic
-    pos += write_magic(outbuf)
+    pos += write_magic(out)
 
     # FHDR
     pos += write_fhdr(
         version,
         hashset_name,
-        hashset_name_field_len,
         hashset_desc,
-        hashset_desc_field_len,
         timestamp,
-        timestamp_field_len,
-        outbuf
+        out
     )
 
     # HHDR
     pos += write_hhdr(
         hash_type,
         hash_type_name,
-        hash_type_name_field_len,
         hash_length,
         len(hashes),
-        outbuf
+        out
     )
 
     # HDAT
-    pos += write_hdat(hashes, outbuf)
+    pos += write_hdat(hashes, out)
 
     # FEND
-    pos += write_fend(outbuf)
+    pos += write_fend(out)
+
+    print(f'wrote {pos} bytes', file=sys.stderr)
 
 
 if __name__ == "__main__":
