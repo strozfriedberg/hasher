@@ -57,17 +57,17 @@ HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end) {
   h->hashset_name = h->hashset_time = h->hashset_desc = nullptr;
 
   // read format version
-  h->version = read_le_8(beg, cur, end);
+  h->version = read_le<uint64_t>(beg, cur, end);
   THROW_IF(h->version != 1, "unsupported format version " << h->version);
 
   // read the rest of the header
-  h->flags = read_le_8(beg, cur, end);
+  h->flags = read_le<uint64_t>(beg, cur, end);
 
-  const uint64_t htype = read_le_8(beg, cur, end);
+  const uint64_t htype = read_le<uint64_t>(beg, cur, end);
   THROW_IF(!hash_name(htype), "unknown hash type " << htype);
   h->hash_type = static_cast<SFHASH_HashAlgorithm>(htype);
 
-  h->hash_length = read_le_8(beg, cur, end);
+  h->hash_length = read_le<uint64_t>(beg, cur, end);
   const uint64_t exp_hash_length = hash_length(h->hash_type);
   THROW_IF(
     exp_hash_length && exp_hash_length != h->hash_length,
@@ -75,10 +75,10 @@ HashSetInfo* parse_header(const uint8_t* beg, const uint8_t* end) {
     ", actual hash length " << h->hash_length
   );
 
-  h->hashset_size = read_le_8(beg, cur, end);
-  h->hashset_off = read_le_8(beg, cur, end);
-  h->sizes_off = read_le_8(beg, cur, end);
-  h->radius = read_le_8(beg, cur, end);
+  h->hashset_size = read_le<uint64_t>(beg, cur, end);
+  h->hashset_off = read_le<uint64_t>(beg, cur, end);
+  h->sizes_off = read_le<uint64_t>(beg, cur, end);
+  h->radius = read_le<uint64_t>(beg, cur, end);
   read_bytes(h->hashset_sha256, sizeof(h->hashset_sha256), beg, cur, end);
   h->hashset_name = read_cstring(beg, cur, end, 96);
   h->hashset_time = read_cstring(beg, cur, end, 40);

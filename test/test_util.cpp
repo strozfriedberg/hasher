@@ -6,15 +6,15 @@
 #include "util.h"
 
 
-TEST_CASE("test_read_le_8") {
+TEST_CASE("test_read_le_uint64_t") {
   const uint8_t x[] = {
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB
   };
 
   const uint8_t* i = &x[0];
-  REQUIRE(0xEFCDAB8967452301 == read_le_8(std::begin(x), i, std::end(x)));
-  REQUIRE_THROWS_AS(read_le_8(std::begin(x), i, std::end(x)), std::runtime_error);
+  REQUIRE(0xEFCDAB8967452301 == read_le<uint64_t>(std::begin(x), i, std::end(x)));
+  REQUIRE_THROWS_AS(read_le<uint64_t>(std::begin(x), i, std::end(x)), std::runtime_error);
 }
 
 TEST_CASE("test_write_le_8") {

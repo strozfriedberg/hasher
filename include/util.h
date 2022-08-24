@@ -5,6 +5,8 @@
 #include <memory>
 #include <type_traits>
 
+#include <boost/endian/conversion.hpp>
+
 //
 // make_unique_del and helpers
 //
@@ -32,13 +34,25 @@ std::unique_ptr<ArgOf<D>, D> make_unique_del(std::nullptr_t, D&& deleter) {
 }
 
 //
-// Functions for reading unsigned integers from bytes
+// Functions for reading integers from bytes
 //
 
-uint64_t read_le_8(const uint8_t* beg, const uint8_t*& i, const uint8_t* end);
+template <typename T>
+T read_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
+  THROW_IF(
+    i + sizeof(T) > end,
+    "out of data reading " << sizeof(T) << " bytes at " << (i - beg)
+  );
+
+  const T r = boost::endian::little_to_native(*reinterpret_cast<const T*>(i));
+  i += sizeof(T);
+  return r;
+}
 
 //
 // Functions for writing unsigned integers to bytes
 //
 
 void write_le_8(uint64_t in, const uint8_t* beg, uint8_t*& out, const uint8_t* end);
+
+
