@@ -37,5 +37,5 @@
 /test/test
 /test/test.exe
 /test-suite.log
-/test/test.log
-/test/test.trs
+/test/*.log
+/test/*.trs
