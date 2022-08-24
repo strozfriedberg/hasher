@@ -125,22 +125,10 @@ def run(hash_type_name, hashset_name, hashset_desc, inlines, out):
     pos += write_magic(out)
 
     # FHDR
-    pos += write_fhdr(
-        version,
-        hashset_name,
-        hashset_desc,
-        timestamp,
-        out
-    )
+    pos += write_fhdr(version, hashset_name, hashset_desc, timestamp, out)
 
     # HHDR
-    pos += write_hhdr(
-        hash_type,
-        hash_type_name,
-        hash_length,
-        len(hashes),
-        out
-    )
+    pos += write_hhdr(hash_type, hash_type_name, hash_length, len(hashes), out)
 
     # HDAT
     pos += write_hdat(hashes, out)
