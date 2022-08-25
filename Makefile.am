@@ -30,6 +30,7 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hashsetdata.cpp \
 	src/lib/hashsetinfo.cpp \
 	src/lib/hex.cpp \
+	src/lib/hset_decoder.cpp \
 	src/lib/libblake3_hasher.cpp \
 	src/lib/libcrypto_hasher.cpp \
 	src/lib/parser.cpp \
@@ -117,6 +118,7 @@ test_test_SOURCES = \
 	test/test_hashsetdata_util.cpp \
 	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
+	test/test_hset_decoder.cpp \
 	test/test_parser.cpp \
 	test/test_util.cpp
 
