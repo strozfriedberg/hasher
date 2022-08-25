@@ -37,8 +37,8 @@ std::unique_ptr<ArgOf<D>, D> make_unique_del(std::nullptr_t, D&& deleter) {
 // Functions for reading integers from bytes
 //
 
-template <typename T>
-T read_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
+template <typename T, typename C>
+T read_le(const C* beg, const C*& i, const C* end) {
   THROW_IF(
     i + sizeof(T) > end,
     "out of data reading " << sizeof(T) << " bytes at " << (i - beg)
@@ -54,5 +54,3 @@ T read_le(const uint8_t* beg, const uint8_t*& i, const uint8_t* end) {
 //
 
 void write_le_8(uint64_t in, const uint8_t* beg, uint8_t*& out, const uint8_t* end);
-
-
