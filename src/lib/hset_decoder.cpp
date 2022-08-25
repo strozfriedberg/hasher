@@ -8,6 +8,7 @@
 #include <ostream>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <iostream>
@@ -71,6 +72,60 @@ std::ostream& operator<<(std::ostream& out, const SizesetData& sdat) {
              << ' ' << sdat.end;
 }
 
+struct RecordHashFieldDescriptor {
+  uint64_t hash_type;
+  std::string hash_name;
+  uint64_t hash_length;
+};
+
+std::ostream& operator<<(std::ostream& out, const RecordHashFieldDescriptor& hrfd) {
+  return out << "RHFD\n"
+             << ' ' << hrfd.hash_type << '\n'
+             << ' ' << hrfd.hash_name << '\n'
+             << ' ' << hrfd.hash_length;
+}
+
+struct RecordSizeFieldDescriptor {
+};
+
+std::ostream& operator<<(std::ostream& out, const RecordSizeFieldDescriptor&) {
+  return out << "RSFD";
+}
+
+struct RecordHeader {
+  uint64_t record_length;
+  uint64_t record_count;
+  std::vector<std::variant<RecordHashFieldDescriptor, RecordSizeFieldDescriptor>> fields;
+};
+
+std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr) {
+  out << "RHDR\n"
+      << ' ' << rhdr.record_length << '\n'
+      << ' ' << rhdr.record_count << '\n';
+
+  for (const auto& f: rhdr.fields) {
+    if (std::holds_alternative<RecordHashFieldDescriptor>(f)) {
+      out << std::get<RecordHashFieldDescriptor>(f) << '\n';
+    }
+    else {
+      out << std::get<RecordSizeFieldDescriptor>(f) << '\n';
+    }
+  }
+
+  return out;
+}
+
+struct RecordData {
+  const void* beg;
+  const void* end;
+};
+
+std::ostream& operator<<(std::ostream& out, const RecordData& rdat) {
+  return out << "RDAT\n"
+             << ' ' << rdat.beg << '\n'
+             << ' ' << rdat.end;
+}
+
 struct Chunk {
   enum Type {
     FHDR = 0x52444846,
@@ -101,21 +156,20 @@ Chunk decode_chunk(const char* beg, const char*& pos, const char* end) {
 
 struct Holder {
   FileHeader fhdr;
-  std::vector<std::pair<HashsetHeader, HashsetData>> hsets; 
+  std::vector<std::pair<HashsetHeader, HashsetData>> hsets;
+  std::vector<std::pair<RecordHeader, RecordData>> recs;
+  SizesetData sdat;
 };
 
 struct State {
   enum Type {
     INIT,
+    DESC, // reading descriptors
     FEND,
     FHDR,
-    HDAT,
     HHDR,
     RHDR,
-    RHFD,
-    RSFD,
-    RDAT,
-    SDAT
+    SEND  // at section end
   };
   
   std::map<Chunk::Type, State::Type (*)(const Chunk&, Holder&)> allowed;
@@ -132,10 +186,28 @@ State::Type init_got_fhdr(const Chunk& ch, Holder& h) {
 
   std::cerr << h.fhdr << "\n\n";
 
-  return State::FHDR;
+  return State::SEND;
 }
 
-void handle_hhdr(const Chunk& ch, Holder& h) {
+State::Type hhdr_got_hdat(const Chunk& ch, Holder& h) {
+  // HHDR -> HDAT
+
+  h.hsets.back().second.beg = ch.dbeg;
+  h.hsets.back().second.end = ch.dend;
+
+  std::cerr << h.hsets.back().second << "\n\n";
+
+  return State::SEND;
+}
+
+State::Type send_got_fend(const Chunk&, Holder&) {
+  // HDAT, RDAT, SDAT -> FEND
+  std::cerr << "FEND\n\n";
+  return State::FEND;
+}
+
+State::Type send_got_hhdr(const Chunk& ch, Holder& h) {
+  // HDAT, RDAT, SDAT -> HHDR
   const char* pos = ch.dbeg;
 
   h.hsets.emplace_back(
@@ -149,132 +221,93 @@ void handle_hhdr(const Chunk& ch, Holder& h) {
   );
 
   std::cerr << h.hsets.back().first << "\n\n";
-}
 
-State::Type fhdr_got_hhdr(const Chunk& ch, Holder& h) {
-  // FHDR -> HHDR
-  handle_hhdr(ch, h);
   return State::HHDR;
 }
 
-State::Type fhdr_got_rhdr(const Chunk&, Holder&) {
-  // FHDR -> RHDR
-  return State::RHDR;
+State::Type send_got_rhdr(const Chunk& ch, Holder& h) {
+  // HDAT, RDAT, SDAT -> RHDR
+  const char* pos = ch.dbeg;
+
+  h.recs.emplace_back(
+    RecordHeader{
+      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
+      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
+      {}
+    },
+    RecordData()
+  );
+
+  std::cerr << h.recs.back().first << "\n\n";
+
+  return State::DESC;
 }
 
-State::Type fhdr_got_sdat(const Chunk&, Holder&) {
-  // FHDR -> SDAT
-  return State::SDAT;
+State::Type send_got_sdat(const Chunk& ch, Holder& h) {
+  // HDAT, RDAT, SDAT -> SDAT
+
+  THROW_IF(h.sdat.beg, "there may be at most one SDAT chunk");
+
+  h.sdat.beg = ch.dbeg;
+  h.sdat.end = ch.dend;
+
+  std::cerr << h.sdat << "\n\n";
+
+  return State::SEND;
 }
 
-State::Type hhdr_got_hdat(const Chunk& ch, Holder& h) {
-  // HHDR -> HDAT
+State::Type desc_got_rhfd(const Chunk& ch, Holder& h) {
+  // RHDR, RHFD, RSFD -> RHFD
+  const char* pos = ch.dbeg;
 
-  h.hsets.back().second.beg = ch.dbeg;
-  h.hsets.back().second.end = ch.dend;
+  auto& fields = h.recs.back().first.fields;
 
-  std::cerr << h.hsets.back().second << "\n\n";
+  fields.emplace_back(
+    RecordHashFieldDescriptor{
+      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
+      read_pstring(ch.dbeg, pos, ch.dend),
+      read_le<uint64_t>(ch.dbeg, pos, ch.dend)
+    }
+  );
 
-  return State::HDAT;
+  std::cerr << std::get<RecordHashFieldDescriptor>(fields.back()) << "\n\n";
+
+  return State::DESC;
 }
 
-State::Type hdat_got_fend(const Chunk&, Holder&) {
-  // HDAT -> FEND
-  std::cerr << "FEND\n\n";
-  return State::FEND;
+State::Type desc_got_rsfd(const Chunk&, Holder& h) {
+  // RHDR, RHFD, RSFD -> RSFD
+
+  auto& fields = h.recs.back().first.fields;
+
+  THROW_IF(
+    std::any_of(
+      fields.begin(),
+      fields.end(),
+      [](const auto& v) {
+        return std::holds_alternative<RecordSizeFieldDescriptor>(v);
+      }
+    ),
+    "there may be at most one RSFD chunk per record section"
+  );
+
+  fields.emplace_back(
+    RecordSizeFieldDescriptor()
+  );
+
+  std::cerr << std::get<RecordSizeFieldDescriptor>(fields.back()) << "\n\n";
+
+  return State::DESC;
 }
 
-State::Type hdat_got_hhdr(const Chunk& ch, Holder& h) {
-  // HDAT -> HHDR
-  handle_hhdr(ch, h);
-  return State::HHDR;
+State::Type desc_got_rdat(const Chunk& ch, Holder& h) {
+  // RHDR, RHFD, RSFD -> RDAT
+
+  h.recs.back().second.beg = ch.dbeg;
+  h.recs.back().second.end = ch.dend;
+
+  return State::SEND;
 }
-
-State::Type hdat_got_rhdr(const Chunk&, Holder&) {
-  // HDAT -> RHDR
-  return State::RHDR;
-}
-
-State::Type hdat_got_sdat(const Chunk&, Holder&) {
-  // HDAT -> SDAT
-  return State::SDAT;
-}
-
-State::Type rhdr_got_rhfd(const Chunk&, Holder&) {
-  // RHDR -> RHFD
-  return State::RHFD;
-}
-
-State::Type rhdr_got_rsfd(const Chunk&, Holder&) {
-  // RHDR -> RSFD
-  return State::RSFD;
-}
-
-State::Type rhfd_got_rhfd(const Chunk&, Holder&) {
-  // RHFD -> RHFD
-  return State::RHFD;
-}
-
-State::Type rhfd_got_rsfd(const Chunk&, Holder&) {
-  // RHFD -> RSFD
-  return State::RSFD;
-}
-
-State::Type rhfd_got_rdat(const Chunk&, Holder&) {
-  // RHFD -> RDAT
-  return State::RDAT;
-}
-
-State::Type rsfd_got_rhfd(const Chunk&, Holder&) {
-  // RHFD -> RHFD
-  return State::RHFD;
-}
-
-State::Type rsfd_got_rdat(const Chunk&, Holder&) {
-  // RHFD -> RDAT
-  return State::RDAT;
-}
-
-State::Type rdat_got_fend(const Chunk&, Holder&) {
-  // RDAT -> FEND
-  std::cerr << "FEND\n\n";
-  return State::FEND;
-}
-
-State::Type rdat_got_hhdr(const Chunk& ch, Holder& h) {
-  // RDAT -> HHDR
-  handle_hhdr(ch, h);
-  return State::HHDR;
-}
-
-State::Type rdat_got_rhdr(const Chunk&, Holder&) {
-  // RDAT -> RHDR
-  return State::RHDR;
-}
-
-State::Type rdat_got_sdat(const Chunk&, Holder&) {
-  // RDAT -> SDAT
-  return State::SDAT;
-}
-
-State::Type sdat_got_fend(const Chunk&, Holder&) {
-  // SDAT -> FEND
-  std::cerr << "FEND\n\n";
-  return State::FEND;
-}
-
-State::Type sdat_got_hhdr(const Chunk& ch, Holder& h) {
-  // SDAT -> HHDR
-  handle_hhdr(ch, h);
-  return State::HHDR;
-}
-
-State::Type sdat_got_rhdr(const Chunk&, Holder&) {
-  // SDAT -> RHDR
-  return State::RHDR;
-}
-
-
 
 const std::map<State::Type, State> SMAP{
   {
@@ -287,89 +320,32 @@ const std::map<State::Type, State> SMAP{
     State::FEND,
     State{}
   },
-  {
-    State::FHDR,
-    State{ {
-      { Chunk::HHDR, fhdr_got_hhdr },
-      { Chunk::RHDR, fhdr_got_rhdr },
-      { Chunk::SDAT, fhdr_got_sdat }
-    } }
-  },
   { 
     State::HHDR,
     State{ {
       { Chunk::HDAT, hhdr_got_hdat } 
     } }
   },
-  { 
-    State::HDAT,
+  {
+    State::DESC,
     State{ {
-      { Chunk::HHDR, hdat_got_hhdr },
-      { Chunk::RHDR, hdat_got_rhdr },
-      { Chunk::SDAT, hdat_got_sdat },
-      { Chunk::FEND, hdat_got_fend }
+      { Chunk::RDAT, desc_got_rdat },
+      { Chunk::RHFD, desc_got_rhfd },
+      { Chunk::RSFD, desc_got_rsfd }
     } }
   },
   {
-    State::RHDR,
-    State{ {
-      { Chunk::RHFD, rhdr_got_rhfd },
-      { Chunk::RSFD, rhdr_got_rsfd }
-    } }
-  },
-  {
-    State::RHFD,
-    State{ {
-      { Chunk::RHFD, rhfd_got_rhfd },
-      { Chunk::RSFD, rhfd_got_rsfd },
-      { Chunk::RDAT, rhfd_got_rdat }
-    } }
-  },
-  {
-    State::RSFD,
-    State{ {
-      { Chunk::RHFD, rsfd_got_rhfd },
-      { Chunk::RDAT, rsfd_got_rdat }
-    } }
-  },
-  {
-    State::RSFD,
-    State{ {
-      { Chunk::RHFD, rsfd_got_rhfd },
-      { Chunk::RDAT, rsfd_got_rdat }
-    } }
-  },
-  {
-    State::RDAT,
-    State{ {
-      { Chunk::HHDR, rdat_got_hhdr },
-      { Chunk::RHDR, rdat_got_rhdr },
-      { Chunk::SDAT, rdat_got_sdat },
-      { Chunk::FEND, rdat_got_fend }
-    } }
-  },
-  {
-    State::SDAT,
-    State{ {
-      { Chunk::HHDR, sdat_got_hhdr },
-      { Chunk::RHDR, sdat_got_rhdr },
-      { Chunk::FEND, sdat_got_fend }
+    State::SEND,
+    State { {
+      { Chunk::HHDR, send_got_hhdr },
+      { Chunk::RHDR, send_got_rhdr },
+      { Chunk::SDAT, send_got_sdat },
+      { Chunk::FEND, send_got_fend }
     } }
   }
 };
 
 // TODO: add validation flag
-
-/*
-class ChunkReader {
-public:
-
-private:
-  bool verbose;
-
-
-};
-*/
 
 void read_chunks(const char* beg, const char* end) {
 
