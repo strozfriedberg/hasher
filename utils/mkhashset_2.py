@@ -5,6 +5,14 @@ Make a hashset from a list of filenames:
 
 find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
 
+Make a hashset and sizeset from a list of filenames:
+
+for i in  $(find -type f); do echo $(sha1sum $i) $(stat --printf=%s $i) ; done | cut -f1,3 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
+
+
+Make a hashset and sizeset from the NSRL:
+
+for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py sha1 'NSRL' 'The NSRL!' >nsrl.hset
 """
 import argparse
 import datetime
@@ -92,6 +100,14 @@ def write_hdat(hashes, out):
     return write_chunk(b'HDAT', b''.join(hashes), out)
 
 
+def write_sdat(sizes, out):
+    chbuf = io.BytesIO()
+    for s in sizes:
+        write_le_u64(s, chbuf)
+
+    return write_chunk(b'SDAT', chbuf.getbuffer(), out)
+
+
 def write_fend(out):
     return write_chunk(b'FEND', b'', out)
 
@@ -132,6 +148,10 @@ def run(hash_type_name, hashset_name, hashset_desc, inlines, out):
 
     # HDAT
     pos += write_hdat(hashes, out)
+
+    if sizes:
+        # SDAT
+        pos += write_sdat(sizes, out)
 
     # FEND
     pos += write_fend(out)
