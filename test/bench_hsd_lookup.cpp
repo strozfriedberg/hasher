@@ -21,6 +21,11 @@
 #include "throw.h"
 #include "util.h"
 
+#include "hsd_impls/basic_hsd.h"
+#include "hsd_impls/block_hsd.h"
+#include "hsd_impls/radius_hsd.h"
+#include "hsd_impls/range_hsd.h"
+
 const std::filesystem::path VS{"test/virusshare-389.hset"};
 const size_t VS_HLEN = 16;
 
@@ -123,26 +128,57 @@ template <
   size_t HashLength,
   class Holder
 >
-auto make_std_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
+auto make_basic_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
   return std::unique_ptr<HashSetData>{
-    std::make_unique<HashSetDataImpl<HashLength>>(
+    std::make_unique<BasicHashSetDataImpl<HashLength>>(
       static_cast<const char*>(h.beg) + hsinfo.hashset_off,
       static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length
     )
   };
 }
 
-// make a HashSetDataRadiusImpl from hashset data 
+// make a RadiusHashSetDataImpl from hashset data
 template <
   size_t HashLength,
   class Holder
 >
 auto make_radius_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo) {
   return std::unique_ptr<HashSetData>{
-    std::make_unique<HashSetDataRadiusImpl<HashLength>>(
+    std::make_unique<RadiusHashSetDataImpl<HashLength>>(
       static_cast<const char*>(h.beg) + hsinfo.hashset_off,
       static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length,
       hsinfo.radius
+    )
+  };
+}
+
+template <
+  size_t HashLength,
+  class Holder
+>
+auto make_range_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo, int64_t left, int64_t right) {
+  return std::unique_ptr<HashSetData>{
+    std::make_unique<RangeHashSetDataImpl<HashLength>>(
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off,
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length,
+      left,
+      right
+    )
+  };
+}
+
+template <
+  size_t HashLength,
+  size_t BlockBits,
+  class Holder,
+  class Blocks
+>
+auto make_block_hsd(Holder& h, const SFHASH_HashSetInfo& hsinfo, Blocks blocks) {
+  return std::unique_ptr<HashSetData>{
+    std::make_unique<BlockHashSetDataImpl<HashLength, BlockBits>>(
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off,
+      static_cast<const char*>(h.beg) + hsinfo.hashset_off + hsinfo.hashset_size * hsinfo.hash_length,
+      blocks
     )
   };
 }
@@ -278,14 +314,102 @@ template <
   size_t HashLength,
   class Holder
 >
+std::pair<int64_t, int64_t> make_left_right(Holder& h) {
+  const auto hsinfo = load_header(h.beg, h.end);
+  REQUIRE(hsinfo->hash_length == HashLength);
+
+  const uint8_t* const beg = static_cast<const uint8_t*>(h.beg) + hsinfo->hashset_off;
+
+  const std::array<uint8_t, HashLength>* hh = reinterpret_cast<const std::array<uint8_t, HashLength>*>(beg);
+
+  int64_t left = std::numeric_limits<int64_t>::max(),
+          right = std::numeric_limits<int64_t>::min();
+
+  for (size_t i = 0; i < hsinfo->hashset_size; ++i) {
+    const size_t e = expected_index(hh[i].data(), hsinfo->hashset_size);
+    const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
+
+    left = std::min(left, delta);
+    right = std::max(right, delta);
+  }
+
+  return { left, right };
+}
+
+template <
+  size_t HashLength,
+  size_t BlockBits,
+  class Holder
+>
+std::array<std::pair<ssize_t, ssize_t>, (1 << BlockBits)> make_block_bounds(Holder& h) {
+  const auto hsinfo = load_header(h.beg, h.end);
+  REQUIRE(hsinfo->hash_length == HashLength);
+
+  const uint8_t* const beg = static_cast<const uint8_t*>(h.beg) + hsinfo->hashset_off;
+
+  const std::array<uint8_t, HashLength>* hh = reinterpret_cast<const std::array<uint8_t, HashLength>*>(beg);
+
+  std::array<std::pair<ssize_t, ssize_t>, (1 << BlockBits)> block_bounds;
+  std::fill(
+    block_bounds.begin(),
+    block_bounds.end(),
+    std::make_pair(
+      std::numeric_limits<ssize_t>::max(),
+      std::numeric_limits<ssize_t>::min()
+    )
+  );
+
+  for (size_t i = 0; i < hsinfo->hashset_size; ++i) {
+    const size_t e = expected_index(hh[i].data(), hsinfo->hashset_size);
+    const ssize_t delta = static_cast<ssize_t>(i) - static_cast<ssize_t>(e);
+
+    const size_t bi = hh[i][0] >> (8 - BlockBits);
+    block_bounds[bi].first = std::min(block_bounds[bi].first, delta);
+    block_bounds[bi].second = std::max(block_bounds[bi].second, delta);
+  }
+
+/*
+  for (size_t b = 0; b < block_bounds.size(); ++b) {
+    std::cout << b << ' ' << block_bounds[b].first << ' ' << block_bounds[b].second << ' ' << (block_bounds[b].second - block_bounds[b].first) << '\n';
+  }
+  std::cout << '\n';
+*/
+
+  return block_bounds;
+}
+
+template <
+  size_t HashLength,
+  class Holder
+>
 auto make_hsds(const Holder& h) {
   const auto hsinfo = load_header(h.beg, h.end);
   REQUIRE(hsinfo->hash_length == HashLength);
 
+  const auto [left, right] = make_left_right<HashLength>(h);
+
+  const auto blocks1 = make_block_bounds<HashLength, 1>(h);
+  const auto blocks2 = make_block_bounds<HashLength, 2>(h);
+  const auto blocks3 = make_block_bounds<HashLength, 3>(h);
+  const auto blocks4 = make_block_bounds<HashLength, 4>(h);
+  const auto blocks5 = make_block_bounds<HashLength, 5>(h);
+  const auto blocks6 = make_block_bounds<HashLength, 6>(h);
+  const auto blocks7 = make_block_bounds<HashLength, 7>(h);
+  const auto blocks8 = make_block_bounds<HashLength, 8>(h);
+
   std::vector<std::pair<std::string, std::unique_ptr<HashSetData>>> hsds;
 // TODO: why can't these go into an intializer list?
-  hsds.emplace_back("std", make_std_hsd<HashLength>(h, *hsinfo));
+  hsds.emplace_back("basic", make_basic_hsd<HashLength>(h, *hsinfo));
   hsds.emplace_back("radius", make_radius_hsd<HashLength>(h, *hsinfo));
+  hsds.emplace_back("range", make_range_hsd<HashLength>(h, *hsinfo, left, right));
+  hsds.emplace_back("block2", make_block_hsd<HashLength, 1>(h, *hsinfo, blocks1));
+  hsds.emplace_back("block4", make_block_hsd<HashLength, 2>(h, *hsinfo, blocks2));
+  hsds.emplace_back("block8", make_block_hsd<HashLength, 3>(h, *hsinfo, blocks3));
+  hsds.emplace_back("block16", make_block_hsd<HashLength, 4>(h, *hsinfo, blocks4));
+  hsds.emplace_back("block32", make_block_hsd<HashLength, 5>(h, *hsinfo, blocks5));
+  hsds.emplace_back("block64", make_block_hsd<HashLength, 6>(h, *hsinfo, blocks6));
+  hsds.emplace_back("block128", make_block_hsd<HashLength, 7>(h, *hsinfo, blocks7));
+  hsds.emplace_back("block256", make_block_hsd<HashLength, 8>(h, *hsinfo, blocks8));
 
   return hsds;
 }

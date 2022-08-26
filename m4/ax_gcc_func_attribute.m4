@@ -155,7 +155,9 @@ AC_DEFUN([AX_GCC_FUNC_ATTRIBUTE], [
                 ],
                 [ifunc], [
                     int my_foo( void ) { return 0; }
-                    static int (*resolve_foo(void))(void) { return my_foo; }
+                    extern "C" {
+                      static int (*resolve_foo(void))(void) { return my_foo; }
+                    }
                     int foo( void ) __attribute__(($1("resolve_foo")));
                 ],
                 [leaf], [
