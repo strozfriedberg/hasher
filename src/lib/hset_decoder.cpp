@@ -6,25 +6,27 @@
 #include <algorithm>
 #include <map>
 #include <ostream>
-#include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include <iostream>
 
-std::string read_pstring(const char* beg, const char*& i, const char* end) {
-  const uint32_t len = read_le<uint16_t>(beg, i, end);
+template <class T>
+T read_pstring(const char* beg, const char*& i, const char* end) {
+  const size_t len = read_le<uint16_t>(beg, i, end);
   THROW_IF(i + len > end, "out of data reading string at " << (i - beg));
   const char* sbeg = i;
-  return std::string(sbeg, i += len);
+  i += len;
+  return T(sbeg, len);
 }
 
 struct FileHeader {
   uint64_t version;
-  std::string hashset_name;
-  std::string hashset_time;
-  std::string hashset_desc;
+  std::string_view hashset_name;
+  std::string_view hashset_time;
+  std::string_view hashset_desc;
 };
 
 std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
@@ -37,7 +39,7 @@ std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
 
 struct HashsetHeader {
   uint64_t hash_type;
-  std::string hash_name;
+  std::string_view hash_name;
   uint64_t hash_length;
   uint64_t hash_count;
 };
@@ -74,7 +76,7 @@ std::ostream& operator<<(std::ostream& out, const SizesetData& sdat) {
 
 struct RecordHashFieldDescriptor {
   uint64_t hash_type;
-  std::string hash_name;
+  std::string_view hash_name;
   uint64_t hash_length;
 };
 
@@ -144,14 +146,14 @@ struct Chunk {
   const char* dend;
 };
 
-Chunk decode_chunk(const char* beg, const char*& pos, const char* end) {
-  const char* dbeg = pos + sizeof(uint64_t) + sizeof(uint32_t);
-  const uint64_t len = read_le<uint64_t>(beg, pos, end);
-  const uint32_t type = read_le<uint32_t>(beg, pos, end);
+Chunk decode_chunk(const char* beg, const char*& cur, const char* end) {
+  const char* dbeg = cur + sizeof(uint64_t) + sizeof(uint32_t);
+  const uint64_t len = read_le<uint64_t>(beg, cur, end);
+  const uint32_t type = read_le<uint32_t>(beg, cur, end);
 
-  pos = dbeg + len + 32;  // 32 is the length of the trailing hash
- 
-  return Chunk{ static_cast<Chunk::Type>(type), dbeg, dbeg + len };   
+  cur = dbeg + len + 32;  // 32 is the length of the trailing hash
+
+  return Chunk{ static_cast<Chunk::Type>(type), dbeg, dbeg + len };
 }
 
 struct Holder {
@@ -171,18 +173,18 @@ struct State {
     RHDR,
     SEND  // at section end
   };
-  
+
   std::map<Chunk::Type, State::Type (*)(const Chunk&, Holder&)> allowed;
 };
 
 State::Type init_got_fhdr(const Chunk& ch, Holder& h) {
   // INIT -> FHDR
 
-  const char* pos = ch.dbeg;
-  h.fhdr.version = read_le<uint64_t>(ch.dbeg, pos, ch.dend);
-  h.fhdr.hashset_name = read_pstring(ch.dbeg, pos, ch.dend); 
-  h.fhdr.hashset_time = read_pstring(ch.dbeg, pos, ch.dend); 
-  h.fhdr.hashset_desc = read_pstring(ch.dbeg, pos, ch.dend); 
+  const char* cur = ch.dbeg;
+  h.fhdr.version = read_le<uint64_t>(ch.dbeg, cur, ch.dend);
+  h.fhdr.hashset_name = read_pstring<std::string_view>(ch.dbeg, cur, ch.dend);
+  h.fhdr.hashset_time = read_pstring<std::string_view>(ch.dbeg, cur, ch.dend);
+  h.fhdr.hashset_desc = read_pstring<std::string_view>(ch.dbeg, cur, ch.dend);
 
   std::cerr << h.fhdr << "\n\n";
 
@@ -208,14 +210,14 @@ State::Type send_got_fend(const Chunk&, Holder&) {
 
 State::Type send_got_hhdr(const Chunk& ch, Holder& h) {
   // HDAT, RDAT, SDAT -> HHDR
-  const char* pos = ch.dbeg;
+  const char* cur = ch.dbeg;
 
   h.hsets.emplace_back(
-    HashsetHeader{   
-      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
-      read_pstring(ch.dbeg, pos, ch.dend),
-      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
-      read_le<uint64_t>(ch.dbeg, pos, ch.dend)
+    HashsetHeader{
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend)
     },
     HashsetData()
   );
@@ -227,12 +229,12 @@ State::Type send_got_hhdr(const Chunk& ch, Holder& h) {
 
 State::Type send_got_rhdr(const Chunk& ch, Holder& h) {
   // HDAT, RDAT, SDAT -> RHDR
-  const char* pos = ch.dbeg;
+  const char* cur = ch.dbeg;
 
   h.recs.emplace_back(
     RecordHeader{
-      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
-      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
       {}
     },
     RecordData()
@@ -258,15 +260,15 @@ State::Type send_got_sdat(const Chunk& ch, Holder& h) {
 
 State::Type desc_got_rhfd(const Chunk& ch, Holder& h) {
   // RHDR, RHFD, RSFD -> RHFD
-  const char* pos = ch.dbeg;
+  const char* cur = ch.dbeg;
 
   auto& fields = h.recs.back().first.fields;
 
   fields.emplace_back(
     RecordHashFieldDescriptor{
-      read_le<uint64_t>(ch.dbeg, pos, ch.dend),
-      read_pstring(ch.dbeg, pos, ch.dend),
-      read_le<uint64_t>(ch.dbeg, pos, ch.dend)
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend)
     }
   );
 
@@ -356,15 +358,15 @@ void read_chunks(const char* beg, const char* end) {
 
   while (state != State::FEND) {
     const State& st = SMAP.at(state);
-    const Chunk ch = decode_chunk(beg, pos, end);
-  
+    const Chunk ch = decode_chunk(beg, cur, end);
+
     const auto i = st.allowed.find(ch.type);
     THROW_IF(
-      i == st.allowed.end(), 
+      i == st.allowed.end(),
       "unexpected chunk type " << to_hex(&ch.type, &ch.type + sizeof(ch.type))
     );
     state = (i->second)(ch, h);
   }
 
-  THROW_IF(pos != end, "found more data after FEND chunk");
+  THROW_IF(cur != end, "found more data after FEND chunk");
 }
