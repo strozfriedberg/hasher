@@ -314,18 +314,18 @@ State::Type desc_got_rdat(const Chunk& ch, Holder& h) {
 const std::map<State::Type, State> SMAP{
   {
     State::INIT,
-    State{ { 
+    State{ {
       { Chunk::FHDR, init_got_fhdr }
-    } } 
+    } }
   },
-  { 
+  {
     State::FEND,
     State{}
   },
-  { 
+  {
     State::HHDR,
     State{ {
-      { Chunk::HDAT, hhdr_got_hdat } 
+      { Chunk::HDAT, hhdr_got_hdat }
     } }
   },
   {
