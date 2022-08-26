@@ -347,11 +347,22 @@ const std::map<State::Type, State> SMAP{
   }
 };
 
+constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
+
+void check_magic(const char*& i, const char* end) {
+  // read magic
+  THROW_IF(i + sizeof(MAGIC) > end, "out of data reading magic");
+  THROW_IF(std::memcmp(i, MAGIC, sizeof(MAGIC)), "bad magic");
+  i += sizeof(MAGIC);
+}
+
 // TODO: add validation flag
 
 void read_chunks(const char* beg, const char* end) {
 
-  const char* pos = beg + 8;  // TODO: don't skip magic 
+  const char* cur = beg;
+  check_magic(cur, end);
+
   State::Type state = State::INIT;
 
   Holder h;
