@@ -1,9 +1,11 @@
 #pragma once
 
 #include "hsd_impls/basic_hsd.h"
+#include "hsd_impls/hsd_utils.h"
 
 #include <algorithm>
 #include <array>
+#include <limits>
 
 template <size_t HashLength>
 class RadiusHashSetDataImpl: public BasicHashSetDataImpl<HashLength> {
@@ -30,7 +32,6 @@ protected:
   uint32_t Radius;
 };
 
-/*
 template <size_t HashLength>
 uint32_t compute_radius(
   const std::array<uint8_t, HashLength>* beg,
@@ -47,4 +48,19 @@ uint32_t compute_radius(
   }
   return max_delta;
 }
-*/
+
+template <size_t HashLength>
+HashSetData* make_radius_hashset_data(
+  const void* beg,
+  const void* end,
+  uint32_t radius)
+{
+  return new RadiusHashSetDataImpl<HashLength>(
+    beg, end,
+    radius == std::numeric_limits<uint32_t>::max() ?
+      compute_radius<HashLength>(
+        static_cast<const std::array<uint8_t, HashLength>*>(beg),
+        static_cast<const std::array<uint8_t, HashLength>*>(end)) :
+      radius
+  );
+}

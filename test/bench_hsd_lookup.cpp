@@ -23,6 +23,7 @@
 
 #include "hsd_impls/basic_hsd.h"
 #include "hsd_impls/block_hsd.h"
+#include "hsd_impls/hsd_utils.h"
 #include "hsd_impls/radius_hsd.h"
 #include "hsd_impls/range_hsd.h"
 
@@ -424,4 +425,16 @@ TEST_CASE("MemoryLookupCheckNSRL") {
   MemoryHolder h{read_file(NSRL)};
   const auto hsds = make_hsds<NSRL_HLEN>(h);
   do_agreement_check<NSRL_HLEN>(h, hsds);
+}
+
+TEST_CASE("MemoryLookupBenchVirusShare") {
+  MemoryHolder h{read_file(VS)};
+  const auto hsds = make_hsds<VS_HLEN>(h);
+  do_benchmark<VS_HLEN>(h, hsds);
+}
+
+TEST_CASE("MemoryLookupBenchNSRL") {
+  MemoryHolder h{read_file(NSRL)};
+  const auto hsds = make_hsds<NSRL_HLEN>(h);
+  do_benchmark<NSRL_HLEN>(h, hsds);
 }

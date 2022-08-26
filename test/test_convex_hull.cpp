@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "convex_hull.h"
+#include "hsd_impls/convex_hull.h"
 
 TEST_CASE("Point_equality") {
   CHECK(Point{0,0} == Point{0,0});
