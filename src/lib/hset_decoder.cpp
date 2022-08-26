@@ -6,10 +6,6 @@
 #include <algorithm>
 #include <map>
 #include <ostream>
-#include <string_view>
-#include <utility>
-#include <variant>
-#include <vector>
 
 #include <iostream>
 
@@ -22,13 +18,6 @@ T read_pstring(const char* beg, const char*& i, const char* end) {
   return T(sbeg, len);
 }
 
-struct FileHeader {
-  uint64_t version;
-  std::string_view hashset_name;
-  std::string_view hashset_time;
-  std::string_view hashset_desc;
-};
-
 std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
   return out << "FHDR\n"
              << ' ' << fhdr.version << '\n'
@@ -36,13 +25,6 @@ std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
              << ' ' << fhdr.hashset_time << '\n'
              << ' ' << fhdr.hashset_desc;
 }
-
-struct HashsetHeader {
-  uint64_t hash_type;
-  std::string_view hash_name;
-  uint64_t hash_length;
-  uint64_t hash_count;
-};
 
 std::ostream& operator<<(std::ostream& out, const HashsetHeader& hhdr) {
   return out << "HHDR\n"
@@ -52,33 +34,17 @@ std::ostream& operator<<(std::ostream& out, const HashsetHeader& hhdr) {
              << ' ' << hhdr.hash_count;
 }
 
-struct HashsetData {
-  const void* beg;
-  const void* end;
-};
-
 std::ostream& operator<<(std::ostream& out, const HashsetData& hdat) {
   return out << "HDAT\n"
              << ' ' << hdat.beg << '\n'
              << ' ' << hdat.end;
 }
 
-struct SizesetData {
-  const void* beg;
-  const void* end;
-};
-
 std::ostream& operator<<(std::ostream& out, const SizesetData& sdat) {
   return out << "SDAT\n"
              << ' ' << sdat.beg << '\n'
              << ' ' << sdat.end;
 }
-
-struct RecordHashFieldDescriptor {
-  uint64_t hash_type;
-  std::string_view hash_name;
-  uint64_t hash_length;
-};
 
 std::ostream& operator<<(std::ostream& out, const RecordHashFieldDescriptor& hrfd) {
   return out << "RHFD\n"
@@ -87,18 +53,9 @@ std::ostream& operator<<(std::ostream& out, const RecordHashFieldDescriptor& hrf
              << ' ' << hrfd.hash_length;
 }
 
-struct RecordSizeFieldDescriptor {
-};
-
 std::ostream& operator<<(std::ostream& out, const RecordSizeFieldDescriptor&) {
   return out << "RSFD";
 }
-
-struct RecordHeader {
-  uint64_t record_length;
-  uint64_t record_count;
-  std::vector<std::variant<RecordHashFieldDescriptor, RecordSizeFieldDescriptor>> fields;
-};
 
 std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr) {
   out << "RHDR\n"
@@ -116,11 +73,6 @@ std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr) {
 
   return out;
 }
-
-struct RecordData {
-  const void* beg;
-  const void* end;
-};
 
 std::ostream& operator<<(std::ostream& out, const RecordData& rdat) {
   return out << "RDAT\n"
@@ -155,13 +107,6 @@ Chunk decode_chunk(const char* beg, const char*& cur, const char* end) {
 
   return Chunk{ static_cast<Chunk::Type>(type), dbeg, dbeg + len };
 }
-
-struct Holder {
-  FileHeader fhdr;
-  std::vector<std::pair<HashsetHeader, HashsetData>> hsets;
-  std::vector<std::pair<RecordHeader, RecordData>> recs;
-  SizesetData sdat;
-};
 
 struct State {
   enum Type {
@@ -358,7 +303,7 @@ void check_magic(const char*& i, const char* end) {
 
 // TODO: add validation flag
 
-void read_chunks(const char* beg, const char* end) {
+Holder read_chunks(const char* beg, const char* end) {
 
   const char* cur = beg;
   check_magic(cur, end);
@@ -380,4 +325,6 @@ void read_chunks(const char* beg, const char* end) {
   }
 
   THROW_IF(cur != end, "found more data after FEND chunk");
+
+  return h;
 }
