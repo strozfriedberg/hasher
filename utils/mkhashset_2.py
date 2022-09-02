@@ -21,20 +21,43 @@ import io
 import sys
 
 
-HASH_TYPE = {
-    'md5':       1 <<  0,
-    'sha1':      1 <<  1,
-    'sha2_224':  1 <<  2,
-    'sha2_256':  1 <<  3,
-    'sha2_384':  1 <<  4,
-    'sha2_512':  1 <<  5,
-    'sha3_224':  1 <<  6,
-    'sha3_256':  1 <<  7,
-    'sha3_384':  1 <<  8,
-    'sha3_512':  1 <<  9,
-    'blake3':    1 << 10,
-    'quick_md5': 1 << 13,
-    'other':     1 <  31
+class HashInfo(object):
+    def __init__(self, hash_type, hash_name, hash_length):
+        self.type = hash_type
+        self.name = hash_name
+        self.length = hash_length
+
+
+SIZES = 0
+MD5 = 1
+SHA1 = 2
+SHA2_224 = 3
+SHA2_256 = 4
+SHA2_384 = 5
+SHA2_512 = 6
+SHA3_224 = 7
+SHA3_256 = 8
+SHA3_384 = 9
+SHA3_512 = 10
+BLAKE3 = 11
+OTHER = 0xFFFF
+
+
+HASH_INFO = {
+    'sizes':    HashInfo(SIZES, 'sizes', 8),
+    'md5':      HashInfo(MD5, 'md5', 16),
+    'sha1':     HashInfo(SHA1, 'sha1', 20),
+    'sha2_224': HashInfo(SHA2_224, 'sha2_224', 28),
+    'sha2_256': HashInfo(SHA2_256, 'sha2_256', 32),
+    'sha2_384': HashInfo(SHA2_384, 'sha2_384', 48),
+    'sha2_512': HashInfo(SHA2_512, 'sha2_512', 64),
+    'sha3_224': HashInfo(SHA3_224, 'sha3_224', 28),
+    'sha3_256': HashInfo(SHA3_256, 'sha3_256', 32),
+    'sha3_384': HashInfo(SHA3_384, 'sha3_384', 48),
+    'sha3_512': HashInfo(SHA3_512, 'sha3_512', 64),
+    'blake3':   HashInfo(BLAKE3, 'blake3', 32),
+# TODO: make sure other works
+    'other':    HashInfo(OTHER, None, None)
 }
 
 
@@ -52,12 +75,20 @@ def write_pstring(s, out):
     return wlen
 
 
+def to_le_u16(i):
+    return i.to_bytes(2, 'little', signed=False)
+
+
+def to_le_u64(i):
+    return i.to_bytes(8, 'little', signed=False)
+
+
 def write_le_u16(i, out):
-    return out.write(i.to_bytes(2, 'little', signed=False))
+    return out.write(to_le_u16(i))
 
 
 def write_le_u64(i, out):
-    return out.write(i.to_bytes(8, 'little', signed=False))
+    return out.write(to_le_u64(i))
 
 
 def write_chunk(chunk_type, chunk_bytes, out):
@@ -70,6 +101,24 @@ def write_chunk(chunk_type, chunk_bytes, out):
     wlen += out.write(hasher.digest())
 
     return wlen
+
+
+#def write_chunk(chunk_type, chunk_length, chunk_gen, out):
+#    wlen = write_le_u64(chunk_length, out)
+#    wlen += out.write(chunk_type)
+#
+#    hasher = hashlib.sha256()
+#    dbeg = wlen;
+#    for b in chunk_gen:
+#        wlen += out.write(b)
+#        hasher.update(b)
+#
+#    if wlen - dbeg != chunk_length:
+#        raise RuntimeError(f"chunk length {chunk_length} != {wlen-dbeg} data length")
+#
+#    wlen += out.write(hasher.digest())
+#
+#    return wlen
 
 
 def write_magic(out):
@@ -86,72 +135,125 @@ def write_fhdr(version, hashset_name, hashset_desc, timestamp, out):
     return write_chunk(b'FHDR', chbuf.getbuffer(), out)
 
 
-def write_hhdr(hash_type, hash_type_name, hash_length, hash_count, out):
+def write_hhnn(hash_type, hash_type_name, hash_length, hash_count, out):
     chbuf = io.BytesIO()
-    write_le_u64(hash_type, chbuf)
     write_pstring(hash_type_name, chbuf)
     write_le_u64(hash_length, chbuf)
     write_le_u64(hash_count, chbuf)
 
-    return write_chunk(b'HHDR', chbuf.getbuffer(), out)
+    return write_chunk(b'HH' + to_le_u16(hash_type), chbuf.getbuffer(), out)
 
 
 def write_hdat(hashes, out):
     return write_chunk(b'HDAT', b''.join(hashes), out)
 
 
-def write_sdat(sizes, out):
-    chbuf = io.BytesIO()
-    for s in sizes:
-        write_le_u64(s, chbuf)
+def write_ridx(ridx, out):
+    return write_chunk(b'RIDX', b''.join(ridx), out)
 
-    return write_chunk(b'SDAT', chbuf.getbuffer(), out)
+
+def write_rdat(records, out):
+    rdat = b''.join(field for record in records for field in record)
+    return write_chunk(b'RDAT', rdat, out)
+
+
+def write_rhdr(hash_infos, record_count, out):
+    chbuf = io.BytesIO()
+    write_le_u64(sum(hi.length for hi in hash_infos), chbuf)
+    write_le_u64(record_count, chbuf)
+
+    for hi in hash_infos:
+        write_le_u16(hi.type, chbuf)
+        write_pstring(hi.name, chbuf)
+        write_le_u64(hi.length, chbuf)
+
+    return write_chunk(b'RHDR', chbuf.getbuffer(), out)
+
+
+def write_ftoc(toc, out):
+    chbuf = io.BytesIO()
+    for offset, chtype in toc:
+        write_le_u64(offset, chbuf)
+        chbuf.write(chtype)
+
+    return write_chunk(b'FTOC', chbuf.getbuffer(), out)
 
 
 def write_fend(out):
     return write_chunk(b'FEND', b'', out)
 
 
-def run(hash_type_name, hashset_name, hashset_desc, inlines, out):
-    hash_type = HASH_TYPE.get(hash_type_name, HASH_TYPE['other'])
-
+def run(hashset_name, hashset_desc, hash_type_names, inlines, out):
     version = 2
 
-    # read the input
-    hashes = []
-    sizes = []
+# TODO: types must be unique
 
+    hash_infos = [
+        HASH_INFO.get(n, HASH_INFO['other']) for n in hash_type_names
+    ]
+
+    conv = [
+        bytes.fromhex if i.type != SIZES else to_int_le_u64 for i in hash_infos
+    ]
+
+    records = []
+
+# TODO: deal with missing record fields
+    # read the input into records
     for line in nonempty_lines(inlines):
         cols = line.split(' ')
-        hashes.append(bytes.fromhex(cols[0]))
-        if len(cols) == 2:
-            sizes.append(int(cols[1]))
-
-    if len(hashes) != len(sizes) and sizes:
-        raise RuntimeError('some sizes missing')
-
-    hash_length = len(hashes[0])
+        rec = [conv[i](c) for i, c in enumerate(cols)]
+        records.append(rec)
 
     # set the timestamp
     timestamp = datetime.datetime.now().isoformat(timespec='microseconds')
 
+    toc = []
     pos = 0
 
     # Magic
     pos += write_magic(out)
 
     # FHDR
+    toc.append((pos, b'FHDR'))
     pos += write_fhdr(version, hashset_name, hashset_desc, timestamp, out)
 
-    # HHDR
-    pos += write_hhdr(hash_type, hash_type_name, hash_length, len(hashes), out)
+    for i, hi in enumerate(hash_infos):
+        recs = [(r[i], ri) for ri, r in enumerate(records)]
+        recs.sort()
 
-    # HDAT
-    pos += write_hdat(hashes, out)
+        hashes = []
+        ridx = []
+        for r in recs:
+            hashes.append(r[0])
+            ridx.append(to_le_u64(r[1]))
 
-    if sizes:
-        # SDAT
-        pos += write_sdat(sizes, out)
+        # HHnn
+        toc.append((pos, b'HH' + to_le_u16(hi.type)))
+        pos += write_hhnn(hi.type, hi.name, hi.length, len(hashes), out)
+
+        # HHNT
+        # TODO
+
+        # HDAT
+        toc.append((pos, b'HDAT'))
+        pos += write_hdat(hashes, out)
+
+        # RIDX
+        toc.append((pos, b'RIDX'))
+        pos += write_ridx(ridx, out)
+
+    # RHDR
+    toc.append((pos, b'RHDR'))
+    pos += write_rhdr(hash_infos, len(records), out)
+
+    # RDAT
+    toc.append((pos, b'RDAT'))
+    pos += write_rdat(records, out)
+
+    # FTOC
+    toc.append((pos, b'FTOC'))
+    pos += write_ftoc(toc, out)
 
     # FEND
     pos += write_fend(out)
@@ -164,14 +266,15 @@ if __name__ == "__main__":
         description=__doc__,
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("hash_type", help="Hash type")
     parser.add_argument("hashset_name", help="Name of hash set")
     parser.add_argument("hashset_desc", help="Hash set description")
+    parser.add_argument("hash_type", help="Hash type", nargs='*')
     args = parser.parse_args()
+
     run(
-        args.hash_type,
         args.hashset_name,
         args.hashset_desc,
+        args.hash_type,
         sys.stdin,
         sys.stdout.buffer
     )
