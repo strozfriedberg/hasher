@@ -79,6 +79,10 @@ def to_le_u16(i):
     return i.to_bytes(2, 'little', signed=False)
 
 
+def to_be_u16(i):
+    return i.to_bytes(2, 'big', signed=False)
+
+
 def to_le_u64(i):
     return i.to_bytes(8, 'little', signed=False)
 
@@ -92,8 +96,8 @@ def write_le_u64(i, out):
 
 
 def write_chunk(chunk_type, chunk_bytes, out):
-    wlen = write_le_u64(len(chunk_bytes), out)
-    wlen += out.write(chunk_type)
+    wlen = out.write(chunk_type)
+    wlen += write_le_u64(len(chunk_bytes), out)
     wlen += out.write(chunk_bytes)
 
     hasher = hashlib.sha256()
@@ -101,6 +105,10 @@ def write_chunk(chunk_type, chunk_bytes, out):
     wlen += out.write(hasher.digest())
 
     return wlen
+
+
+def write_page_alignment_padding(pos, out):
+    return out.write(b'0' * (4096 - pos % 4096))
 
 
 #def write_chunk(chunk_type, chunk_length, chunk_gen, out):
@@ -141,7 +149,7 @@ def write_hhnn(hash_type, hash_type_name, hash_length, hash_count, out):
     write_le_u64(hash_length, chbuf)
     write_le_u64(hash_count, chbuf)
 
-    return write_chunk(b'HH' + to_le_u16(hash_type), chbuf.getbuffer(), out)
+    return write_chunk(b'HH' + to_be_u16(hash_type), chbuf.getbuffer(), out)
 
 
 def write_hdat(hashes, out):
@@ -177,10 +185,6 @@ def write_ftoc(toc, out):
         chbuf.write(chtype)
 
     return write_chunk(b'FTOC', chbuf.getbuffer(), out)
-
-
-def write_fend(out):
-    return write_chunk(b'FEND', b'', out)
 
 
 def run(hashset_name, hashset_desc, hash_type_names, inlines, out):
@@ -229,13 +233,14 @@ def run(hashset_name, hashset_desc, hash_type_names, inlines, out):
             ridx.append(to_le_u64(r[1]))
 
         # HHnn
-        toc.append((pos, b'HH' + to_le_u16(hi.type)))
+        toc.append((pos, b'HH' + to_be_u16(hi.type)))
         pos += write_hhnn(hi.type, hi.name, hi.length, len(hashes), out)
 
         # HHNT
         # TODO
 
         # HDAT
+        pos += write_page_alignment_padding(pos, out)
         toc.append((pos, b'HDAT'))
         pos += write_hdat(hashes, out)
 
@@ -254,9 +259,6 @@ def run(hashset_name, hashset_desc, hash_type_names, inlines, out):
     # FTOC
     toc.append((pos, b'FTOC'))
     pos += write_ftoc(toc, out)
-
-    # FEND
-    pos += write_fend(out)
 
     print(f'wrote {pos} bytes', file=sys.stderr)
 

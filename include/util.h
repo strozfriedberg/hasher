@@ -49,6 +49,18 @@ T read_le(const C* beg, const C*& i, const C* end) {
   return r;
 }
 
+template <typename T, typename C>
+T read_be(const C* beg, const C*& i, const C* end) {
+  THROW_IF(
+    i + sizeof(T) > end,
+    "out of data reading " << sizeof(T) << " bytes at " << (i - beg)
+  );
+
+  const T r = boost::endian::big_to_native(*reinterpret_cast<const T*>(i));
+  i += sizeof(T);
+  return r;
+}
+
 //
 // Functions for writing unsigned integers to bytes
 //

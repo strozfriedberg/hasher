@@ -4,10 +4,13 @@
 #include "util.h"
 
 #include <algorithm>
+#include <exception>
 #include <map>
 #include <ostream>
 
 #include <iostream>
+
+#include <boost/endian/conversion.hpp>
 
 template <class T>
 T read_pstring(const char* beg, const char*& i, const char* end) {
@@ -40,21 +43,17 @@ std::ostream& operator<<(std::ostream& out, const HashsetData& hdat) {
              << ' ' << hdat.end;
 }
 
-std::ostream& operator<<(std::ostream& out, const SizesetData& sdat) {
-  return out << "SDAT\n"
-             << ' ' << sdat.beg << '\n'
-             << ' ' << sdat.end;
+std::ostream& operator<<(std::ostream& out, const RecordIndex& ridx) {
+  return out << "RIDX\n"
+             << ' ' << ridx.beg << '\n'
+             << ' ' << ridx.end;
 }
 
-std::ostream& operator<<(std::ostream& out, const RecordHashFieldDescriptor& hrfd) {
-  return out << "RHFD\n"
-             << ' ' << hrfd.hash_type << '\n'
-             << ' ' << hrfd.hash_name << '\n'
-             << ' ' << hrfd.hash_length;
-}
-
-std::ostream& operator<<(std::ostream& out, const RecordSizeFieldDescriptor&) {
-  return out << "RSFD";
+std::ostream& operator<<(std::ostream& out, const RecordFieldDescriptor& rfd) {
+  return out << "RFD\n"
+             << ' ' << rfd.hash_type << '\n'
+             << ' ' << rfd.hash_name << '\n'
+             << ' ' << rfd.hash_length;
 }
 
 std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr) {
@@ -63,12 +62,7 @@ std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr) {
       << ' ' << rhdr.record_count << '\n';
 
   for (const auto& f: rhdr.fields) {
-    if (std::holds_alternative<RecordHashFieldDescriptor>(f)) {
-      out << std::get<RecordHashFieldDescriptor>(f) << '\n';
-    }
-    else {
-      out << std::get<RecordSizeFieldDescriptor>(f) << '\n';
-    }
+    out << f << '\n';
   }
 
   return out;
@@ -82,47 +76,65 @@ std::ostream& operator<<(std::ostream& out, const RecordData& rdat) {
 
 struct Chunk {
   enum Type {
-    FHDR = 0x52444846,
-    FEND = 0x444E4546,
-    HDAT = 0x54414448,
-    HHDR = 0x52444848,
-    RHDR = 0x52444852,
-    RHFD = 0x44464852,
-    RSFD = 0x44465352,
-    RDAT = 0x54414452,
-    SDAT = 0x54414453
+    FHDR = 0x46484452,
+    FTOC = 0x46544F43,
+    HDAT = 0x48444154,
+    HHDR = 0x48480000,
+    HINT = 0x48494E54,
+    RIDX = 0x52494458,
+    RHDR = 0x52484452,
+    RDAT = 0x52444154
   };
 
-  Type type;
+  uint32_t type;
   const char* dbeg;
   const char* dend;
 };
 
+std::string printable_chunk_type(uint32_t type) {
+  const uint32_t t = boost::endian::native_to_big(type);
+  const char* tt = reinterpret_cast<const char*>(&t);
+
+  if (tt[0] == 'H' && tt[1] == 'H') {
+    return "HH " + to_hex(tt + 2, tt + 4);
+  } 
+  else {
+    return std::string(tt, tt + 4);
+  }
+}
+
+std::ostream& operator<<(std::ostream& out, const Chunk& ch) {
+  return out << printable_chunk_type(ch.type)
+             << " ["
+             << static_cast<const void*>(ch.dbeg)
+             << ','
+             << static_cast<const void*>(ch.dend)
+             << "]";
+}
+
 Chunk decode_chunk(const char* beg, const char*& cur, const char* end) {
-  const char* dbeg = cur + sizeof(uint64_t) + sizeof(uint32_t);
+  const uint32_t type = read_be<uint32_t>(beg, cur, end);
   const uint64_t len = read_le<uint64_t>(beg, cur, end);
-  const uint32_t type = read_le<uint32_t>(beg, cur, end);
+  const char* dbeg = cur;
 
   cur = dbeg + len + 32;  // 32 is the length of the trailing hash
 
-  return Chunk{ static_cast<Chunk::Type>(type), dbeg, dbeg + len };
+  return Chunk{ type, dbeg, dbeg + len };
 }
 
 struct State {
   enum Type {
     INIT,
-    DESC, // reading descriptors
-    FEND,
-    FHDR,
+    SBRK, // section break 
     HHDR,
+    HINT,
+    HDAT,
     RHDR,
-    SEND  // at section end
+    DONE
   };
-
-  std::map<Chunk::Type, State::Type (*)(const Chunk&, Holder&)> allowed;
 };
 
-State::Type init_got_fhdr(const Chunk& ch, Holder& h) {
+State::Type parse_fhdr(const Chunk& ch, Holder& h) {
   // INIT -> FHDR
 
   const char* cur = ch.dbeg;
@@ -133,164 +145,122 @@ State::Type init_got_fhdr(const Chunk& ch, Holder& h) {
 
   std::cerr << h.fhdr << "\n\n";
 
-  return State::SEND;
+  return State::SBRK;
 }
 
-State::Type hhdr_got_hdat(const Chunk& ch, Holder& h) {
-  // HHDR -> HDAT
+State::Type parse_hhdr(const Chunk& ch, Holder& h) {
+  // section break -> HHDR
 
-  h.hsets.back().second.beg = ch.dbeg;
-  h.hsets.back().second.end = ch.dend;
-
-  std::cerr << h.hsets.back().second << "\n\n";
-
-  return State::SEND;
-}
-
-State::Type send_got_fend(const Chunk&, Holder&) {
-  // HDAT, RDAT, SDAT -> FEND
-  std::cerr << "FEND\n\n";
-  return State::FEND;
-}
-
-State::Type send_got_hhdr(const Chunk& ch, Holder& h) {
-  // HDAT, RDAT, SDAT -> HHDR
   const char* cur = ch.dbeg;
 
   h.hsets.emplace_back(
     HashsetHeader{
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+      static_cast<uint16_t>(ch.type & 0x0000FFFF),
       read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
       read_le<uint64_t>(ch.dbeg, cur, ch.dend),
       read_le<uint64_t>(ch.dbeg, cur, ch.dend)
     },
-    HashsetData()
+    HashsetData(),
+    RecordIndex()
   );
 
-  std::cerr << h.hsets.back().first << "\n\n";
+  std::cerr << std::get<0>(h.hsets.back()) << "\n\n";
 
   return State::HHDR;
 }
 
-State::Type send_got_rhdr(const Chunk& ch, Holder& h) {
-  // HDAT, RDAT, SDAT -> RHDR
+State::Type parse_rhdr(const Chunk& ch, Holder& h) {
+  // section break -> RHDR
+
   const char* cur = ch.dbeg;
 
-  h.recs.emplace_back(
-    RecordHeader{
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
-      {}
-    },
-    RecordData()
-  );
+  h.rhdr.record_length = read_le<uint64_t>(ch.dbeg, cur, ch.dend);
+  h.rhdr.record_count = read_le<uint64_t>(ch.dbeg, cur, ch.dend);
 
-  std::cerr << h.recs.back().first << "\n\n";
+  while (cur < ch.dend) {
+    h.rhdr.fields.emplace_back(
+      RecordFieldDescriptor{
+        read_le<uint16_t>(ch.dbeg, cur, ch.dend),
+        read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+        read_le<uint64_t>(ch.dbeg, cur, ch.dend)
+      }
+    );
+  }
 
-  return State::DESC;
+  std::cerr << h.rhdr << "\n\n";
+
+  return State::RHDR;
 }
 
-State::Type send_got_sdat(const Chunk& ch, Holder& h) {
-  // HDAT, RDAT, SDAT -> SDAT
+State::Type parse_ftoc(const Chunk& ch, Holder& h) {
+  // section break -> DONE
 
-  THROW_IF(h.sdat.beg, "there may be at most one SDAT chunk");
+  // Nothing to do here, as we've already read the FTOC to drive parsing
 
-  h.sdat.beg = ch.dbeg;
-  h.sdat.end = ch.dend;
+  std::cerr << ch << "\n\n";
 
-  std::cerr << h.sdat << "\n\n";
-
-  return State::SEND;
+  return State::DONE;
 }
 
-State::Type desc_got_rhfd(const Chunk& ch, Holder& h) {
-  // RHDR, RHFD, RSFD -> RHFD
-  const char* cur = ch.dbeg;
+State::Type parse_hint(const Chunk& ch, Holder& h) {
+  // HHDR -> HINT
 
-  auto& fields = h.recs.back().first.fields;
+// TODO
+  std::cerr << ch << "\n\n";
 
-  fields.emplace_back(
-    RecordHashFieldDescriptor{
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
-      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend)
-    }
-  );
-
-  std::cerr << std::get<RecordHashFieldDescriptor>(fields.back()) << "\n\n";
-
-  return State::DESC;
+  return State::HINT;
 }
 
-State::Type desc_got_rsfd(const Chunk&, Holder& h) {
-  // RHDR, RHFD, RSFD -> RSFD
+State::Type parse_ridx(const Chunk& ch, Holder& h) {
+  // HDAT -> RIDX;
 
-  auto& fields = h.recs.back().first.fields;
+  auto& hset = h.hsets.back();
+
+  const uint64_t exp_ridx_data = std::get<0>(hset).hash_count * sizeof(uint64_t);
 
   THROW_IF(
-    std::any_of(
-      fields.begin(),
-      fields.end(),
-      [](const auto& v) {
-        return std::holds_alternative<RecordSizeFieldDescriptor>(v);
-      }
-    ),
-    "there may be at most one RSFD chunk per record section"
-  );
+    static_cast<uint64_t>(ch.dend - ch.dbeg) != exp_ridx_data,
+    "expected " << exp_ridx_data << "bytes in RIDX, found "
+                << (ch.dend - ch.dbeg)
+  ); 
 
-  fields.emplace_back(
-    RecordSizeFieldDescriptor()
-  );
+  std::get<2>(hset).beg = ch.dbeg;
+  std::get<2>(hset).end = ch.dend;
 
-  std::cerr << std::get<RecordSizeFieldDescriptor>(fields.back()) << "\n\n";
+  std::cerr << std::get<2>(hset) << "\n\n";
 
-  return State::DESC;
+  return State::SBRK;
 }
 
-State::Type desc_got_rdat(const Chunk& ch, Holder& h) {
-  // RHDR, RHFD, RSFD -> RDAT
+State::Type parse_hdat(const Chunk& ch, Holder& h) {
+  auto& hset = h.hsets.back();
 
-  h.recs.back().second.beg = ch.dbeg;
-  h.recs.back().second.end = ch.dend;
+  const uint64_t exp_hash_data = std::get<0>(hset).hash_count * std::get<0>(hset).hash_length;
 
-  return State::SEND;
+  THROW_IF(
+    static_cast<uint64_t>(ch.dend - ch.dbeg) != exp_hash_data,
+    "expected " << exp_hash_data << "bytes in HDAT, found "
+                << (ch.dend - ch.dbeg)
+  ); 
+
+  std::get<1>(hset).beg = ch.dbeg;
+  std::get<1>(hset).end = ch.dend;
+
+  std::cerr << std::get<1>(hset) << "\n\n";
+
+  return State::HDAT;
 }
 
-const std::map<State::Type, State> SMAP{
-  {
-    State::INIT,
-    State{ {
-      { Chunk::FHDR, init_got_fhdr }
-    } }
-  },
-  {
-    State::FEND,
-    State{}
-  },
-  {
-    State::HHDR,
-    State{ {
-      { Chunk::HDAT, hhdr_got_hdat }
-    } }
-  },
-  {
-    State::DESC,
-    State{ {
-      { Chunk::RDAT, desc_got_rdat },
-      { Chunk::RHFD, desc_got_rhfd },
-      { Chunk::RSFD, desc_got_rsfd }
-    } }
-  },
-  {
-    State::SEND,
-    State { {
-      { Chunk::HHDR, send_got_hhdr },
-      { Chunk::RHDR, send_got_rhdr },
-      { Chunk::SDAT, send_got_sdat },
-      { Chunk::FEND, send_got_fend }
-    } }
-  }
-};
+State::Type parse_rdat(const Chunk& ch, Holder& h) {
+  // RHDR -> RDAT;
+
+  h.rdat.beg = ch.dbeg;
+  h.rdat.end = ch.dend;
+
+  std::cerr << h.rdat << "\n\n";
+
+  return State::SBRK;
+}
 
 constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
 
@@ -303,28 +273,240 @@ void check_magic(const char*& i, const char* end) {
 
 // TODO: add validation flag
 
-Holder read_chunks(const char* beg, const char* end) {
+class UnexpectedChunkType: public std::exception {
+};
 
+class ChunkIterator {
+public:
+  using iterator_category = std::input_iterator_tag;
+  using value_type = Chunk;
+  using pointer = const value_type*;
+  using reference = const value_type&;
+  using difference_type = std::ptrdiff_t;  
+
+  ChunkIterator(const char* beg, const char* end):
+    beg(beg), cur(beg), end(end)
+  {
+    if (beg != end) {
+      ++(*this); 
+    } 
+  }
+
+  ChunkIterator(const char* end): ChunkIterator(end, end) {}
+
+  reference operator*() const noexcept {
+    return ch; 
+  }
+
+  pointer operator->() const noexcept {
+    return &ch; 
+  }
+
+  ChunkIterator& operator++() {
+    if (cur < end) {
+      
+      ch = decode_chunk(beg, cur, end);
+    }
+    return *this;
+  }
+
+  ChunkIterator operator++(int) {
+    ChunkIterator itr{*this};
+    ++(*this);
+    return itr;
+  }
+
+  friend bool operator==(const ChunkIterator& a, const ChunkIterator& b) noexcept; 
+  friend bool operator!=(const ChunkIterator& a, const ChunkIterator& b) noexcept; 
+
+private:
+  const char* beg;
+  const char* cur;
+  const char* end;
+
+  Chunk ch;
+};
+
+bool operator==(const ChunkIterator& a, const ChunkIterator& b) noexcept {
+  return a.cur == b.cur;
+}
+
+bool operator!=(const ChunkIterator& a, const ChunkIterator& b) noexcept {
+  return a.cur != b.cur;
+}
+
+class TOCIterator {
+public:
+  using iterator_category = std::input_iterator_tag;
+  using value_type = Chunk;
+  using pointer = const value_type*;
+  using reference = const value_type&;
+  using difference_type = std::ptrdiff_t;  
+
+  TOCIterator(const char* beg, const char* toc_cur, const char* toc_end, const char* end):
+    beg(beg), toc_cur(toc_cur), toc_end(toc_end), end(end)
+  {
+    if (toc_cur < toc_end) {
+      ++(*this);
+    } 
+  }
+
+  TOCIterator(const char* toc_end):
+    TOCIterator(toc_end, toc_end, toc_end, toc_end) {}
+
+  reference operator*() const noexcept {
+    return ch; 
+  }
+
+  pointer operator->() const noexcept {
+    return &ch; 
+  }
+
+  TOCIterator& operator++() {
+    if (toc_cur < toc_end) {
+      advance_chunk(); 
+    }
+    return *this;
+  }
+
+  TOCIterator operator++(int) {
+    TOCIterator itr{*this};
+    ++(*this);
+    return itr;
+  }
+
+  friend bool operator==(const TOCIterator& a, const TOCIterator& b) noexcept; 
+  friend bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept; 
+
+private:
+  void advance_chunk() {
+    const uint64_t ch_off = read_le<uint64_t>(beg, toc_cur, toc_end);
+    const uint32_t ch_type = read_be<uint32_t>(beg, toc_cur, toc_end); 
+
+    const char* cur = beg + ch_off;
+    ch = decode_chunk(beg, cur, end);
+ 
+    THROW_IF(
+      ch_type != ch.type,
+      "expected " << printable_chunk_type(ch_type) << ", "
+      "found " << printable_chunk_type(ch.type)
+    );
+  }
+
+  const char* beg;
+  const char* toc_cur;
+  const char* toc_end;
+  const char* end;
+
+  Chunk ch;
+};
+
+bool operator==(const TOCIterator& a, const TOCIterator& b) noexcept {
+  return a.toc_cur == b.toc_cur;
+}
+
+bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept {
+  return a.toc_cur != b.toc_cur;
+}
+
+Holder parse_hset(const char* beg, const char* end) {
+  // check magic
   const char* cur = beg;
   check_magic(cur, end);
 
-  State::Type state = State::INIT;
+  // read FTOC start offset from the last FTOC entry
+  cur = end - 32 - 4 - 8; // end - SHA256 - chunk type - offset
+  cur = beg + read_le<uint64_t>(beg, cur, end);
+
+  // get the FTOC chunk
+  const Chunk toc_ch = decode_chunk(beg, cur, end);
+
+  THROW_IF(
+    toc_ch.type != Chunk::FTOC,
+    "expected FTOC, found " << printable_chunk_type(toc_ch.type)
+  );
+
+  TOCIterator ch(beg, toc_ch.dbeg, toc_ch.dend, end), ch_end(end);
 
   Holder h;
+  State::Type state = State::INIT;
 
-  while (state != State::FEND) {
-    const State& st = SMAP.at(state);
-    const Chunk ch = decode_chunk(beg, cur, end);
+  try {
+    while (state != State::DONE) { 
+      std::cerr << state << "\n\n"; 
 
-    const auto i = st.allowed.find(ch.type);
-    THROW_IF(
-      i == st.allowed.end(),
-      "unexpected chunk type " << to_hex(&ch.type, &ch.type + sizeof(ch.type))
-    );
-    state = (i->second)(ch, h);
+      THROW_IF(ch == ch_end, "exhausted FTOC expecting more data");
+
+      switch (state) {
+      case State::INIT:
+        if (ch->type == Chunk::FHDR) {
+          state = parse_fhdr(*ch++, h);
+        }
+        else {    
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::SBRK:
+        if ((ch->type & 0xFFFF0000) == Chunk::HHDR) {
+          state = parse_hhdr(*ch++, h);
+        }
+        else if (ch->type == Chunk::RHDR) {
+          state = parse_rhdr(*ch++, h);
+        }
+        else if (ch->type == Chunk::FTOC) {
+          state = parse_ftoc(*ch++, h);
+        }
+        else {    
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::HHDR:
+        switch (ch->type) {
+        case Chunk::HINT:
+          state = parse_hint(*ch++, h);
+          break;
+        case Chunk::HDAT:
+          state = parse_hdat(*ch++, h);
+          break;
+        default:
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::HINT:
+        if (ch->type == Chunk::HDAT) {
+          state = parse_hdat(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::HDAT:
+        if (ch->type == Chunk::RIDX) {
+          state = parse_ridx(*ch++, h);
+        }
+        else {
+          state = State::SBRK;
+        }
+        break;
+
+      case State::RHDR:
+        if (ch->type == Chunk::RDAT) {
+          state = parse_rdat(*ch++, h); 
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+      }
+    }
   }
-
-  THROW_IF(cur != end, "found more data after FEND chunk");
+  catch (const UnexpectedChunkType&) {
+    THROW("unexpected chunk type " << printable_chunk_type(ch->type));
+  }
 
   return h;
 }

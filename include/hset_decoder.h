@@ -2,9 +2,8 @@
 
 #include <cstdint>
 #include <string_view>
-#include <variant>
+#include <tuple>
 #include <vector>
-#include <utility>
 
 struct FileHeader {
   uint64_t version;
@@ -14,10 +13,13 @@ struct FileHeader {
 };
 
 struct HashsetHeader {
-  uint64_t hash_type;
+  uint16_t hash_type;
   std::string_view hash_name;
   uint64_t hash_length;
   uint64_t hash_count;
+};
+
+struct HashsetHint {
 };
 
 struct HashsetData {
@@ -25,24 +27,21 @@ struct HashsetData {
   const void* end;
 };
 
-struct SizesetData {
+struct RecordIndex {
   const void* beg;
   const void* end;
 };
 
-struct RecordHashFieldDescriptor {
-  uint64_t hash_type;
+struct RecordFieldDescriptor {
+  uint16_t hash_type;
   std::string_view hash_name;
   uint64_t hash_length;
-};
-
-struct RecordSizeFieldDescriptor {
 };
 
 struct RecordHeader {
   uint64_t record_length;
   uint64_t record_count;
-  std::vector<std::variant<RecordHashFieldDescriptor, RecordSizeFieldDescriptor>> fields;
+  std::vector<RecordFieldDescriptor> fields;
 };
 
 struct RecordData {
@@ -52,9 +51,9 @@ struct RecordData {
 
 struct Holder {
   FileHeader fhdr;
-  std::vector<std::pair<HashsetHeader, HashsetData>> hsets;
-  std::vector<std::pair<RecordHeader, RecordData>> recs;
-  SizesetData sdat;
+  std::vector<std::tuple<HashsetHeader, HashsetData, RecordIndex>> hsets;
+  RecordHeader rhdr;
+  RecordData rdat;
 };
 
-Holder read_chunks(const char* beg, const char* end);
+Holder parse_hset(const char* beg, const char* end);
