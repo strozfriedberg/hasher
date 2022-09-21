@@ -86,37 +86,37 @@ TEST_CASE("alphabetHash") {
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
 
-  REQUIRE(
+  CHECK(
     "c3fcd3d76192e4007dfb496cca67e13b" ==
     to_hex(std::begin(hashes.Md5), std::end(hashes.Md5))
   );
 
-  REQUIRE(
+  CHECK(
     "c3fcd3d76192e4007dfb496cca67e13b" ==
     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5))
   );
 
-  REQUIRE(
+  CHECK(
     "32d10c7b8cf96570ca04ce37f2a19d84240d3a89" ==
     to_hex(std::begin(hashes.Sha1), std::end(hashes.Sha1))
   );
 
-  REQUIRE(
+  CHECK(
     "71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73" ==
     to_hex(std::begin(hashes.Sha2_256), std::end(hashes.Sha2_256))
   );
 
-  REQUIRE(
+  CHECK(
     "7cab2dc765e21b241dbc1c255ce620b29f527c6d5e7f5f843e56288f0d707521" ==
     to_hex(std::begin(hashes.Sha3_256), std::end(hashes.Sha3_256))
   );
 
-  REQUIRE(
+  CHECK(
     "2468eec8894acfb4e4df3a51ea916ba115d48268287754290aae8e9e6228e85f" ==
     to_hex(std::begin(hashes.Blake3), std::end(hashes.Blake3))
   );
 
-  REQUIRE(
+  CHECK(
     "3:u+6LO5Sfn:u+6LO5Sfn" ==
     std::string((const char*)hashes.Fuzzy)
   );
@@ -190,11 +190,11 @@ TEST_CASE("updatingInPartsDiscontiguouslyIsSameAsOneBigUpdate") {
 
   sfhash_get_hashes(hasher.get(), &h_piecewise);
 
-  REQUIRE(!std::memcmp(&h_once, &h_piecewise, sizeof(h_once)));
+  CHECK(!std::memcmp(&h_once, &h_piecewise, sizeof(h_once)));
 }
 
 TEST_CASE("FUZZY_MAX_LEN_SIZE") {
-  REQUIRE(FUZZY_MAX_RESULT == sizeof(SFHASH_HashValues::Fuzzy));
+  CHECK(FUZZY_MAX_RESULT == sizeof(SFHASH_HashValues::Fuzzy));
 }
 
 TEST_CASE("QUICK_HASH_STOPS_UPDATING") {
@@ -212,10 +212,10 @@ TEST_CASE("QUICK_HASH_STOPS_UPDATING") {
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
 
-  REQUIRE("62a457719101124d52a9c4fe5211f52a" ==
-                     to_hex(std::begin(hashes.Md5), std::end(hashes.Md5)));
-  REQUIRE("422e2b4e027b430225b3cff67247be64" ==
-                     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
+  CHECK("62a457719101124d52a9c4fe5211f52a" ==
+        to_hex(std::begin(hashes.Md5), std::end(hashes.Md5)));
+  CHECK("422e2b4e027b430225b3cff67247be64" ==
+        to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 }
 
 void check_quick_hash_runs(const std::string& exp, size_t len, const std::vector<int>& offsets) {
@@ -235,7 +235,7 @@ void check_quick_hash_runs(const std::string& exp, size_t len, const std::vector
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
 
-  REQUIRE(exp == to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
+  CHECK(exp == to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5)));
 }
 
 struct QuickHashTest {
@@ -286,25 +286,25 @@ TEST_CASE("INVALID_FLAGS_VALUE") {
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
 
-  REQUIRE(
+  CHECK(
     "d41d8cd98f00b204e9800998ecf8427e" ==
      to_hex(std::begin(hashes.Md5), std::end(hashes.Md5))
   );
 
-  REQUIRE(
+  CHECK(
     "d41d8cd98f00b204e9800998ecf8427e" ==
     to_hex(std::begin(hashes.QuickMd5), std::end(hashes.QuickMd5))
   );
 
-  REQUIRE(
+  CHECK(
     "da39a3ee5e6b4b0d3255bfef95601890afd80709" ==
     to_hex(std::begin(hashes.Sha1), std::end(hashes.Sha1))
   );
 
-  REQUIRE(
+  CHECK(
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ==
     to_hex(std::begin(hashes.Sha2_256), std::end(hashes.Sha2_256))
   );
 
-  REQUIRE("3::" == std::string((const char*)hashes.Fuzzy));
+  CHECK("3::" == std::string((const char*)hashes.Fuzzy));
 }
