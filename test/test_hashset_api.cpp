@@ -61,10 +61,10 @@ TEST_CASE("hashset_index_for_type") {
     { { X_SFHASH_SHA_1, "sha1",     20, 0 }, {}, {} }
   });
 
-  CHECK(x_sfhash_hashset_index_for_type(&hset, X_SFHASH_SIZE) == 0);
-  CHECK(x_sfhash_hashset_index_for_type(&hset, X_SFHASH_MD5) == 1);
-  CHECK(x_sfhash_hashset_index_for_type(&hset, X_SFHASH_SHA_1) == 2);
-  CHECK(x_sfhash_hashset_index_for_type(&hset, X_SFHASH_OTHER) == -1);
+  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_SIZE) == 0);
+  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_MD5) == 1);
+  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_SHA_1) == 2);
+  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_OTHER) == -1);
 }
 
 template <class Tests>
@@ -73,7 +73,7 @@ void do_lookups(
   SFHASH_HashsetType htype,
   const Tests& tests
 ) {
-  const auto tidx = x_sfhash_hashset_index_for_type(hset, htype);
+  const auto tidx = sfhash_hashset_index_for_type(hset, htype);
   REQUIRE(tidx != -1);
 
   for (const auto& [hash, exp]: tests) {
