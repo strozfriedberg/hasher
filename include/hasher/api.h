@@ -108,71 +108,6 @@ void sfhash_destroy_hasher(SFHASH_Hasher* hasher);
 ******************************************************************************/
 
 struct SFHASH_HashSet;
-struct SFHASH_SizeSet;
-
-// Metadata from the hashset file header
-typedef struct {
-  uint64_t version;               // file format version
-  SFHASH_HashAlgorithm hash_type; // type of hash in this hashset
-  uint64_t hash_length;           // length of hash in this hashset
-  uint64_t flags;                 // flags; unused at present
-  uint64_t hashset_size;          // number of hashes in hashset
-  uint64_t hashset_off;           // offset of hashes in hashset file
-  uint64_t sizes_off;             // offset of sizes in hashset file
-  uint64_t radius;                // max delta of any hash from expected index
-  uint8_t hashset_sha256[32];     // SHA-2-256 of hash data only
-  char* hashset_name;             // name of hashset
-  char* hashset_time;             // ISO 8601 timestamp of hashset
-  char* hashset_desc;             // description of hashset
-} SFHASH_HashSetInfo;
-
-/*
- * Load hashset metadata
- *
- * Returns null on error and sets err to nonnull.
- */
-SFHASH_HashSetInfo* sfhash_load_hashset_info(
-  const void* beg,
-  const void* end,
-  SFHASH_Error** err
-);
-
-/*
- * Free hashset metadata
- */
-void sfhash_destroy_hashset_info(SFHASH_HashSetInfo* hsinfo);
-
-/*
- * Load a hashset
- *
- * The buffer [beg, end) is used directly and the caller remains responsible
- * for freeing it.
- *
- * Returns null on error and sets err to nonnull.
- */
-SFHASH_HashSet* sfhash_load_hashset(
-  const void* beg,
-  const void* end,
-  SFHASH_Error** err
-);
-
-/*
- * Get the metadata for a hashset
- */
-const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset);
-
-/*
- * Check if a given hash is contained in a hashset
- */
-bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash);
-
-/*
- * Free a hashset
- *
- * This does not free the buffer containing the hashset data; the caller
- * remains responsible for freeing that.
- */
-void sfhash_destroy_hashset(SFHASH_HashSet* hset);
 
 /*
  *  Union of two hashsets
@@ -241,29 +176,6 @@ SFHASH_HashSet* sfhash_difference_hashsets(
   const char* out_desc,
   SFHASH_Error** err
 );
-
-/*
- * Load a sizeset
- *
- * Returns null on error and sets err to nonnull.
- */
-SFHASH_SizeSet* sfhash_load_sizeset(
-  SFHASH_HashSetInfo* hsinfo,
-  const void* beg,
-  const void* end,
-  SFHASH_Error** err
-);
-
-/*
- * Free a sizeset
- */
-void sfhash_destroy_sizeset(SFHASH_SizeSet* sset);
-
-/*
- * Check if a given size is contained in a sizeset
- */
-bool sfhash_lookup_sizeset(const SFHASH_SizeSet* sset, uint64_t size);
-
 
 /******************************************************************************
   Hex encoding

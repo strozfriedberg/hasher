@@ -23,8 +23,8 @@ TEST_CASE("load_hashset_good") {
   SFHASH_Error* err = nullptr;
 
   const auto hset = make_unique_del(
-    x_sfhash_load_hashset(beg, end, &err),
-    x_sfhash_destroy_hashset
+    sfhash_load_hashset(beg, end, &err),
+    sfhash_destroy_hashset
   );
 
   CHECK(!err);
@@ -42,8 +42,8 @@ TEST_CASE("load_hashset_bad") {
   SFHASH_Error* err = nullptr;
 
   const auto hset = make_unique_del(
-    x_sfhash_load_hashset(nullptr, nullptr, &err),
-    x_sfhash_destroy_hashset
+    sfhash_load_hashset(nullptr, nullptr, &err),
+    sfhash_destroy_hashset
   );
 
   REQUIRE(err);
@@ -77,7 +77,7 @@ void do_lookups(
   REQUIRE(tidx != -1);
 
   for (const auto& [hash, exp]: tests) {
-    CHECK(x_sfhash_hashset_lookup(hset, tidx, hash.data()) == exp);
+    CHECK(sfhash_hashset_lookup(hset, tidx, hash.data()) == exp);
   }
 }
 

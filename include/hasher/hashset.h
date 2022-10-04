@@ -39,7 +39,7 @@ struct SFHASH_Hashset;
  *
  * Returns null on error and sets err to nonnull.
  */
-SFHASH_Hashset* x_sfhash_load_hashset(
+SFHASH_Hashset* sfhash_load_hashset(
   const void* beg,
   const void* end,
   SFHASH_Error** err
@@ -48,7 +48,7 @@ SFHASH_Hashset* x_sfhash_load_hashset(
 /*
  * Free a hashset
  */
-void x_sfhash_destroy_hashset(SFHASH_Hashset* hset);
+void sfhash_destroy_hashset(SFHASH_Hashset* hset);
 
 /*
  * Get hashset data index for the given hash type.
@@ -65,7 +65,7 @@ int sfhash_hashset_index_for_type(
  *
  *  The type index is the index returned by sfhash_hashset_index_for_type.
  */
-bool x_sfhash_hashset_lookup(
+bool sfhash_hashset_lookup(
   const SFHASH_Hashset* hset,
   size_t tidx,
   const void* hash

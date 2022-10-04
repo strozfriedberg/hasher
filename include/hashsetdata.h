@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hasher/hashset.h"
+
 #include "hasher/api.h"
 
 class HashSetData {
@@ -12,7 +14,6 @@ public:
 };
 
 HashSetData* load_hashset_data(
-  const SFHASH_HashSetInfo* hsinfo,
-  const void* beg,
-  const void* end
+  const SFHASH_Hashset* hset,
+  size_t tidx
 );

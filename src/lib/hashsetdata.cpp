@@ -5,12 +5,11 @@
 #include "hasher/api.h"
 #include "hashsetdata.h"
 #include "hashset_util.h"
+#include "hset.h"
 #include "throw.h"
 #include "util.h"
 
 #include "hsd_impls/radius_hsd.h"
-
-using HashSetInfo = SFHASH_HashSetInfo;
 
 template <size_t HashLength>
 HashSetData* make_hashset_data(
@@ -30,16 +29,20 @@ struct MakeHashSetData {
   }
 };
 
-HashSetData* load_hashset_data(const HashSetInfo* hsinfo, const void* beg, const void* end) {
-  THROW_IF(beg > end, "beg > end!");
+HashSetData* load_hashset_data(const SFHASH_Hashset* hset, size_t tidx) {
+  THROW_IF(!hset, "hset == nullptr");
 
-  const size_t exp_len = hsinfo->hashset_size * hsinfo->hash_length;
-  const size_t act_len = static_cast<const char*>(end) - static_cast<const char*>(beg);
+  const auto& hdr = std::get<0>(hset->hsets[tidx]);
+  const auto& dat = std::get<1>(hset->hsets[tidx]);
+
+  const size_t exp_len = hdr.hash_length * hdr.hash_count;
+  const size_t act_len = static_cast<const char*>(dat.end) - static_cast<const char*>(dat.beg);
 
   THROW_IF(exp_len > act_len, "out of data reading hashes");
   THROW_IF(exp_len < act_len, "data trailing hashes");
 
+// TODO: radius arg
   return hashset_dispatcher<MakeHashSetData>(
-    hsinfo->hash_length, beg, end, hsinfo->radius
+    hdr.hash_length, dat.beg, dat.end, 0 
   );
 }

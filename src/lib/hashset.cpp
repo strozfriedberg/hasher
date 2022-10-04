@@ -2,7 +2,6 @@
 #include "error.h"
 #include "hashset.h"
 #include "hashsetdata.h"
-#include "hashsetinfo.h"
 #include "hashset_util.h"
 #include "throw.h"
 #include "util.h"
@@ -14,68 +13,6 @@
 #include <memory>
 #include <string>
 #include <type_traits>
-
-void SFHASH_HashSet::load(const void* ptr, size_t len) {
-  const uint8_t* p = static_cast<const uint8_t*>(ptr);
-
-  std::unique_ptr<SFHASH_Error> errptr;
-  SFHASH_Error* err = nullptr;
-
-  info = make_unique_del(
-    sfhash_load_hashset_info(p, p + len, &err),
-    sfhash_destroy_hashset_info
-  );
-
-  errptr.reset(err);
-  THROW_IF(err, err->message);
-
-  hset = std::unique_ptr<HashSetData>(
-    load_hashset_data(
-      info.get(),
-      p + info->hashset_off,
-      p + info->hashset_off + info->hashset_size * info->hash_length
-    )
-  );
-
-  errptr.reset(err);
-  THROW_IF(err, err->message);
-}
-
-SFHASH_HashSet* sfhash_load_hashset(
-  const void* beg,
-  const void* end,
-  SFHASH_Error** err)
-{
-  auto hset = make_unique_del(
-    new SFHASH_HashSet{{nullptr, nullptr}, nullptr},
-    sfhash_destroy_hashset
-  );
-
-  const size_t len = static_cast<const uint8_t*>(end) -
-                     static_cast<const uint8_t*>(beg);
-
-  try {
-    hset->load(beg, len);
-  }
-  catch (const std::exception& e) {
-    fill_error(err, e.what());
-    return nullptr;
-  }
-
-  return hset.release();
-}
-
-const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset) {
-  return hset->info.get();
-}
-
-bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash) {
-  return hset->hset->contains(static_cast<const uint8_t*>(hash));
-}
-
-void sfhash_destroy_hashset(SFHASH_HashSet* hset) {
-  delete hset;
-}
 
 template <size_t HashLength>
 using IItr = const std::array<uint8_t, HashLength>*;

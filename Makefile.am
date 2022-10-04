@@ -36,7 +36,6 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/libcrypto_hasher.cpp \
 	src/lib/parser.cpp \
 	src/lib/quick_hasher.cpp \
-	src/lib/sizeset.cpp \
 	src/lib/util.cpp \
 	src/lib/hex_impls/hex_avx2.cpp \
 	src/lib/hex_impls/hex_sse41.cpp \
@@ -115,7 +114,6 @@ test_test_SOURCES = \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
-	test/test_hashset.cpp \
 	test/test_hashset_api.cpp \
 	test/test_hashsetdata_util.cpp \
 	test/test_hashset_setops.cpp \

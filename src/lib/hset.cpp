@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <memory>
 
-SFHASH_Hashset* x_sfhash_load_hashset(
+SFHASH_Hashset* sfhash_load_hashset(
   const void* beg,
   const void* end,
   SFHASH_Error** err
@@ -28,7 +28,7 @@ SFHASH_Hashset* x_sfhash_load_hashset(
   }
 }
 
-void x_sfhash_destroy_hashset(SFHASH_Hashset* hset) {
+void sfhash_destroy_hashset(SFHASH_Hashset* hset) {
   delete hset;
 };
 
@@ -53,7 +53,7 @@ struct Make_BHSDI {
   }
 };
 
-bool x_sfhash_hashset_lookup(
+bool sfhash_hashset_lookup(
   const SFHASH_Hashset* hset,
   size_t tidx,
   const void* hash
