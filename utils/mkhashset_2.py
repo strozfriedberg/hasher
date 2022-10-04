@@ -186,6 +186,10 @@ def write_ftoc(toc, out):
     return write_chunk(b'FTOC', chbuf.getbuffer(), out)
 
 
+def size_to_u64(s):
+    return to_le_u64(int(s))
+
+
 def run(hashset_name, hashset_desc, hash_type_names, inlines, out):
     version = 2
 
@@ -196,7 +200,7 @@ def run(hashset_name, hashset_desc, hash_type_names, inlines, out):
     ]
 
     conv = [
-        bytes.fromhex if i.type != SIZES else to_int_le_u64 for i in hash_infos
+        bytes.fromhex if i.type != SIZES else size_to_u64 for i in hash_infos
     ]
 
     records = []
