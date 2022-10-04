@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <hasher/common.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,10 +43,6 @@ uint32_t sfhash_hash_length(SFHASH_HashAlgorithm hash_type);
 /******************************************************************************
  Error handling
 ******************************************************************************/
-
-struct SFHASH_Error {
-  char* message;
-};
 
 // Frees an error struct
 void sfhash_free_error(SFHASH_Error* err);
