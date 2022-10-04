@@ -1,5 +1,5 @@
-#include <algorithm>
-#include <cstring>
+#include <tuple>
+#include <utility>
 
 #include "hashsetdata.h"
 #include "hashset_util.h"
