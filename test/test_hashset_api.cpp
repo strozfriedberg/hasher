@@ -56,9 +56,9 @@ TEST_CASE("hashset_index_for_type") {
   SFHASH_Hashset hset;
 
   hset.hsets.assign({
-    { { X_SFHASH_SIZE,  "size",      8, 0 }, {}, {} },
-    { { X_SFHASH_MD5,   "md5",      16, 0 }, {}, {} },
-    { { X_SFHASH_SHA_1, "sha1",     20, 0 }, {}, {} }
+    { { X_SFHASH_SIZE,  "size",  8, 0 }, {}, {} },
+    { { X_SFHASH_MD5,   "md5",  16, 0 }, {}, {} },
+    { { X_SFHASH_SHA_1, "sha1", 20, 0 }, {}, {} }
   });
 
   CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_SIZE) == 0);
