@@ -7,8 +7,7 @@ find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py sha1 'So
 
 Make a hashset and sizeset from a list of filenames:
 
-for i in  $(find -type f); do echo $(sha1sum $i) $(stat --printf=%s $i) ; done | cut -f1,3 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
-
+for i in $(find -type f) ; do echo $(stat --printf=%s $i) $(md5sum $i | cut -f1 -d' ') $(sha1sum $i | cut -f1 -d' ') ; done | sort -u | ./mkhashset.py 'Some test hashes' 'These are test hashes.' sizes md5 sha1 >test.hset
 
 Make a hashset and sizeset from the NSRL:
 
