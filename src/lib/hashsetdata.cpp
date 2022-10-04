@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <cstring>
-#include <limits>
 
-#include "hasher/api.h"
 #include "hashsetdata.h"
 #include "hashset_util.h"
 #include "hset.h"
