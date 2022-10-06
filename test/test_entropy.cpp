@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "hasher/api.h"
+#include "hasher/hasher.h"
 #include "util.h"
 
 #include <algorithm>

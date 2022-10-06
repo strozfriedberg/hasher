@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hasher/api.h"
+#include "hasher/hasher.h"
 
 #include <limits>
 

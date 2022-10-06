@@ -6,6 +6,7 @@
 #include <fuzzy.h>
 
 #include "hasher/api.h"
+#include "hasher/hasher.h"
 #include "hex.h"
 #include "util.h"
 
