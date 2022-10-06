@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hashset/basic_hsd.h"
-#include "hashset/hsd_utils.h"
+#include "hashset/basic_ls.h"
+#include "hashset/utils.h"
 
 template <
   size_t HashLength,

@@ -4,7 +4,7 @@
 #include "hashset_util.h"
 #include "hset.h"
 #include "lookupstrategy.h"
-#include "hashset/basic_hsd.h"
+#include "hashset/basic_ls.h"
 
 #include <algorithm>
 #include <memory>
