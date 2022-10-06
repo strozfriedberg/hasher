@@ -35,11 +35,11 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hasher/libblake3_hasher.cpp \
 	src/lib/hasher/libcrypto_hasher.cpp \
 	src/lib/hasher/quick_hasher.cpp \
+	src/lib/hashset/convex_hull.cpp \
+	src/lib/hashset/hsd_utils.cpp \
 	src/lib/hex/hex.cpp \
 	src/lib/hex/hex_avx2.cpp \
-	src/lib/hex/hex_sse41.cpp \
-	src/lib/hsd_impls/convex_hull.cpp \
-	src/lib/hsd_impls/hsd_utils.cpp
+	src/lib/hex/hex_sse41.cpp
 
 src_lib_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
