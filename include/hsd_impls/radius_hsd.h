@@ -8,16 +8,16 @@
 #include <limits>
 
 template <size_t HashLength>
-class RadiusHashSetDataImpl: public BasicHashSetDataImpl<HashLength> {
+class RadiusLookupStrategy: public BasicLookupStrategy<HashLength> {
 public:
-  RadiusHashSetDataImpl(
+  RadiusLookupStrategy(
     const void* beg,
     const void* end,
     uint32_t radius
   ):
-    BasicHashSetDataImpl<HashLength>(beg, end), Radius(radius) {}
+    BasicLookupStrategy<HashLength>(beg, end), Radius(radius) {}
 
-  virtual ~RadiusHashSetDataImpl() {}
+  virtual ~RadiusLookupStrategy() {}
 
   virtual bool contains(const uint8_t* hash) const override {
     const size_t exp = expected_index(hash, this->HashesEnd - this->HashesBeg.get());
@@ -50,12 +50,12 @@ uint32_t compute_radius(
 }
 
 template <size_t HashLength>
-HashSetData* make_radius_hashset_data(
+LookupStrategy* make_radius_lookup_strategy(
   const void* beg,
   const void* end,
   uint32_t radius)
 {
-  return new RadiusHashSetDataImpl<HashLength>(
+  return new RadiusLookupStrategy<HashLength>(
     beg, end,
     radius == std::numeric_limits<uint32_t>::max() ?
       compute_radius<HashLength>(

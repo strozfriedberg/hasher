@@ -1,7 +1,7 @@
 #include <tuple>
 #include <utility>
 
-#include "hashsetdata.h"
+#include "lookupstrategy.h"
 #include "hashset_util.h"
 #include "hset.h"
 #include "throw.h"
@@ -10,24 +10,24 @@
 #include "hsd_impls/radius_hsd.h"
 
 template <size_t HashLength>
-HashSetData* make_hashset_data(
+LookupStrategy* make_lookup_strategy(
   const void* beg,
   const void* end,
   uint32_t radius)
 {
-  return make_radius_hashset_data<HashLength>(beg, end, radius);
+  return make_radius_lookup_strategy<HashLength>(beg, end, radius);
 }
 
 // adaptor for use with hashset_dispatcher
 template <size_t HashLength>
-struct MakeHashSetData {
+struct MakeLookupStrategy {
   template <class... Args>
   auto operator()(Args&&... args) {
-    return make_hashset_data<HashLength>(std::forward<Args>(args)...);
+    return make_lookup_strategy<HashLength>(std::forward<Args>(args)...);
   }
 };
 
-HashSetData* load_hashset_data(const SFHASH_Hashset* hset, size_t tidx) {
+LookupStrategy* load_lookup_strategy(const SFHASH_Hashset* hset, size_t tidx) {
   THROW_IF(!hset, "hset == nullptr");
 
   const auto& hdr = std::get<0>(hset->hsets[tidx]);
@@ -39,8 +39,8 @@ HashSetData* load_hashset_data(const SFHASH_Hashset* hset, size_t tidx) {
   THROW_IF(exp_len > act_len, "out of data reading hashes");
   THROW_IF(exp_len < act_len, "data trailing hashes");
 
-// TODO: radius arg
-  return hashset_dispatcher<MakeHashSetData>(
+// TODO: radius arg: use the hint
+  return hashset_dispatcher<MakeLookupStrategy>(
     hdr.hash_length, dat.beg, dat.end, 0 
   );
 }

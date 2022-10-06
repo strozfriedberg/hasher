@@ -7,18 +7,18 @@ template <
   size_t HashLength,
   size_t BlockBits
 >
-class BlockHashSetDataImpl: public BasicHashSetDataImpl<HashLength> {
+class BlockLookupStrategy: public BasicLookupStrategy<HashLength> {
 public:
-  BlockHashSetDataImpl(
+  BlockLookupStragegy(
     const void* beg,
     const void* end,
     std::array<std::pair<ssize_t, ssize_t>, (1 << BlockBits)> blocks
   ):
-    BasicHashSetDataImpl<HashLength>(beg, end),
+    BasicLookupStrategy<HashLength>(beg, end),
     Blocks(blocks)
   {}
 
-  virtual ~BlockHashSetDataImpl() {}
+  virtual ~BlockLookupStragegy() {}
 
   virtual bool contains(const uint8_t* hash) const override {
     const size_t exp = expected_index(hash, this->HashesEnd - this->HashesBeg.get());

@@ -1,9 +1,9 @@
 #include "hasher/hashset.h"
 
 #include "error.h"
-#include "hashsetdata.h"
 #include "hashset_util.h"
 #include "hset.h"
+#include "lookupstrategy.h"
 #include "hsd_impls/basic_hsd.h"
 
 #include <algorithm>
@@ -46,10 +46,10 @@ int sfhash_hashset_index_for_type(
 }
 
 template <size_t HashLength>
-struct Make_BHSDI {
+struct Make_BLS {
   template <class... Args>
-  HashSetData* operator()(Args&&... args) {
-    return new BasicHashSetDataImpl<HashLength>(std::forward<Args>(args)...);
+  LookupStrategy* operator()(Args&&... args) {
+    return new BasicLookupStrategy<HashLength>(std::forward<Args>(args)...);
   }
 };
 

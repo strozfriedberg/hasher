@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hashsetdata.h"
+#include "lookupstrategy.h"
 
 #include <algorithm>
 #include <array>
@@ -12,9 +12,9 @@ std::array<uint8_t, HashLength>* hash_ptr_cast(const void* ptr) {
 }
 
 template <size_t HashLength>
-class BasicHashSetDataImpl: public HashSetData {
+class BasicLookupStrategy: public LookupStrategy {
 public:
-  BasicHashSetDataImpl(const void* beg, const void* end):
+  BasicLookupStrategy(const void* beg, const void* end):
     HashesBeg(nullptr, nullptr)
   {
     auto b = hash_ptr_cast<HashLength>(beg);
@@ -24,7 +24,7 @@ public:
     HashesEnd = e;
   }
 
-  virtual ~BasicHashSetDataImpl() {}
+  virtual ~BasicLookupStrategy() {}
 
   virtual bool contains(const uint8_t* hash) const {
     return std::binary_search(

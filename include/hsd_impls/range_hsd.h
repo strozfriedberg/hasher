@@ -7,21 +7,21 @@
 #include <array>
 
 template <size_t HashLength>
-class RangeHashSetDataImpl: public BasicHashSetDataImpl<HashLength> {
+class RangeLookupStrategy: public BasicLookupStrategy<HashLength> {
 public:
-  RangeHashSetDataImpl(
+  RangeLookupStrategy(
     const void* beg,
     const void* end,
     int64_t left,
     int64_t right
   ):
-    BasicHashSetDataImpl<HashLength>(beg, end),
+    BasicLookupStrategy<HashLength>(beg, end),
     Left(left),
     Right(right)
   {
   }
 
-  virtual ~RangeHashSetDataImpl() {}
+  virtual ~RangeLookupStrategy() {}
 
   virtual bool contains(const uint8_t* hash) const override {
     const size_t exp = expected_index(hash, this->HashesEnd - this->HashesBeg.get());

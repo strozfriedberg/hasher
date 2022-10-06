@@ -27,7 +27,6 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hash_types.cpp \
 	src/lib/hasher.cpp \
 	src/lib/hashset.cpp \
-	src/lib/hashsetdata.cpp \
 	src/lib/hashsetinfo.cpp \
 	src/lib/hex.cpp \
 	src/lib/hset.cpp \
