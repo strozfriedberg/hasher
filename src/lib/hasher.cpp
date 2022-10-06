@@ -1,7 +1,6 @@
 #include <cstddef>
 #include <vector>
 
-#include "hasher/api.h"
 #include "hasher/hasher.h"
 
 #include "entropy_impl.h"
