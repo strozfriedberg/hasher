@@ -28,8 +28,7 @@ typedef enum {
   SFHASH_BLAKE3    = 1 << 10,
   SFHASH_FUZZY     = 1 << 11, // ssdeep fuzzy hash
   SFHASH_ENTROPY   = 1 << 12, // Shannon entropy
-  SFHASH_QUICK_MD5 = 1 << 13,
-  SFHASH_OTHER     = 1 << 31  // any other hash type
+  SFHASH_QUICK_MD5 = 1 << 13
 } SFHASH_HashAlgorithm;
 
 // Returns a name string corresponding to the given hash type
