@@ -1,6 +1,8 @@
 #ifndef HASHER_HASHER_H_
 #define HASHER_HASHER_H_
 
+#include <stdint.h>
+
 #include <hasher/api.h>
 
 #ifdef __cplusplus
