@@ -3,8 +3,8 @@
 #include "error.h"
 #include "hashset_util.h"
 #include "hset.h"
-#include "lookupstrategy.h"
 #include "hashset/basic_ls.h"
+#include "hashset/lookupstrategy.h"
 
 #include <algorithm>
 #include <memory>

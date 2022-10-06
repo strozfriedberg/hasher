@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lookupstrategy.h"
+#include "hashset/lookupstrategy.h"
 
 #include <algorithm>
 #include <array>

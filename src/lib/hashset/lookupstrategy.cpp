@@ -1,12 +1,12 @@
 #include <tuple>
 #include <utility>
 
-#include "lookupstrategy.h"
 #include "hashset_util.h"
 #include "hset.h"
 #include "throw.h"
 #include "util.h"
 
+#include "hashset/lookupstrategy.h"
 #include "hashset/radius_ls.h"
 
 template <size_t HashLength>
