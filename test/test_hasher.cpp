@@ -118,7 +118,7 @@ TEST_CASE("alphabetHash") {
 
   CHECK(
     "3:u+6LO5Sfn:u+6LO5Sfn" ==
-    std::string((const char*)hashes.Fuzzy)
+    std::string(reinterpret_cast<const char*>(hashes.Fuzzy))
   );
 }
 
@@ -306,5 +306,5 @@ TEST_CASE("INVALID_FLAGS_VALUE") {
     to_hex(std::begin(hashes.Sha2_256), std::end(hashes.Sha2_256))
   );
 
-  CHECK("3::" == std::string((const char*)hashes.Fuzzy));
+  CHECK("3::" == std::string(reinterpret_cast<const char*>(hashes.Fuzzy)));
 }
