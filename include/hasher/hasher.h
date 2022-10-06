@@ -13,6 +13,31 @@ extern "C" {
  Hashing functions
 ******************************************************************************/
 
+// Bit flags for specifying hash algorithms
+typedef enum {
+  SFHASH_MD5       = 1 <<  0,
+  SFHASH_SHA_1     = 1 <<  1,
+  SFHASH_SHA_2_224 = 1 <<  2,
+  SFHASH_SHA_2_256 = 1 <<  3,
+  SFHASH_SHA_2_384 = 1 <<  4,
+  SFHASH_SHA_2_512 = 1 <<  5,
+  SFHASH_SHA_3_224 = 1 <<  6,
+  SFHASH_SHA_3_256 = 1 <<  7,
+  SFHASH_SHA_3_384 = 1 <<  8,
+  SFHASH_SHA_3_512 = 1 <<  9,
+  SFHASH_BLAKE3    = 1 << 10,
+  SFHASH_FUZZY     = 1 << 11, // ssdeep fuzzy hash
+  SFHASH_ENTROPY   = 1 << 12, // Shannon entropy
+  SFHASH_QUICK_MD5 = 1 << 13,
+  SFHASH_OTHER     = 1 << 31  // any other hash type
+} SFHASH_HashAlgorithm;
+
+// Returns a name string corresponding to the given hash type
+const char* sfhash_hash_name(SFHASH_HashAlgorithm hash_type);
+
+// Returns the byte length of the given hash type
+uint32_t sfhash_hash_length(SFHASH_HashAlgorithm hash_type);
+
 struct SFHASH_HashValues {
   uint8_t Md5[16];
   uint8_t Sha1[20];
