@@ -1,12 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "hex.h"
-#include "hset.h"
 #include "util.h"
 
 #include "helper.h"
 
 #include "hasher/hashset.h"
+#include "hashset/hset.h"
 
 #include <array>
 #include <cstring>
