@@ -30,8 +30,8 @@ struct MakeLookupStrategy {
 LookupStrategy* load_lookup_strategy(const SFHASH_Hashset* hset, size_t tidx) {
   THROW_IF(!hset, "hset == nullptr");
 
-  const auto& hdr = std::get<0>(hset->hsets[tidx]);
-  const auto& dat = std::get<1>(hset->hsets[tidx]);
+  const auto& hdr = std::get<0>(hset->holder.hsets[tidx]);
+  const auto& dat = std::get<1>(hset->holder.hsets[tidx]);
 
   const size_t exp_len = hdr.hash_length * hdr.hash_count;
   const size_t act_len = static_cast<const char*>(dat.end) - static_cast<const char*>(dat.beg);

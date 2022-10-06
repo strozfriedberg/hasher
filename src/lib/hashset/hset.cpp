@@ -37,12 +37,12 @@ int sfhash_hashset_index_for_type(
   SFHASH_HashsetType htype
 ) {
   const auto i = std::find_if(
-    hset->hsets.begin(),
-    hset->hsets.end(),
+    hset->holder.hsets.begin(),
+    hset->holder.hsets.end(),
     [htype](const auto& t) { return htype == std::get<0>(t).hash_type; }
   );
 
-  return i == hset->hsets.end() ? -1 : i - hset->hsets.begin();
+  return i == hset->holder.hsets.end() ? -1 : i - hset->holder.hsets.begin();
 }
 
 template <size_t HashLength>

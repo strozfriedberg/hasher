@@ -1,4 +1,9 @@
 #include "hset_decoder.h"
+#include "hashset/lookupstrategy.h"
 
-struct SFHASH_Hashset: public Holder {
+#include <memory>
+
+struct SFHASH_Hashset {
+  Holder holder;
+  std::unique_ptr<LookupStrategy> lookup;
 };

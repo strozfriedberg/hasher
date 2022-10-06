@@ -111,7 +111,7 @@ TEST_CASE("hashset_lookup") {
 
   SFHASH_Hashset hset;
 
-  hset.hsets.assign({
+  hset.holder.hsets.assign({
     { { X_SFHASH_MD5,   "md5",  16, 0 }, {md5s.begin(),  md5s.end()},  {} },
     { { X_SFHASH_SHA_1, "sha1", 20, 0 }, {sha1s.begin(), sha1s.end()}, {} }
   });
