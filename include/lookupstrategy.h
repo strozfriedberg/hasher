@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 struct SFHASH_Hashset;
 
 class LookupStrategy {
