@@ -1,4 +1,4 @@
-#include "hasher/api.h"
+#include "hasher/common.h"
 #include "error.h"
 
 #include <cstring>
