@@ -20,21 +20,21 @@ nodist_EXTRA_src_lib_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 noinst_LTLIBRARIES = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT)
 
 src_lib_libhasherint_la_SOURCES = \
-	src/lib/entropy.cpp \
 	src/lib/error.cpp \
-	src/lib/fuzzy_hasher.cpp \
 	src/lib/fuzzy_matcher.cpp \
 	src/lib/hash_types.cpp \
-	src/lib/hasher.cpp \
 	src/lib/hashset.cpp \
 	src/lib/hashsetinfo.cpp \
 	src/lib/hset.cpp \
 	src/lib/hset_decoder.cpp \
-	src/lib/libblake3_hasher.cpp \
-	src/lib/libcrypto_hasher.cpp \
 	src/lib/parser.cpp \
-	src/lib/quick_hasher.cpp \
 	src/lib/util.cpp \
+	src/lib/hasher/entropy.cpp \
+	src/lib/hasher/fuzzy_hasher.cpp \
+	src/lib/hasher/hasher.cpp \
+	src/lib/hasher/libblake3_hasher.cpp \
+	src/lib/hasher/libcrypto_hasher.cpp \
+	src/lib/hasher/quick_hasher.cpp \
 	src/lib/hex/hex.cpp \
 	src/lib/hex/hex_avx2.cpp \
 	src/lib/hex/hex_sse41.cpp \
