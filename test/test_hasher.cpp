@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <iterator>
+#include <string>
 
 #include <fuzzy.h>
 
