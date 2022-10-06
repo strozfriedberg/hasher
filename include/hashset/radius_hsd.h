@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hsd_impls/basic_hsd.h"
-#include "hsd_impls/hsd_utils.h"
+#include "hashset/basic_hsd.h"
+#include "hashset/hsd_utils.h"
 
 #include <algorithm>
 #include <array>

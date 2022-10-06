@@ -7,7 +7,7 @@
 #include "throw.h"
 #include "util.h"
 
-#include "hsd_impls/radius_hsd.h"
+#include "hashset/radius_hsd.h"
 
 template <size_t HashLength>
 LookupStrategy* make_lookup_strategy(

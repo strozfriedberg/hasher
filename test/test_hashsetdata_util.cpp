@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "hex.h"
-#include "hsd_impls/hsd_utils.h"
+#include "hashset/hsd_utils.h"
 
 #include <array>
 #include <tuple>
