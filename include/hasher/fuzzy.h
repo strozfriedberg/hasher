@@ -1,6 +1,8 @@
 #ifndef HASHER_FUZZY_H_
 #define HASHER_FUZZY_H_
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
