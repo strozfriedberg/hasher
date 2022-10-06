@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iterator>
 #include <string>
+#include <string_view>
 
 #include <fuzzy.h>
 
@@ -41,7 +42,7 @@ void empty_hash_checker(const SFHASH_HashValues& hashes) {
     to_hex(std::begin(hashes.Blake3), std::end(hashes.Blake3))
   );
 
-  REQUIRE("3::" == std::string((const char*)hashes.Fuzzy));
+  REQUIRE("3::" == std::string_view(reinterpret_cast<const char*>(hashes.Fuzzy)));
 }
 
 TEST_CASE("emptyHashNoUpdate") {
@@ -119,7 +120,7 @@ TEST_CASE("alphabetHash") {
 
   CHECK(
     "3:u+6LO5Sfn:u+6LO5Sfn" ==
-    std::string(reinterpret_cast<const char*>(hashes.Fuzzy))
+    std::string_view(reinterpret_cast<const char*>(hashes.Fuzzy))
   );
 }
 
@@ -307,5 +308,5 @@ TEST_CASE("INVALID_FLAGS_VALUE") {
     to_hex(std::begin(hashes.Sha2_256), std::end(hashes.Sha2_256))
   );
 
-  CHECK("3::" == std::string(reinterpret_cast<const char*>(hashes.Fuzzy)));
+  CHECK("3::" == std::string_view(reinterpret_cast<const char*>(hashes.Fuzzy)));
 }
