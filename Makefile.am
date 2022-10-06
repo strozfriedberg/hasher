@@ -28,7 +28,6 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hasher.cpp \
 	src/lib/hashset.cpp \
 	src/lib/hashsetinfo.cpp \
-	src/lib/hex.cpp \
 	src/lib/hset.cpp \
 	src/lib/hset_decoder.cpp \
 	src/lib/libblake3_hasher.cpp \
@@ -36,8 +35,9 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/parser.cpp \
 	src/lib/quick_hasher.cpp \
 	src/lib/util.cpp \
-	src/lib/hex_impls/hex_avx2.cpp \
-	src/lib/hex_impls/hex_sse41.cpp \
+	src/lib/hex/hex.cpp \
+	src/lib/hex/hex_avx2.cpp \
+	src/lib/hex/hex_sse41.cpp \
 	src/lib/hsd_impls/convex_hull.cpp \
 	src/lib/hsd_impls/hsd_utils.cpp
 
