@@ -76,7 +76,7 @@ struct SFHASH_HashsetRecordRange {
   size_t end;
 };
 
-const SFHASH_HashsetRecordRange x_sfhash_hashset_records_lookup(
+const SFHASH_HashsetRecordRange sfhash_hashset_records_lookup(
   const SFHASH_Hashset* hset,
   size_t tidx,
   const void* hash
@@ -84,15 +84,20 @@ const SFHASH_HashsetRecordRange x_sfhash_hashset_records_lookup(
 
 struct SFHASH_HashsetRecord;
 
-const void* x_sfhash_hashset_record_for_hash(
+const SFHASH_HashsetRecord* sfhash_hashset_record_for_hash(
   const SFHASH_Hashset* hset,
   size_t tidx,
   size_t ridx
 );
 
-const void* x_sfhash_hashset_record_field(
-  const SFHASH_HashsetRecord* rec,
+int sfhash_hashset_record_field_index_for_type(
+  const SFHASH_Hashset* hset,
   SFHASH_HashsetType htype
+);
+
+const void* sfhash_hashset_record_field(
+  const SFHASH_HashsetRecord* rec,
+  size_t tidx
 );
 
 #ifdef __cplusplus
