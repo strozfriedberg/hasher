@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 
 #include "hasher/api.h"
+#include "hasher/fuzzy.h"
+
 #include "parser.h"
 #include "throw.h"
 #include "util.h"

@@ -9,7 +9,7 @@
 
 #include <parallel_hashmap/phmap.h>
 
-#include "hasher/api.h"
+#include "hasher/fuzzy.h"
 
 struct FuzzyFileOffsets {
   // Offsets of block, double_block, and filename in ssdeep format hash file
