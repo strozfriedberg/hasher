@@ -52,7 +52,12 @@ endif
 src_lib_libhasher_ladir = $(includedir)/hasher
 
 src_lib_libhasher_la_HEADERS = \
-	include/hasher/api.h
+	include/hasher/api.h \
+	include/hasher/common.h \
+	include/hasher/fuzzy.h \
+	include/hasher/hasher.h \
+	include/hasher/hashset.h \
+	include/hasher/hex.h
 
 vendors_BLAKE3_c_libblake3int_la_CPPFLAGS = $(AM_CPPFLAGS)
 
