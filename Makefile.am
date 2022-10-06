@@ -25,8 +25,6 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hash_types.cpp \
 	src/lib/hashset.cpp \
 	src/lib/hashsetinfo.cpp \
-	src/lib/hset.cpp \
-	src/lib/hset_decoder.cpp \
 	src/lib/parser.cpp \
 	src/lib/util.cpp \
 	src/lib/hasher/entropy.cpp \
@@ -37,6 +35,9 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hasher/quick_hasher.cpp \
 	src/lib/hashset/convex_hull.cpp \
 	src/lib/hashset/hsd_utils.cpp \
+	src/lib/hashset/hset.cpp \
+	src/lib/hashset/hset_decoder.cpp \
+	src/lib/hashset/lookupstrategy.cpp \
 	src/lib/hex/hex.cpp \
 	src/lib/hex/hex_avx2.cpp \
 	src/lib/hex/hex_sse41.cpp
