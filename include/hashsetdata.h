@@ -2,7 +2,7 @@
 
 #include "hasher/hashset.h"
 
-#include "hasher/api.h"
+#include <cstdint>
 
 class HashSetData {
 public:
