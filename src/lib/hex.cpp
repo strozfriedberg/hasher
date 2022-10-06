@@ -1,7 +1,7 @@
 #include "hex.h"
 #include "throw.h"
 
-#include "hasher/api.h"
+#include "hasher/hex.h"
 
 #if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET)
 

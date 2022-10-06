@@ -1,8 +1,6 @@
 #ifndef HASHER_C_API_H_
 #define HASHER_C_API_H_
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
 #include <hasher/common.h>
@@ -113,19 +111,6 @@ SFHASH_HashSet* sfhash_difference_hashsets(
   const char* out_desc,
   SFHASH_Error** err
 );
-
-/******************************************************************************
-  Hex encoding
-******************************************************************************/
-
-// Converts len bytes of src to a hexadecimal string dest.
-// The length of dest will be 2*len.
-void sfhash_hex(char* dest, const void* src, size_t len);
-
-// Converts a hexadecimal string src of length len to bytes dest.
-// Returns true on success, false on bad input (either src had a
-// character not in [0-9A-Za-z] or src had an odd length).
-bool sfhash_unhex(uint8_t* dest, const char* src, size_t len);
 
 #ifdef __cplusplus
 }
