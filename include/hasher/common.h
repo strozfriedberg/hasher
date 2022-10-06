@@ -5,9 +5,16 @@
 extern "C" {
 #endif
 
+/******************************************************************************
+ Error handling
+******************************************************************************/
+
 struct SFHASH_Error {
   char* message;
 };
+
+// Frees an error struct
+void sfhash_free_error(SFHASH_Error* err);
 
 #ifdef __cplusplus
 }

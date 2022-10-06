@@ -41,13 +41,6 @@ const char* sfhash_hash_name(SFHASH_HashAlgorithm hash_type);
 uint32_t sfhash_hash_length(SFHASH_HashAlgorithm hash_type);
 
 /******************************************************************************
- Error handling
-******************************************************************************/
-
-// Frees an error struct
-void sfhash_free_error(SFHASH_Error* err);
-
-/******************************************************************************
   Hash set and size set functions
 ******************************************************************************/
 
