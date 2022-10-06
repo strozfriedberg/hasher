@@ -3,6 +3,7 @@
 #include "hasher/api.h"
 #include "hasher/hasher.h"
 
+#include <cstddef>
 #include <limits>
 
 //
