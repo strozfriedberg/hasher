@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#include <hasher/api.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
