@@ -34,10 +34,10 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hasher/libcrypto_hasher.cpp \
 	src/lib/hasher/quick_hasher.cpp \
 	src/lib/hashset/convex_hull.cpp \
-	src/lib/hashset/hsd_utils.cpp \
 	src/lib/hashset/hset.cpp \
 	src/lib/hashset/hset_decoder.cpp \
 	src/lib/hashset/lookupstrategy.cpp \
+	src/lib/hashset/utils.cpp \
 	src/lib/hex/hex.cpp \
 	src/lib/hex/hex_avx2.cpp \
 	src/lib/hex/hex_sse41.cpp
