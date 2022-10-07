@@ -1,7 +1,10 @@
 #include "hset_decoder.h"
 
+#include "hashset_util.h"
 #include "hex.h"
 #include "util.h"
+#include "hashset/basic_ls.h"
+#include "hashset/lookupstrategy.h"
 
 #include <algorithm>
 #include <exception>
@@ -211,21 +214,71 @@ State::Type parse_ftoc(const Chunk& ch, Holder& h) {
   return State::DONE;
 }
 
+template <size_t HashLength>
+struct Make_BLS {
+  template <class... Args>
+  LookupStrategy* operator()(Args&&... args) {
+    return new BasicLookupStrategy<HashLength>(std::forward<Args>(args)...);
+  }
+};
+
+std::unique_ptr<LookupStrategy> make_lookup_strategy(
+  const HashsetHeader& hsh,
+  const HashsetHint& hnt,
+  const HashsetData& hsd)
+{
+  switch (hnt.hint_type) {
+  case HintType::RADIUS:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  case HintType::RANGE:
+    return std::unique_ptr<LookupStrategy>(
+
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  case HintType::BLOCK:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  case HintType::BLOCK_LINEAR:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  default:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  }
+}
+
 State::Type parse_hint(const Chunk& ch, Holder& h) {
   // HHDR -> HINT
 
-  auto& hint = std::get<HashsetHint>(h.hsets.back());
+  auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
 
   const char* cur = ch.dbeg;
 
-  hint.hint_type = read_le<uint16_t>(ch.dbeg, cur, ch.dend);
+  hnt.hint_type = read_le<uint16_t>(ch.dbeg, cur, ch.dend);
 
 // TODO: check for recognized type?
 
-  hint.beg = cur;
-  hint.end = ch.dend;
+  hnt.beg = cur;
+  hnt.end = ch.dend;
 
-  std::cerr << hint << "\n\n";
+  ls = make_lookup_strategy(hsh, hnt, hsd);
+
+  std::cerr << hnt << "\n\n";
 
   return State::HINT;
 }

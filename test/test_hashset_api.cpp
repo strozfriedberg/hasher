@@ -13,8 +13,10 @@
 #include <array>
 #include <cstring>
 #include <initializer_list>
-#include <optional>
+#include <map>
+#include <memory>
 #include <utility>
+#include <variant>
 #include <vector>
 
 TEST_CASE("load_hashset_good") {
