@@ -13,8 +13,3 @@ public:
 
   virtual const uint8_t* data() const = 0;
 };
-
-LookupStrategy* load_lookup_strategy(
-  const SFHASH_Hashset* hset,
-  size_t tidx
-);
