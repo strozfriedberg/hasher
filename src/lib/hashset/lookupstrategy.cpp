@@ -9,6 +9,7 @@
 #include "hashset/hset.h"
 #include "hashset/radius_ls.h"
 
+/*
 template <size_t HashLength>
 LookupStrategy* make_lookup_strategy(
   const void* beg,
@@ -26,21 +27,4 @@ struct MakeLookupStrategy {
     return make_lookup_strategy<HashLength>(std::forward<Args>(args)...);
   }
 };
-
-LookupStrategy* load_lookup_strategy(const SFHASH_Hashset* hset, size_t tidx) {
-  THROW_IF(!hset, "hset == nullptr");
-
-  const auto& hdr = std::get<0>(hset->holder.hsets[tidx]);
-  const auto& dat = std::get<1>(hset->holder.hsets[tidx]);
-
-  const size_t exp_len = hdr.hash_length * hdr.hash_count;
-  const size_t act_len = static_cast<const char*>(dat.end) - static_cast<const char*>(dat.beg);
-
-  THROW_IF(exp_len > act_len, "out of data reading hashes");
-  THROW_IF(exp_len < act_len, "data trailing hashes");
-
-// TODO: radius arg: use the hint
-  return hashset_dispatcher<MakeLookupStrategy>(
-    hdr.hash_length, dat.beg, dat.end, 0 
-  );
-}
+*/
