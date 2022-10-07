@@ -99,7 +99,7 @@ std::string printable_chunk_type(uint32_t type) {
 
   if (tt[0] == 'H' && tt[1] == 'H') {
     return "HH " + to_hex(tt + 2, tt + 4);
-  } 
+  }
   else {
     return std::string(tt, tt + 4);
   }
@@ -127,7 +127,7 @@ Chunk decode_chunk(const char* beg, const char*& cur, const char* end) {
 struct State {
   enum Type {
     INIT,
-    SBRK, // section break 
+    SBRK, // section break
     HHDR,
     HINT,
     HDAT,
@@ -285,29 +285,29 @@ public:
   using value_type = Chunk;
   using pointer = const value_type*;
   using reference = const value_type&;
-  using difference_type = std::ptrdiff_t;  
+  using difference_type = std::ptrdiff_t;
 
   ChunkIterator(const char* beg, const char* end):
     beg(beg), cur(beg), end(end)
   {
     if (beg != end) {
-      ++(*this); 
-    } 
+      ++(*this);
+    }
   }
 
   ChunkIterator(const char* end): ChunkIterator(end, end) {}
 
   reference operator*() const noexcept {
-    return ch; 
+    return ch;
   }
 
   pointer operator->() const noexcept {
-    return &ch; 
+    return &ch;
   }
 
   ChunkIterator& operator++() {
     if (cur < end) {
-      
+
       ch = decode_chunk(beg, cur, end);
     }
     return *this;
@@ -319,8 +319,8 @@ public:
     return itr;
   }
 
-  friend bool operator==(const ChunkIterator& a, const ChunkIterator& b) noexcept; 
-  friend bool operator!=(const ChunkIterator& a, const ChunkIterator& b) noexcept; 
+  friend bool operator==(const ChunkIterator& a, const ChunkIterator& b) noexcept;
+  friend bool operator!=(const ChunkIterator& a, const ChunkIterator& b) noexcept;
 
 private:
   const char* beg;
@@ -344,30 +344,30 @@ public:
   using value_type = Chunk;
   using pointer = const value_type*;
   using reference = const value_type&;
-  using difference_type = std::ptrdiff_t;  
+  using difference_type = std::ptrdiff_t;
 
   TOCIterator(const char* beg, const char* toc_cur, const char* toc_end, const char* end):
     beg(beg), toc_cur(toc_cur), toc_end(toc_end), end(end)
   {
     if (toc_cur < toc_end) {
       ++(*this);
-    } 
+    }
   }
 
   TOCIterator(const char* toc_end):
     TOCIterator(toc_end, toc_end, toc_end, toc_end) {}
 
   reference operator*() const noexcept {
-    return ch; 
+    return ch;
   }
 
   pointer operator->() const noexcept {
-    return &ch; 
+    return &ch;
   }
 
   TOCIterator& operator++() {
     if (toc_cur < toc_end) {
-      advance_chunk(); 
+      advance_chunk();
     }
     return *this;
   }
@@ -378,17 +378,17 @@ public:
     return itr;
   }
 
-  friend bool operator==(const TOCIterator& a, const TOCIterator& b) noexcept; 
-  friend bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept; 
+  friend bool operator==(const TOCIterator& a, const TOCIterator& b) noexcept;
+  friend bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept;
 
 private:
   void advance_chunk() {
     const uint64_t ch_off = read_le<uint64_t>(beg, toc_cur, toc_end);
-    const uint32_t ch_type = read_be<uint32_t>(beg, toc_cur, toc_end); 
+    const uint32_t ch_type = read_be<uint32_t>(beg, toc_cur, toc_end);
 
     const char* cur = beg + ch_off;
     ch = decode_chunk(beg, cur, end);
- 
+
     THROW_IF(
       ch_type != ch.type,
       "expected " << printable_chunk_type(ch_type) << ", "
@@ -443,8 +443,8 @@ Holder parse_hset(const char* beg, const char* end) {
   State::Type state = State::INIT;
 
   try {
-    while (state != State::DONE) { 
-      std::cerr << state << "\n\n"; 
+    while (state != State::DONE) {
+      std::cerr << state << "\n\n";
 
       THROW_IF(ch == ch_end, "exhausted FTOC expecting more data");
 
@@ -453,7 +453,7 @@ Holder parse_hset(const char* beg, const char* end) {
         if (ch->type == Chunk::FHDR) {
           state = parse_fhdr(*ch++, h);
         }
-        else {    
+        else {
           throw UnexpectedChunkType();
         }
         break;
@@ -468,7 +468,7 @@ Holder parse_hset(const char* beg, const char* end) {
         else if (ch->type == Chunk::FTOC) {
           state = parse_ftoc(*ch++, h);
         }
-        else {    
+        else {
           throw UnexpectedChunkType();
         }
         break;
@@ -506,7 +506,7 @@ Holder parse_hset(const char* beg, const char* end) {
 
       case State::RHDR:
         if (ch->type == Chunk::RDAT) {
-          state = parse_rdat(*ch++, h); 
+          state = parse_rdat(*ch++, h);
         }
         else {
           throw UnexpectedChunkType();
