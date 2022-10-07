@@ -32,8 +32,6 @@ TEST_CASE("load_hashset_good") {
   CHECK(!err);
 
   if (err) {
-    // there shouldn't be an error, but if there is the message must be nonnull
-    REQUIRE(err->message);
     FAIL(err->message);
   }
 
