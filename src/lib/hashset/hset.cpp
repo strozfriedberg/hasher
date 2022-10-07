@@ -96,31 +96,18 @@ int sfhash_hashset_index_for_type(
   const auto i = std::find_if(
     hset->holder.hsets.begin(),
     hset->holder.hsets.end(),
-    [htype](const auto& t) { return htype == std::get<0>(t).hash_type; }
+    [htype](const auto& t) {
+      return htype == std::get<HashsetHeader>(t).hash_type;
+    }
   );
 
   return i == hset->holder.hsets.end() ? -1 : i - hset->holder.hsets.begin();
 }
-
-template <size_t HashLength>
-struct Make_BLS {
-  template <class... Args>
-  LookupStrategy* operator()(Args&&... args) {
-    return new BasicLookupStrategy<HashLength>(std::forward<Args>(args)...);
-  }
-};
 
 bool sfhash_hashset_lookup(
   const SFHASH_Hashset* hset,
   size_t tidx,
   const void* hash
 ) {
-  const auto& hs = hset->hsets[tidx];
-  const auto& hsh = std::get<0>(hs);
-  const auto& hsd = std::get<1>(hs);
-
-  std::unique_ptr<HashSetData> impl(hashset_dispatcher<Make_BHSDI>(
-    hsh.hash_length, hsd.beg, hsd.end
-  ));
-  return impl->contains(static_cast<const uint8_t*>(hash));
+  return std::get<std::unique_ptr<LookupStrategy>>(hset->holder.hsets[tidx])->contains(static_cast<const uint8_t*>(hash));
 }
