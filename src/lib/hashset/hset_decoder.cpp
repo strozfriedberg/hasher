@@ -39,6 +39,13 @@ std::ostream& operator<<(std::ostream& out, const HashsetHeader& hhdr) {
              << ' ' << hhdr.hash_count;
 }
 
+std::ostream& operator<<(std::ostream& out, const HashsetHint& hint) {
+  return out << "HINT\n"
+             << ' ' << hint.hint_type << '\n'
+             << ' ' << hint.beg << '\n'
+             << ' ' << hint.end;
+}
+
 std::ostream& operator<<(std::ostream& out, const HashsetData& hdat) {
   return out << "HDAT\n"
              << ' ' << hdat.beg << '\n'
@@ -162,12 +169,13 @@ State::Type parse_hhdr(const Chunk& ch, Holder& h) {
       read_le<uint64_t>(ch.dbeg, cur, ch.dend),
       read_le<uint64_t>(ch.dbeg, cur, ch.dend)
     },
+    HashsetHint(),
     HashsetData(),
     nullptr,
     RecordIndex()
   );
 
-  std::cerr << std::get<0>(h.hsets.back()) << "\n\n";
+  std::cerr << std::get<HashsetHeader>(h.hsets.back()) << "\n\n";
 
   return State::HHDR;
 }
@@ -208,8 +216,18 @@ State::Type parse_ftoc(const Chunk& ch, Holder& h) {
 State::Type parse_hint(const Chunk& ch, Holder& h) {
   // HHDR -> HINT
 
-// TODO
-  std::cerr << ch << "\n\n";
+  auto& hint = std::get<HashsetHint>(h.hsets.back());
+
+  const char* cur = ch.dbeg;
+
+  hint.hint_type = read_le<uint16_t>(ch.dbeg, cur, ch.dend);
+
+// TODO: check for recognized type?
+
+  hint.beg = cur;
+  hint.end = ch.dend;
+
+  std::cerr << hint << "\n\n";
 
   return State::HINT;
 }
@@ -219,18 +237,18 @@ State::Type parse_ridx(const Chunk& ch, Holder& h) {
 
   auto& hset = h.hsets.back();
 
-  const uint64_t exp_ridx_data = std::get<0>(hset).hash_count * sizeof(uint64_t);
+  const uint64_t exp_ridx_data = std::get<HashsetHeader>(hset).hash_count * sizeof(uint64_t);
 
   THROW_IF(
     static_cast<uint64_t>(ch.dend - ch.dbeg) != exp_ridx_data,
     "expected " << exp_ridx_data << "bytes in RIDX, found "
                 << (ch.dend - ch.dbeg)
-  ); 
+  );
 
-  std::get<3>(hset).beg = ch.dbeg;
-  std::get<3>(hset).end = ch.dend;
+  std::get<RecordIndex>(hset).beg = ch.dbeg;
+  std::get<RecordIndex>(hset).end = ch.dend;
 
-  std::cerr << std::get<3>(hset) << "\n\n";
+  std::cerr << std::get<RecordIndex>(hset) << "\n\n";
 
   return State::SBRK;
 }
@@ -238,18 +256,18 @@ State::Type parse_ridx(const Chunk& ch, Holder& h) {
 State::Type parse_hdat(const Chunk& ch, Holder& h) {
   auto& hset = h.hsets.back();
 
-  const uint64_t exp_hash_data = std::get<0>(hset).hash_count * std::get<0>(hset).hash_length;
+  const uint64_t exp_hash_data = std::get<HashsetHeader>(hset).hash_count * std::get<HashsetHeader>(hset).hash_length;
 
   THROW_IF(
     static_cast<uint64_t>(ch.dend - ch.dbeg) != exp_hash_data,
     "expected " << exp_hash_data << "bytes in HDAT, found "
                 << (ch.dend - ch.dbeg)
-  ); 
+  );
 
-  std::get<1>(hset).beg = ch.dbeg;
-  std::get<1>(hset).end = ch.dend;
+  std::get<HashsetData>(hset).beg = ch.dbeg;
+  std::get<HashsetData>(hset).end = ch.dend;
 
-  std::cerr << std::get<1>(hset) << "\n\n";
+  std::cerr << std::get<HashsetData>(hset) << "\n\n";
 
   return State::HDAT;
 }
@@ -420,6 +438,54 @@ struct Make_BLS {
   }
 };
 
+enum HintType {
+  BASIC = 0,
+  RADIUS = 1,
+  RANGE = 2,
+  BLOCK = 3,
+  BLOCK_LINEAR = 4
+};
+
+std::unique_ptr<LookupStrategy> make_lookup_strategy(
+  const HashsetHeader& hsh,
+  const HashsetHint& hnt,
+  const HashsetData& hsd)
+{
+  switch (hnt.hint_type) {
+  case HintType::RADIUS:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  case HintType::RANGE:
+    return std::unique_ptr<LookupStrategy>(
+
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  case HintType::BLOCK:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  case HintType::BLOCK_LINEAR:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  default:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<Make_BLS>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  }
+}
+
 Holder parse_hset(const char* beg, const char* end) {
   // check magic
   const char* cur = beg;
@@ -519,15 +585,9 @@ Holder parse_hset(const char* beg, const char* end) {
     THROW("unexpected chunk type " << printable_chunk_type(ch->type));
   }
 
-////
-
-  for (auto& [hsh, hsd, ls, _]: h.hsets) {
-    ls.reset(hashset_dispatcher<Make_BLS>(
-      hsh.hash_length, hsd.beg, hsd.end
-    ));
+  for (auto& [hsh, hsd, hnt, ls, _]: h.hsets) {
+    ls = make_lookup_strategy(hsh, hsd, hnt);
   }
-
-////
 
   return h;
 }

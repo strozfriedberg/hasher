@@ -57,6 +57,7 @@ TEST_CASE("hashset_index_for_type") {
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ X_SFHASH_SIZE, "size", 8, 0 },
+    HashsetHint{},
     HashsetData{},
     std::unique_ptr<LookupStrategy>(),
     RecordIndex{}
@@ -64,6 +65,7 @@ TEST_CASE("hashset_index_for_type") {
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ X_SFHASH_MD5, "MD5", 16, 0 },
+    HashsetHint{},
     HashsetData{},
     std::unique_ptr<LookupStrategy>(),
     RecordIndex{}
@@ -71,6 +73,7 @@ TEST_CASE("hashset_index_for_type") {
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ X_SFHASH_SHA_1, "SHA-1", 20, 0 },
+    HashsetHint{},
     HashsetData{},
     std::unique_ptr<LookupStrategy>(),
     RecordIndex{}
@@ -128,6 +131,7 @@ TEST_CASE("hashset_lookup") {
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ X_SFHASH_MD5, "md5", 16, 0 },
+    HashsetHint{},
     HashsetData{ md5s.begin(),  md5s.end() },
     std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<16>(md5s.begin(), md5s.end())),
     RecordIndex{}
@@ -135,6 +139,7 @@ TEST_CASE("hashset_lookup") {
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ X_SFHASH_SHA_1, "sha1", 20, 0 },
+    HashsetHint{},
     HashsetData{ sha1s.begin(), sha1s.end() },
     std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<20>(sha1s.begin(), sha1s.end())),
     RecordIndex{}

@@ -23,6 +23,9 @@ struct HashsetHeader {
 };
 
 struct HashsetHint {
+  uint16_t hint_type;
+  const void* beg;
+  const void* end;
 };
 
 struct HashsetData {
@@ -57,6 +60,7 @@ struct Holder {
   std::vector<
     std::tuple<
       HashsetHeader,
+      HashsetHint,
       HashsetData,
       std::unique_ptr<LookupStrategy>,
       RecordIndex
