@@ -28,6 +28,14 @@ struct HashsetHint {
   const void* end;
 };
 
+enum HintType {
+  BASIC = 0,
+  RADIUS = 1,
+  RANGE = 2,
+  BLOCK = 3,
+  BLOCK_LINEAR = 4
+};
+
 struct HashsetData {
   const void* beg;
   const void* end;

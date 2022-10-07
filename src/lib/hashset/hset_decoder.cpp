@@ -1,9 +1,7 @@
 #include "hset_decoder.h"
 
-#include "hashset_util.h"
 #include "hex.h"
 #include "util.h"
-#include "hashset/basic_ls.h"
 
 #include <algorithm>
 #include <exception>
@@ -430,62 +428,6 @@ bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept {
   return a.toc_cur != b.toc_cur;
 }
 
-template <size_t HashLength>
-struct Make_BLS {
-  template <class... Args>
-  LookupStrategy* operator()(Args&&... args) {
-    return new BasicLookupStrategy<HashLength>(std::forward<Args>(args)...);
-  }
-};
-
-enum HintType {
-  BASIC = 0,
-  RADIUS = 1,
-  RANGE = 2,
-  BLOCK = 3,
-  BLOCK_LINEAR = 4
-};
-
-std::unique_ptr<LookupStrategy> make_lookup_strategy(
-  const HashsetHeader& hsh,
-  const HashsetHint& hnt,
-  const HashsetData& hsd)
-{
-  switch (hnt.hint_type) {
-  case HintType::RADIUS:
-    return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  case HintType::RANGE:
-    return std::unique_ptr<LookupStrategy>(
-
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  case HintType::BLOCK:
-    return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  case HintType::BLOCK_LINEAR:
-    return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  default:
-    return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  }
-}
-
 Holder parse_hset(const char* beg, const char* end) {
   // check magic
   const char* cur = beg;
@@ -583,10 +525,6 @@ Holder parse_hset(const char* beg, const char* end) {
   }
   catch (const UnexpectedChunkType&) {
     THROW("unexpected chunk type " << printable_chunk_type(ch->type));
-  }
-
-  for (auto& [hsh, hsd, hnt, ls, _]: h.hsets) {
-    ls = make_lookup_strategy(hsh, hsd, hnt);
   }
 
   return h;
