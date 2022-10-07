@@ -1,9 +1,6 @@
 #include "hset_decoder.h"
-#include "hashset/lookupstrategy.h"
-
-#include <memory>
+#include "hasher/hashset.h"
 
 struct SFHASH_Hashset {
   Holder holder;
-  std::unique_ptr<LookupStrategy> lookup;
 };

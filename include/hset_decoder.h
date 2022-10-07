@@ -1,9 +1,12 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string_view>
 #include <tuple>
 #include <vector>
+
+#include "hashset/lookupstrategy.h"
 
 struct FileHeader {
   uint64_t version;
@@ -51,7 +54,14 @@ struct RecordData {
 
 struct Holder {
   FileHeader fhdr;
-  std::vector<std::tuple<HashsetHeader, HashsetData, RecordIndex>> hsets;
+  std::vector<
+    std::tuple<
+      HashsetHeader,
+      HashsetData,
+      std::unique_ptr<LookupStrategy>,
+      RecordIndex
+    >
+  > hsets;
   RecordHeader rhdr;
   RecordData rdat;
 };

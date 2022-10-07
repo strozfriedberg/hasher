@@ -1,7 +1,9 @@
 #include "hset_decoder.h"
 
+#include "hashset_util.h"
 #include "hex.h"
 #include "util.h"
+#include "hashset/basic_ls.h"
 
 #include <algorithm>
 #include <exception>
@@ -161,6 +163,7 @@ State::Type parse_hhdr(const Chunk& ch, Holder& h) {
       read_le<uint64_t>(ch.dbeg, cur, ch.dend)
     },
     HashsetData(),
+    nullptr,
     RecordIndex()
   );
 
@@ -224,10 +227,10 @@ State::Type parse_ridx(const Chunk& ch, Holder& h) {
                 << (ch.dend - ch.dbeg)
   ); 
 
-  std::get<2>(hset).beg = ch.dbeg;
-  std::get<2>(hset).end = ch.dend;
+  std::get<3>(hset).beg = ch.dbeg;
+  std::get<3>(hset).end = ch.dend;
 
-  std::cerr << std::get<2>(hset) << "\n\n";
+  std::cerr << std::get<3>(hset) << "\n\n";
 
   return State::SBRK;
 }
@@ -409,6 +412,14 @@ bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept {
   return a.toc_cur != b.toc_cur;
 }
 
+template <size_t HashLength>
+struct Make_BLS {
+  template <class... Args>
+  LookupStrategy* operator()(Args&&... args) {
+    return new BasicLookupStrategy<HashLength>(std::forward<Args>(args)...);
+  }
+};
+
 Holder parse_hset(const char* beg, const char* end) {
   // check magic
   const char* cur = beg;
@@ -507,6 +518,16 @@ Holder parse_hset(const char* beg, const char* end) {
   catch (const UnexpectedChunkType&) {
     THROW("unexpected chunk type " << printable_chunk_type(ch->type));
   }
+
+////
+
+  for (auto& [hsh, hsd, ls, _]: h.hsets) {
+    ls.reset(hashset_dispatcher<Make_BLS>(
+      hsh.hash_length, hsd.beg, hsd.end
+    ));
+  }
+
+////
 
   return h;
 }

@@ -6,7 +6,9 @@
 #include "helper.h"
 
 #include "hasher/hashset.h"
+#include "hashset/basic_ls.h"
 #include "hashset/hset.h"
+#include "hashset/lookupstrategy.h"
 
 #include <array>
 #include <cstring>
@@ -55,11 +57,26 @@ TEST_CASE("load_hashset_bad") {
 TEST_CASE("hashset_index_for_type") {
   SFHASH_Hashset hset;
 
-  hset.hsets.assign({
-    { { X_SFHASH_SIZE,  "size",  8, 0 }, {}, {} },
-    { { X_SFHASH_MD5,   "md5",  16, 0 }, {}, {} },
-    { { X_SFHASH_SHA_1, "sha1", 20, 0 }, {}, {} }
-  });
+  hset.holder.hsets.emplace_back(
+    HashsetHeader{ X_SFHASH_SIZE, "size", 8, 0 },
+    HashsetData{},
+    std::unique_ptr<LookupStrategy>(),
+    RecordIndex{}
+  );
+
+  hset.holder.hsets.emplace_back(
+    HashsetHeader{ X_SFHASH_MD5, "MD5", 16, 0 },
+    HashsetData{},
+    std::unique_ptr<LookupStrategy>(),
+    RecordIndex{}
+  );
+
+  hset.holder.hsets.emplace_back(
+    HashsetHeader{ X_SFHASH_SHA_1, "SHA-1", 20, 0 },
+    HashsetData{},
+    std::unique_ptr<LookupStrategy>(),
+    RecordIndex{}
+  );
 
   CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_SIZE) == 0);
   CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_MD5) == 1);
@@ -111,10 +128,19 @@ TEST_CASE("hashset_lookup") {
 
   SFHASH_Hashset hset;
 
-  hset.holder.hsets.assign({
-    { { X_SFHASH_MD5,   "md5",  16, 0 }, {md5s.begin(),  md5s.end()},  {} },
-    { { X_SFHASH_SHA_1, "sha1", 20, 0 }, {sha1s.begin(), sha1s.end()}, {} }
-  });
+  hset.holder.hsets.emplace_back(
+    HashsetHeader{ X_SFHASH_MD5, "md5", 16, 0 },
+    HashsetData{ md5s.begin(),  md5s.end() },
+    std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<16>(md5s.begin(), md5s.end())),
+    RecordIndex{}
+  );
+
+  hset.holder.hsets.emplace_back(
+    HashsetHeader{ X_SFHASH_SHA_1, "sha1", 20, 0 },
+    HashsetData{ sha1s.begin(), sha1s.end() },
+    std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<20>(sha1s.begin(), sha1s.end())),
+    RecordIndex{}
+  );
 
   // lookup some MD5s
 
