@@ -2,7 +2,10 @@
 
 #include "throw.h"
 
+#include <cstdint>
 #include <type_traits>
+
+uint32_t expected_index(const uint8_t* h, uint32_t set_size);
 
 template <template <size_t> class Func, class... Args>
 auto hashset_dispatcher(size_t hash_length, Args&&... args)

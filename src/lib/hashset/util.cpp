@@ -1,4 +1,4 @@
-#include "hashset/utils.h"
+#include "hashset/util.h"
 
 #include <boost/endian/conversion.hpp>
 

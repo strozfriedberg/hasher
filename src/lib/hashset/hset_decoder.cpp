@@ -1,10 +1,10 @@
 #include "hset_decoder.h"
 
-#include "hashset_util.h"
 #include "hex.h"
 #include "util.h"
 #include "hashset/basic_ls.h"
 #include "hashset/lookupstrategy.h"
+#include "hashset/util.h"
 
 #include <algorithm>
 #include <exception>

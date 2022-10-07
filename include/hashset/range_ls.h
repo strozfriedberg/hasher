@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hashset/basic_ls.h"
-#include "hashset/utils.h"
+#include "hashset/util.h"
 
 #include <algorithm>
 #include <array>

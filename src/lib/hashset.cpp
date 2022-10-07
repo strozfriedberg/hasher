@@ -1,7 +1,7 @@
 #include "hasher/api.h"
 #include "error.h"
 #include "hashset.h"
-#include "hashset_util.h"
+#include "hashset/util.h"
 #include "throw.h"
 #include "util.h"
 
