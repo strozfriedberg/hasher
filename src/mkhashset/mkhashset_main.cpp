@@ -292,7 +292,7 @@ size_t write_ftoc(
 void run(
   const std::string hashset_name,
   const std::string hashset_desc,
-  const char** hash_type_names,
+  char const* const* hash_type_names,
   size_t hash_type_names_count,
   std::istream& in,
   std::ostream& out)
@@ -406,13 +406,6 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  run(
-    argv[1],
-    argv[2],
-    const_cast<const char**>(argv + 3),
-    argc - 3,
-    std::cin,
-    std::cout
-  );
+  run(argv[1], argv[2], argv + 3, argc - 3, std::cin, std::cout);
   return 0;
 }
