@@ -102,7 +102,12 @@ src_hasher_hasher_SOURCES = \
 
 src_hasher_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-bin_PROGRAMS = src/fuzzy/fuzzy src/hasher/hasher
+src_mkhashset_mkhashset_SOURCES = \
+	src/mkhashset/mkhashset_main.cpp
+
+src_mkhashset_mkhashset_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
+
+bin_PROGRAMS = src/fuzzy/fuzzy src/hasher/hasher src/mkhashset/mkhashset
 
 check_PROGRAMS = test/test
 
