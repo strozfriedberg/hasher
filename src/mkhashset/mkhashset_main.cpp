@@ -400,7 +400,6 @@ void run(
 }
 
 int main(int argc, char** argv) {
-
   if (argc < 4) {
     std::cerr << "Usage: mkhashset NAME DESC TYPE...\n";
     return -1;
