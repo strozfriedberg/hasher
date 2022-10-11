@@ -3,15 +3,15 @@
 """
 Make a hashset from a list of filenames:
 
-find -type f | xargs sha1sum | cut -f1 -d' ' | sort -u | ./mkhashset.py sha1 'Some test hashes' 'These are test hashes.' >sha1.hset
+find -type f | xargs sha1sum | cut -f1 -d' ' | ./mkhashset.py 'Some test hashes' 'These are test hashes.' sha1 >sha1.hset
 
 Make a hashset and sizeset from a list of filenames:
 
-for i in $(find -type f) ; do echo $(stat --printf=%s $i) $(md5sum $i | cut -f1 -d' ') $(sha1sum $i | cut -f1 -d' ') ; done | sort -u | ./mkhashset.py 'Some test hashes' 'These are test hashes.' sizes md5 sha1 >test.hset
+for i in $(find -type f) ; do echo $(stat --printf=%s $i) $(md5sum $i | cut -f1 -d' ') $(sha1sum $i | cut -f1 -d' ') ; done | ./mkhashset.py 'Some test hashes' 'These are test hashes.' sizes md5 sha1 >test.hset
 
 Make a hashset and sizeset from the NSRL:
 
-for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py sha1 'NSRL' 'The NSRL!' >nsrl.hset
+for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | ./mkhashset.py 'NSRL' 'The NSRL!' sha1 >nsrl.hset
 """
 import argparse
 import datetime
