@@ -17,6 +17,7 @@ for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | mkhashset 'NSRL
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -28,6 +29,7 @@ for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | mkhashset 'NSRL
 #include <boost/endian/conversion.hpp>
 
 #include "hex.h"
+#include "hashset/util.h"
 
 enum HashType {
   SIZES = 0,
@@ -210,6 +212,59 @@ size_t write_hhnn(
   return write_chunk(make_hhnn_str(hi.type).c_str(), chbuf, out);
 }
 
+template <size_t BlockBits>
+std::vector<std::pair<int64_t, int64_t>> make_block_bounds(
+  const std::vector<std::vector<char>>& hashes)
+{
+  std::vector<std::pair<int64_t, int64_t>> block_bounds(
+    1 << BlockBits,
+    {
+      std::numeric_limits<int64_t>::max(),
+      std::numeric_limits<int64_t>::min()
+    }
+  );
+
+  for (size_t i = 0; i < hashes.size(); ++i) {
+    const size_t e = expected_index(reinterpret_cast<const uint8_t*>(hashes[i].data()), hashes.size());
+    const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
+
+    const size_t bi = static_cast<uint8_t>(hashes[i][0]) >> (8 - BlockBits);
+    block_bounds[bi].first = std::min(block_bounds[bi].first, delta);
+    block_bounds[bi].second = std::max(block_bounds[bi].second, delta);
+  }
+
+  return block_bounds;
+}
+
+size_t write_hint(
+  const std::vector<std::vector<char>>& hashes,
+  std::ostream& out)
+{
+  const auto block_bounds = make_block_bounds<8>(hashes);
+
+/*
+  for (size_t b = 0; b < block_bounds.size(); ++b) {
+     std::cerr << std::hex << std::setw(2) << std::setfill('0') << b << ' '
+               << std::dec
+               << block_bounds[b].first << ' '
+               << block_bounds[b].second << ' '
+               << (block_bounds[b].second - block_bounds[b].first) << '\n';
+   }
+   std::cerr << '\n';
+*/
+
+  std::vector<char> chbuf;
+// TODO: set a real hint type
+  write_be<uint16_t>(0x6208, chbuf);  // b8 = blocks, 8-bit
+
+  for (const auto& bb: block_bounds) {
+    write_le<int64_t>(bb.first, chbuf);
+    write_le<int64_t>(bb.second, chbuf);
+  }
+
+  return write_chunk("HINT", chbuf, out);
+}
+
 size_t write_hdat(
   const std::vector<std::vector<char>>& hashes,
   std::ostream& out)
@@ -373,6 +428,12 @@ void run(
     // HHnn
     toc.emplace_back(pos, make_hhnn_str(hash_infos[i].type));
     pos += write_hhnn(hash_infos[i], hashes.size(), out);
+
+    // HINT
+    if (hash_infos[i].type != HashType::SIZES) {
+      toc.emplace_back(pos, "HINT");
+      pos += write_hint(hashes, out);
+    }
 
     // HDAT
     pos += write_page_alignment_padding(pos, out);
