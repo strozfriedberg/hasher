@@ -273,7 +273,7 @@ size_t write_ridx(
   return write_chunk(
     "RIDX",
     reinterpret_cast<const char*>(ridx.data()),
-    sizeof(std::remove_reference<decltype(ridx)>::type::value_type),
+    ridx.size() * sizeof(std::remove_reference<decltype(ridx)>::type::value_type),
     out
   );
 }
