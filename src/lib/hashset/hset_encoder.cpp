@@ -134,7 +134,7 @@ size_t write_chunk(
   out.write(chunk_bytes, chunk_length);
   wlen += chunk_length;
 
-  char sha256[20];
+  char sha256[32] = { 0 };
   // TODO: hash chunk
   out.write(sha256, sizeof(sha256));
   wlen += sizeof(sha256);
