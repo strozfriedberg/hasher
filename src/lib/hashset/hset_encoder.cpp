@@ -15,9 +15,9 @@
 #include <vector>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/endian/conversion.hpp>
 
 #include "hex.h"
+#include "rwutil.h"
 #include "hashset/util.h"
 
 enum HashType {
@@ -73,50 +73,6 @@ std::vector<std::string> split(const std::string& s, char delim) {
   } while (i != s.end());
 
   return splits;
-}
-
-template <class T>
-T to_be(T i) {
-  return boost::endian::native_to_big(i);
-}
-
-template <class T>
-T to_le(T i) {
-  return boost::endian::native_to_little(i);
-}
-
-template <class T, T (*EndianFunc)(T)>
-size_t write_i(T i, std::ostream& out) {
-  const T l = EndianFunc(i);
-  out.write(reinterpret_cast<const char*>(&l), sizeof(i));
-  return sizeof(i);
-}
-
-template <class T, T (*EndianFunc)(T)>
-size_t write_i(T i, std::vector<char>& out) {
-  const T l = EndianFunc(i);
-  out.insert(
-    out.end(),
-    reinterpret_cast<const char*>(&l),
-    reinterpret_cast<const char*>(&l) + sizeof(i)
-  );
-  return sizeof(i);
-}
-
-template <class T, class Out>
-size_t write_le(T i, Out& out) {
-  return write_i<T, to_le>(i, out);
-}
-
-template <class T, class Out>
-size_t write_be(T i, Out& out) {
-  return write_i<T, to_be>(i, out);
-}
-
-size_t write_pstring(const std::string& s, std::vector<char>& out) {
-  write_le<uint16_t>(s.length(), out);
-  out.insert(out.end(), s.begin(), s.end());
-  return sizeof(uint16_t) + s.length();
 }
 
 size_t write_chunk(
