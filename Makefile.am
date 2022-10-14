@@ -26,6 +26,7 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hashset.cpp \
 	src/lib/hashsetinfo.cpp \
 	src/lib/parser.cpp \
+	src/lib/rwutil.cpp \
 	src/lib/util.cpp \
 	src/lib/hasher/entropy.cpp \
 	src/lib/hasher/fuzzy_hasher.cpp \

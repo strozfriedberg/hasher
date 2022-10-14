@@ -3,6 +3,7 @@
 #include <iterator>
 #include <stdexcept>
 
+#include "rwutil.h"
 #include "util.h"
 
 

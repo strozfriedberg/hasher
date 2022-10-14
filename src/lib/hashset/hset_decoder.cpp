@@ -1,10 +1,10 @@
 #include "hset_decoder.h"
 
 #include "hex.h"
-#include "util.h"
 #include "hashset/basic_ls.h"
 #include "hashset/lookupstrategy.h"
 #include "hashset/util.h"
+#include "rwutil.h"
 
 #include <algorithm>
 #include <exception>
@@ -12,8 +12,6 @@
 #include <ostream>
 
 #include <iostream>
-
-#include <boost/endian/conversion.hpp>
 
 template <class T>
 T read_pstring(const char* beg, const char*& i, const char* end) {
@@ -102,7 +100,7 @@ struct Chunk {
 };
 
 std::string printable_chunk_type(uint32_t type) {
-  const uint32_t t = boost::endian::native_to_big(type);
+  const uint32_t t = to_be(type);
   const char* tt = reinterpret_cast<const char*>(&t);
 
   if (tt[0] == 'H' && tt[1] == 'H') {

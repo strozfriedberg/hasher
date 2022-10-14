@@ -5,8 +5,6 @@
 #include <memory>
 #include <type_traits>
 
-#include <boost/endian/conversion.hpp>
-
 //
 // make_unique_del and helpers
 //
@@ -31,34 +29,6 @@ using ArgOf = typename std::remove_pointer<typename function_traits<F>::arg_type
 template <class D>
 std::unique_ptr<ArgOf<D>, D> make_unique_del(std::nullptr_t, D&& deleter) {
   return make_unique_del<ArgOf<D>, D>(nullptr, std::forward<D>(deleter));
-}
-
-//
-// Functions for reading integers from bytes
-//
-
-template <typename T, typename C>
-T read_le(const C* beg, const C*& i, const C* end) {
-  THROW_IF(
-    i + sizeof(T) > end,
-    "out of data reading " << sizeof(T) << " bytes at " << (i - beg)
-  );
-
-  const T r = boost::endian::little_to_native(*reinterpret_cast<const T*>(i));
-  i += sizeof(T);
-  return r;
-}
-
-template <typename T, typename C>
-T read_be(const C* beg, const C*& i, const C* end) {
-  THROW_IF(
-    i + sizeof(T) > end,
-    "out of data reading " << sizeof(T) << " bytes at " << (i - beg)
-  );
-
-  const T r = boost::endian::big_to_native(*reinterpret_cast<const T*>(i));
-  i += sizeof(T);
-  return r;
 }
 
 //

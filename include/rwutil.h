@@ -1,8 +1,14 @@
-#include <ostream>
+#pragma once
+
 #include <string_view>
-#include <vector>
 
 #include <boost/endian/conversion.hpp>
+
+#include "throw.h"
+
+//
+// Endianness conversion
+//
 
 template <class T>
 T to_be(T i) {
@@ -14,24 +20,48 @@ T to_le(T i) {
   return boost::endian::native_to_little(i);
 }
 
+template <class T>
+T from_le(T i) {
+  return boost::endian::little_to_native(i);
+}
+
+template <class T>
+T from_be(T i) {
+  return boost::endian::big_to_native(i);
+}
+
+//
+// Read
+//
+
+template <typename T, T (*EndianFunc)(T), typename C>
+T read_i(const C* beg, const C*& i, const C* end) {
+  THROW_IF(
+    i + sizeof(T) > end,
+    "out of data reading " << sizeof(T) << " bytes at " << (i - beg)
+  );
+
+  const T r = EndianFunc(*reinterpret_cast<const T*>(i));
+  i += sizeof(T);
+  return r;
+}
+
+template <typename T, typename C>
+T read_le(const C* beg, const C*& i, const C* end) {
+  return read_i<T, from_le>(beg, i, end);
+}
+
+template <typename T, typename C>
+T read_be(const C* beg, const C*& i, const C* end) {
+  return read_i<T, from_be>(beg, i, end);
+}
+
+//
+// Write
+//
+
 template <class Out>
 size_t write_to(Out& out, const void* buf, size_t len);
-
-template <>
-size_t write_to(std::ostream& out, const void* buf, size_t len) {
-  out.write(static_cast<const char*>(buf), len);
-  return len;
-}
-
-template <>
-size_t write_to(std::vector<char>& out, const void* buf, size_t len) {
-  out.insert(
-    out.end(),
-    static_cast<const char*>(buf),
-    static_cast<const char*>(buf) + len
-  );
-  return len;
-}
 
 template <class T, T (*EndianFunc)(T), class Out>
 size_t write_i(T i, Out& out) {
