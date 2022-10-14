@@ -13,15 +13,6 @@
 
 #include <iostream>
 
-template <class T>
-T read_pstring(const char* beg, const char*& i, const char* end) {
-  const size_t len = read_le<uint16_t>(beg, i, end);
-  THROW_IF(i + len > end, "out of data reading string at " << (i - beg));
-  const char* sbeg = i;
-  i += len;
-  return T(sbeg, len);
-}
-
 std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
   return out << "FHDR\n"
              << ' ' << fhdr.version << '\n'

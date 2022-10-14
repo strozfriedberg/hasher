@@ -56,6 +56,15 @@ T read_be(const C* beg, const C*& i, const C* end) {
   return read_i<T, from_be>(beg, i, end);
 }
 
+template <class T>
+T read_pstring(const char* beg, const char*& i, const char* end) {
+  const size_t len = read_le<uint16_t>(beg, i, end);
+  THROW_IF(i + len > end, "out of data reading string at " << (i - beg));
+  const char* sbeg = i;
+  i += len;
+  return T(sbeg, len);
+}
+
 //
 // Write
 //
