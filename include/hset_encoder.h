@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <string>
 
-size_t run(
+size_t encode_hset(
   const std::string hashset_name,
   const std::string hashset_desc,
   char const* const* hash_type_names,

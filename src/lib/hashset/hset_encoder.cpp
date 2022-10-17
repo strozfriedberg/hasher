@@ -289,7 +289,7 @@ size_t write_ftoc(
   return write_chunk("FTOC", chbuf, out);
 }
 
-size_t run(
+size_t encode_hset(
   const std::string hashset_name,
   const std::string hashset_desc,
   char const* const* hash_type_names,

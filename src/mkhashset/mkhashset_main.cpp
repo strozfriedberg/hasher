@@ -24,8 +24,13 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  const size_t wlen = run(
-    argv[1], argv[2], argv + 3, argc - 3, std::cin, std::cout
+  const size_t wlen = encode_hset(
+    argv[1],
+    argv[2],
+    argv + 3,
+    argc - 3,
+    std::cin,
+    std::cout
   );
 
   std::cerr << "wrote " << wlen << " bytes\n";
