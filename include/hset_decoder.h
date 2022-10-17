@@ -78,4 +78,4 @@ struct Holder {
   RecordData rdat;
 };
 
-Holder parse_hset(const char* beg, const char* end);
+Holder decode_hset(const char* beg, const char* end);

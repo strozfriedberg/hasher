@@ -14,7 +14,7 @@ SFHASH_Hashset* sfhash_load_hashset(
 ) {
   try {
     return new SFHASH_Hashset{
-      parse_hset(
+      decode_hset(
         static_cast<const char*>(beg),
         static_cast<const char*>(end)
       )

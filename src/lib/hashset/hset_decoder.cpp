@@ -470,7 +470,7 @@ bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept {
   return a.toc_cur != b.toc_cur;
 }
 
-Holder parse_hset(const char* beg, const char* end) {
+Holder decode_hset(const char* beg, const char* end) {
   // check magic
   const char* cur = beg;
   check_magic(cur, end);
