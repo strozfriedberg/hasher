@@ -81,6 +81,33 @@ const void* sfhash_hashset_record_field(
   size_t tidx
 );
 
+/*
+ *
+ */
+
+struct SFHASH_HashsetBuildCtx;
+
+SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
+  const char* hashset_name,
+  const char* hashset_desc,
+  const SFHASH_HashAlgorithm* record_order,
+  size_t record_order_length
+);
+
+void sfhash_add_hashset_record(
+  SFHASH_HashsetBuildCtx* bctx,
+  const void* record
+);
+
+size_t sfhash_save_hashset_close(
+  SFHASH_HashsetBuildCtx* bctx,
+  ssize_t (*write_func)(void*, const void*, size_t),
+  void* wctx,
+  SFHASH_Error** err
+);
+
+void sfhash_save_hashset_destroy(SFHASH_HashsetBuildCtx* bctx);
+
 #ifdef __cplusplus
 }
 #endif

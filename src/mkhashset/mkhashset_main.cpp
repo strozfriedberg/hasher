@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     htypes.push_back(sfhash_hash_type(argv[i]));
   }
 
-  write_hashset(
+  const size_t wlen = write_hashset(
     argv[1],
     argv[2],
     htypes.data(),
@@ -41,17 +41,6 @@ int main(int argc, char** argv) {
     std::cout
   );
 
-/*
-  const size_t wlen = encode_hset(
-    argv[1],
-    argv[2],
-    argv + 3,
-    argc - 3,
-    std::cin,
-    std::cout
-  );
-
   std::cerr << "wrote " << wlen << " bytes\n";
-*/
   return 0;
 }
