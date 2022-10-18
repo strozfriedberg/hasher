@@ -58,7 +58,7 @@ TEST_CASE("hashset_index_for_type") {
   SFHASH_Hashset hset;
 
   hset.holder.hsets.emplace_back(
-    HashsetHeader{ X_SFHASH_SIZE, "size", 8, 0 },
+    HashsetHeader{ SFHASH_SIZE, "size", 8, 0 },
     HashsetHint{},
     HashsetData{},
     std::unique_ptr<LookupStrategy>(),
@@ -66,7 +66,7 @@ TEST_CASE("hashset_index_for_type") {
   );
 
   hset.holder.hsets.emplace_back(
-    HashsetHeader{ X_SFHASH_MD5, "MD5", 16, 0 },
+    HashsetHeader{ SFHASH_MD5, "MD5", 16, 0 },
     HashsetHint{},
     HashsetData{},
     std::unique_ptr<LookupStrategy>(),
@@ -74,23 +74,23 @@ TEST_CASE("hashset_index_for_type") {
   );
 
   hset.holder.hsets.emplace_back(
-    HashsetHeader{ X_SFHASH_SHA_1, "SHA-1", 20, 0 },
+    HashsetHeader{ SFHASH_SHA_1, "SHA-1", 20, 0 },
     HashsetHint{},
     HashsetData{},
     std::unique_ptr<LookupStrategy>(),
     RecordIndex{}
   );
 
-  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_SIZE) == 0);
-  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_MD5) == 1);
-  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_SHA_1) == 2);
-  CHECK(sfhash_hashset_index_for_type(&hset, X_SFHASH_OTHER) == -1);
+  CHECK(sfhash_hashset_index_for_type(&hset, SFHASH_SIZE) == 0);
+  CHECK(sfhash_hashset_index_for_type(&hset, SFHASH_MD5) == 1);
+  CHECK(sfhash_hashset_index_for_type(&hset, SFHASH_SHA_1) == 2);
+  CHECK(sfhash_hashset_index_for_type(&hset, SFHASH_SHA_3_224) == -1);
 }
 
 template <class Tests>
 void do_lookups(
   const SFHASH_Hashset* hset,
-  SFHASH_HashsetType htype,
+  SFHASH_HashAlgorithm htype,
   const Tests& tests
 ) {
   const auto tidx = sfhash_hashset_index_for_type(hset, htype);
@@ -132,7 +132,7 @@ TEST_CASE("hashset_lookup") {
   SFHASH_Hashset hset;
 
   hset.holder.hsets.emplace_back(
-    HashsetHeader{ X_SFHASH_MD5, "md5", 16, 0 },
+    HashsetHeader{ SFHASH_MD5, "md5", 16, 0 },
     HashsetHint{},
     HashsetData{ md5s.begin(),  md5s.end() },
     std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<16>(md5s.begin(), md5s.end())),
@@ -140,7 +140,7 @@ TEST_CASE("hashset_lookup") {
   );
 
   hset.holder.hsets.emplace_back(
-    HashsetHeader{ X_SFHASH_SHA_1, "sha1", 20, 0 },
+    HashsetHeader{ SFHASH_SHA_1, "sha1", 20, 0 },
     HashsetHint{},
     HashsetData{ sha1s.begin(), sha1s.end() },
     std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<20>(sha1s.begin(), sha1s.end())),
@@ -159,7 +159,7 @@ TEST_CASE("hashset_lookup") {
     tests_16.emplace_back(h, true);
   }
 
-  do_lookups(&hset, X_SFHASH_MD5, tests_16);
+  do_lookups(&hset, SFHASH_MD5, tests_16);
 
   // lookup some SHA1s
 

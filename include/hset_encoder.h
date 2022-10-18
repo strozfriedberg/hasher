@@ -4,6 +4,9 @@
 #include <iosfwd>
 #include <string>
 
+#include "hasher/hashset.h"
+
+/*
 size_t encode_hset(
   const std::string hashset_name,
   const std::string hashset_desc,

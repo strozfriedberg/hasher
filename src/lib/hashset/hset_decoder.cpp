@@ -154,7 +154,7 @@ State::Type parse_hhdr(const Chunk& ch, Holder& h) {
 
   h.hsets.emplace_back(
     HashsetHeader{
-      static_cast<uint16_t>(ch.type & 0x0000FFFF),
+      1u << (ch.type & 0x0000FFFF),
       read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
       read_le<uint64_t>(ch.dbeg, cur, ch.dend),
       read_le<uint64_t>(ch.dbeg, cur, ch.dend)

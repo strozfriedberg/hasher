@@ -10,25 +10,6 @@
 extern "C" {
 #endif
 
-typedef enum {
-  X_SFHASH_SIZE,
-  X_SFHASH_MD5,
-  X_SFHASH_SHA_1,
-  X_SFHASH_SHA_2_224,
-  X_SFHASH_SHA_2_256,
-  X_SFHASH_SHA_2_384,
-  X_SFHASH_SHA_2_512,
-  X_SFHASH_SHA_3_224,
-  X_SFHASH_SHA_3_256,
-  X_SFHASH_SHA_3_384,
-  X_SFHASH_SHA_3_512,
-  X_SFHASH_BLAKE3,
-//  SFHASH_FUZZY,
-  X_SFHASH_ENTROPY,
-//  SFHASH_QUICK_MD5,
-  X_SFHASH_OTHER = 0xFFFF // any other hash type
-} SFHASH_HashsetType;
-
 struct SFHASH_Hashset;
 
 /*
@@ -57,7 +38,7 @@ void sfhash_destroy_hashset(SFHASH_Hashset* hset);
  */
 int sfhash_hashset_index_for_type(
   const SFHASH_Hashset* hset,
-  SFHASH_HashsetType htype
+  SFHASH_HashAlgorithm htype
 );
 
 /*
@@ -92,7 +73,7 @@ const SFHASH_HashsetRecord* sfhash_hashset_record_for_hash(
 
 int sfhash_hashset_record_field_index_for_type(
   const SFHASH_Hashset* hset,
-  SFHASH_HashsetType htype
+  SFHASH_HashAlgorithm htype
 );
 
 const void* sfhash_hashset_record_field(

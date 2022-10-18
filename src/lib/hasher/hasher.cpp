@@ -27,6 +27,7 @@ HasherInit{
   {make_blake3_hasher,      offsetof(HashValues, Blake3)  },
   {make_fuzzy_hasher,       offsetof(HashValues, Fuzzy)   },
   {make_entropy_calculator, offsetof(HashValues, Entropy) },
+  {nullptr, /* size */      0 },
   {make_quick_md5_hasher,   offsetof(HashValues, QuickMd5)}
 };
 
@@ -34,8 +35,8 @@ HasherInit{
 struct SFHASH_Hasher {
 public:
   SFHASH_Hasher(uint32_t algs) {
-    for (uint32_t i = 0; i < HasherInit.size() && algs; algs >>= 1, ++i) {
-      if (algs & 1) {
+    for (uint32_t i = 0; algs && i < HasherInit.size(); algs >>= 1, ++i) {
+      if (algs & 1 && HasherInit[i].first) {
         hashers.emplace_back(HasherInit[i].first(), HasherInit[i].second);
       }
     }

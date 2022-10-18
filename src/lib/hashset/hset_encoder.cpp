@@ -1,6 +1,7 @@
 #include "hset_encoder.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
@@ -19,46 +20,25 @@
 #include "hex.h"
 #include "rwutil.h"
 #include "hashset/util.h"
-
-enum HashType {
-  SIZES = 0,
-  MD5 = 1,
-  SHA1 = 2,
-  SHA2_224 = 3,
-  SHA2_256 = 4,
-  SHA2_384 = 5,
-  SHA2_512 = 6,
-  SHA3_224 = 7,
-  SHA3_256 = 8,
-  SHA3_384 = 9,
-  SHA3_512 = 10,
-  BLAKE3 = 11
-};
-
-struct HashInfo {
-  HashType type;
-  std::string name;
-  uint32_t length;
-  void (*conv)(uint8_t* dst, const char* src, size_t dlen);
-};
+#include "hasher/hashset.h"
 
 void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
   *reinterpret_cast<uint64_t*>(dst) = boost::lexical_cast<uint64_t>(src);
 }
 
-const std::map<std::string, HashInfo> HASH_INFO{
-  { "sizes",    HashInfo{SIZES, "sizes", 8, size_to_u64 } },
-  { "md5",      HashInfo{MD5, "md5", 16, from_hex } },
-  { "sha1",     HashInfo{SHA1, "sha1", 20, from_hex } },
-  { "sha2_224", HashInfo{SHA2_224, "sha2_224", 28, from_hex } },
-  { "sha2_256", HashInfo{SHA2_256, "sha2_256", 32, from_hex } },
-  { "sha2_384", HashInfo{SHA2_384, "sha2_384", 48, from_hex } },
-  { "sha2_512", HashInfo{SHA2_512, "sha2_512", 64, from_hex } },
-  { "sha3_224", HashInfo{SHA3_224, "sha3_224", 28, from_hex } },
-  { "sha3_256", HashInfo{SHA3_256, "sha3_256", 32, from_hex } },
-  { "sha3_384", HashInfo{SHA3_384, "sha3_384", 48, from_hex } },
-  { "sha3_512", HashInfo{SHA3_512, "sha3_512", 64, from_hex } },
-  { "blake3",   HashInfo{BLAKE3, "blake3", 32, from_hex } },
+const std::map<SFHASH_HashAlgorithm, HashInfo> HASH_INFO{
+  { SFHASH_MD5,       HashInfo{SFHASH_MD5, "md5", 16, from_hex } },
+  { SFHASH_SHA_1,     HashInfo{SFHASH_SHA_1, "sha1", 20, from_hex } },
+  { SFHASH_SHA_2_224, HashInfo{SFHASH_SHA_2_224, "sha2_224", 28, from_hex } },
+  { SFHASH_SHA_2_256, HashInfo{SFHASH_SHA_2_256, "sha2_256", 32, from_hex } },
+  { SFHASH_SHA_2_384, HashInfo{SFHASH_SHA_2_384, "sha2_384", 48, from_hex } },
+  { SFHASH_SHA_2_512, HashInfo{SFHASH_SHA_2_512, "sha2_512", 64, from_hex } },
+  { SFHASH_SHA_3_224, HashInfo{SFHASH_SHA_3_224, "sha3_224", 28, from_hex } },
+  { SFHASH_SHA_3_256, HashInfo{SFHASH_SHA_3_256, "sha3_256", 32, from_hex } },
+  { SFHASH_SHA_3_384, HashInfo{SFHASH_SHA_3_384, "sha3_384", 48, from_hex } },
+  { SFHASH_SHA_3_512, HashInfo{SFHASH_SHA_3_512, "sha3_512", 64, from_hex } },
+  { SFHASH_BLAKE3,    HashInfo{SFHASH_BLAKE3, "blake3", 32, from_hex } },
+  { SFHASH_SIZE,      HashInfo{SFHASH_SIZE, "sizes", 8, size_to_u64 } }
 };
 
 // TODO: return a std::vector<std::string_view>
@@ -133,9 +113,10 @@ size_t write_fhdr(
   return write_chunk("FHDR", chbuf, out);
 }
 
-std::string make_hhnn_str(uint16_t hash_type) {
+std::string make_hhnn_str(uint32_t hash_type) {
   // nn is stored big-endian
-  hash_type = to_be<uint16_t>(hash_type);
+  // TODO: Use std::bit_width in C++20
+  hash_type = to_be<uint16_t>(std::floor(std::log2(hash_type)));
   return {
     'H',
     'H',

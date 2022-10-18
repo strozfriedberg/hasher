@@ -16,7 +16,7 @@ struct FileHeader {
 };
 
 struct HashsetHeader {
-  uint16_t hash_type;
+  uint32_t hash_type;
   std::string_view hash_name;
   uint64_t hash_length;
   uint64_t hash_count;

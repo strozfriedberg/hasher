@@ -32,7 +32,7 @@ void sfhash_destroy_hashset(SFHASH_Hashset* hset) {
 
 int sfhash_hashset_index_for_type(
   const SFHASH_Hashset* hset,
-  SFHASH_HashsetType htype
+  SFHASH_HashAlgorithm htype
 ) {
   const auto i = std::find_if(
     hset->holder.hsets.begin(),
