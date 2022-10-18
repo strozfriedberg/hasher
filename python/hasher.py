@@ -9,6 +9,7 @@ ctypes bindings for libhasher
 from ctypes import *
 
 import os
+from pathlib import Path
 import sys
 import logging
 
@@ -21,7 +22,7 @@ exts = {'win32': '.dll', 'darwin': '.dylib'}
 lib_name = lib_base + exts.get(sys.platform, '.so')
 
 if sys.platform == 'win32':
-    os.add_dll_directory(f"{os.getcwd()}\\asdf\\libs\\win64")
+    os.add_dll_directory(Path(__file__).parent.parent / Path("win64"))
 
 try:
     _hasher = CDLL(lib_name)
