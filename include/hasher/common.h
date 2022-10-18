@@ -13,6 +13,7 @@ extern "C" {
 
 // Bit flags for specifying hash algorithms
 typedef enum {
+  SFHASH_INVALID   = 0,
   SFHASH_MD5       = 1 << 0,
   SFHASH_SHA_1     = 1 << 1,
   SFHASH_SHA_2_224 = 1 << 2,

@@ -356,7 +356,7 @@ size_t encode_hset(
     pos += write_hhnn(hash_infos[i], hashes.size(), out);
 
     // HINT
-    if (hash_infos[i].type != HashType::SIZES) {
+    if (hash_infos[i].type != SFHASH_SIZE) {
       toc.emplace_back(pos, "HINT");
       pos += write_hint(hashes, out);
     }
