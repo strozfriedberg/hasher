@@ -15,8 +15,10 @@ for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | mkhashset 'NSRL
 */
 
 #include <iostream>
+#include <vector>
 
 #include "hset_encoder.h"
+#include "hasher/hashset.h"
 
 int main(int argc, char** argv) {
   if (argc < 4) {
@@ -24,6 +26,22 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  std::vector<SFHASH_HashAlgorithm> htypes;
+  for (int i = 3; i < argc; ++i) {
+// TODO: handle errors
+    htypes.push_back(sfhash_hash_type(argv[i]));
+  }
+
+  write_hashset(
+    argv[1],
+    argv[2],
+    htypes.data(),
+    htypes.size(),
+    std::cin,
+    std::cout
+  );
+
+/*
   const size_t wlen = encode_hset(
     argv[1],
     argv[2],
@@ -34,5 +52,6 @@ int main(int argc, char** argv) {
   );
 
   std::cerr << "wrote " << wlen << " bytes\n";
+*/
   return 0;
 }
