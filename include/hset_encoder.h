@@ -7,18 +7,6 @@
 
 #include "hasher/hashset.h"
 
-//#include <ranges>
-
-/*
-size_t encode_hset(
-  const auto&& hashset_name,
-  const auto&& hashset_desc,
-  std::ranges::input_range auto&& hash_type_names,
-  std::ranges::input_range auto&& in,
-  std::ostream& out
-);
-*/
-
 struct HashInfo {
   SFHASH_HashAlgorithm type;
   std::string name;
