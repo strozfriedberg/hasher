@@ -71,6 +71,8 @@ size_t write_chunk(
     sfhash_create_hasher(SFHASH_SHA_2_256), sfhash_destroy_hasher
   );
 
+  sfhash_update_hasher(hasher.get(), chunk_bytes, chunk_bytes + chunk_length);
+
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
 

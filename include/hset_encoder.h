@@ -40,3 +40,10 @@ struct Writer {
     write_func(wctx, buf, len);
   }
 };
+
+size_t write_chunk(
+  const char* chunk_type,
+  const char* chunk_bytes,
+  size_t chunk_length,
+  Writer& out
+);
