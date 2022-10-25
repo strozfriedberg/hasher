@@ -25,11 +25,6 @@
 #include "hasher/hasher.h"
 #include "hasher/hashset.h"
 
-void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
-  THROW_IF(std::strchr(src, '-'), src << " is not nonnegative");
-  *reinterpret_cast<uint64_t*>(dst) = boost::lexical_cast<uint64_t>(src);
-}
-
 const std::map<SFHASH_HashAlgorithm, HashInfo> HASH_INFO{
   { SFHASH_MD5,       HashInfo{SFHASH_MD5, "md5", 16, from_hex } },
   { SFHASH_SHA_1,     HashInfo{SFHASH_SHA_1, "sha1", 20, from_hex } },
@@ -44,6 +39,11 @@ const std::map<SFHASH_HashAlgorithm, HashInfo> HASH_INFO{
   { SFHASH_BLAKE3,    HashInfo{SFHASH_BLAKE3, "blake3", 32, from_hex } },
   { SFHASH_SIZE,      HashInfo{SFHASH_SIZE, "sizes", 8, size_to_u64 } }
 };
+
+void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
+  THROW_IF(std::strchr(src, '-'), src << " is not nonnegative");
+  *reinterpret_cast<uint64_t*>(dst) = boost::lexical_cast<uint64_t>(src);
+}
 
 template <>
 size_t write_to(Writer& out, const void* buf, size_t len) {
