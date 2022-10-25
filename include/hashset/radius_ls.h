@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <array>
-#include <limits>
 
 template <size_t HashLength>
 class RadiusLookupStrategy: public BasicLookupStrategy<HashLength> {
@@ -47,20 +46,4 @@ uint32_t compute_radius(
     );
   }
   return max_delta;
-}
-
-template <size_t HashLength>
-LookupStrategy* make_radius_lookup_strategy(
-  const void* beg,
-  const void* end,
-  uint32_t radius)
-{
-  return new RadiusLookupStrategy<HashLength>(
-    beg, end,
-    radius == std::numeric_limits<uint32_t>::max() ?
-      compute_radius<HashLength>(
-        static_cast<const std::array<uint8_t, HashLength>*>(beg),
-        static_cast<const std::array<uint8_t, HashLength>*>(end)) :
-      radius
-  );
 }
