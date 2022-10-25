@@ -22,6 +22,7 @@
 #include "rwutil.h"
 #include "util.h"
 #include "hashset/util.h"
+#include "hasher/hasher.h"
 #include "hasher/hashset.h"
 
 void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
@@ -74,10 +75,16 @@ size_t write_chunk(
   out.write(chunk_bytes, chunk_length);
   wlen += chunk_length;
 
-  char sha256[32] = { 0 };
-  // TODO: hash chunk
-  out.write(sha256, sizeof(sha256));
-  wlen += sizeof(sha256);
+  // hash the chunk data
+  auto hasher = make_unique_del(
+    sfhash_create_hasher(SFHASH_SHA_2_256), sfhash_destroy_hasher
+  );
+
+  SFHASH_HashValues hashes;
+  sfhash_get_hashes(hasher.get(), &hashes);
+
+  out.write(hashes.Sha2_256, sizeof(hashes.Sha2_256));
+  wlen += sizeof(hashes.Sha2_256);
 
   return wlen;
 }
