@@ -11,13 +11,13 @@ LibcryptoHasher::LibcryptoHasher(const LibcryptoHasher& other):
   Ctx(EVP_MD_CTX_create()),
   Hfunc(other.Hfunc)
 {
-  if (!EVP_MD_CTX_copy(Ctx, other.Ctx)) {
+  if (!EVP_MD_CTX_copy_ex(Ctx, other.Ctx)) {
     // TODO: error!
   }
 }
 
 LibcryptoHasher& LibcryptoHasher::operator=(const LibcryptoHasher& other) {
-  if (!EVP_MD_CTX_copy(Ctx, other.Ctx)) {
+  if (!EVP_MD_CTX_copy_ex(Ctx, other.Ctx)) {
     // TODO: error!
   }
 
@@ -46,7 +46,7 @@ void LibcryptoHasher::get(void* val) {
 }
 
 void LibcryptoHasher::reset() {
-  if (!EVP_DigestInit(Ctx, Hfunc)) {
+  if (!EVP_DigestInit_ex(Ctx, Hfunc, nullptr)) {
     // TODO: error!
   }
 }
