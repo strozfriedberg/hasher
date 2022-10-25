@@ -29,3 +29,6 @@ size_t write_hashset(
   std::istream& in,
   std::ostream& out
 );
+
+void size_to_u64(uint8_t* dst, const char* src, size_t dlen);
+
