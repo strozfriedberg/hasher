@@ -9,16 +9,16 @@ template <
 >
 class BlockLookupStrategy: public BasicLookupStrategy<HashLength> {
 public:
-  BlockLookupStragegy(
+  BlockLookupStrategy(
     const void* beg,
     const void* end,
-    std::array<std::pair<ssize_t, ssize_t>, (1 << BlockBits)> blocks
+    std::array<std::pair<int64_t, int64_t>, (1 << BlockBits)> blocks
   ):
     BasicLookupStrategy<HashLength>(beg, end),
     Blocks(blocks)
   {}
 
-  virtual ~BlockLookupStragegy() {}
+  virtual ~BlockLookupStrategy() {}
 
   virtual bool contains(const uint8_t* hash) const override {
     const size_t exp = expected_index(hash, this->HashesEnd - this->HashesBeg.get());
@@ -48,5 +48,5 @@ public:
   }
 
 protected:
-  std::array<std::pair<ssize_t, ssize_t>, (1 << BlockBits)> Blocks;
+  std::array<std::pair<int64_t, int64_t>, (1 << BlockBits)> Blocks;
 };
