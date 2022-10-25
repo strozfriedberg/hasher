@@ -4,3 +4,6 @@
 struct SFHASH_Hashset {
   Holder holder;
 };
+
+struct SFHASH_HashsetRecord {
+};
