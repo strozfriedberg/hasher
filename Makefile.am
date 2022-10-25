@@ -129,6 +129,7 @@ test_test_SOURCES = \
 	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
 	test/test_hset_decoder.cpp \
+	test/test_hset_encoder.cpp \
 	test/test_parser.cpp \
 	test/test_util.cpp
 
