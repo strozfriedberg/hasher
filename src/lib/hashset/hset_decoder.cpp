@@ -2,7 +2,10 @@
 
 #include "hex.h"
 #include "hashset/basic_ls.h"
+#include "hashset/block_ls.h"
 #include "hashset/lookupstrategy.h"
+#include "hashset/radius_ls.h"
+#include "hashset/range_ls.h"
 #include "hashset/util.h"
 #include "rwutil.h"
 
@@ -203,52 +206,183 @@ State::Type parse_ftoc(const Chunk& ch, Holder& h) {
   return State::DONE;
 }
 
-template <size_t HashLength>
-struct Make_BLS {
+template <template <size_t> class Strategy, size_t HashLength>
+struct MakeLookupStrategy {
   template <class... Args>
   LookupStrategy* operator()(Args&&... args) {
-    return new BasicLookupStrategy<HashLength>(std::forward<Args>(args)...);
+    return new Strategy<HashLength>(std::forward<Args>(args)...);
   }
 };
+
+template <size_t HashLength>
+struct MakeBasicLookupStrategy: public MakeLookupStrategy<BasicLookupStrategy, HashLength> {};
+
+template <size_t HashLength>
+struct MakeRadiusLookupStrategy: public MakeLookupStrategy<RadiusLookupStrategy, HashLength> {};
+
+template <size_t HashLength>
+struct MakeRangeLookupStrategy: public MakeLookupStrategy<RangeLookupStrategy, HashLength> {};
+
+template <size_t BlockBits>
+std::array<std::pair<int64_t, int64_t>, (1 << BlockBits)> make_blocks(const HashsetHint& hnt) {
+  std::array<std::pair<int64_t, int64_t>, (1 << BlockBits)> blocks;
+
+  std::copy(
+    static_cast<const std::pair<int64_t, int64_t>*>(hnt.beg),
+    static_cast<const std::pair<int64_t, int64_t>*>(hnt.end),
+    blocks.begin()
+  );
+
+  return blocks;
+}
+
+template <size_t BlockBits, size_t HashLength>
+struct MakeBlockLookupStrategy {
+  template <class... Args>
+  LookupStrategy* operator()(Args&&... args) {
+    return new BlockLookupStrategy<BlockBits, HashLength>(std::forward<Args>(args)...);
+  }
+};
+
+// TODO: there must be a way to template this
+template <size_t HashLength>
+struct MakeBlockLookupStrategy1: public MakeBlockLookupStrategy<HashLength, 1> {};
+
+template <size_t HashLength>
+struct MakeBlockLookupStrategy2: public MakeBlockLookupStrategy<HashLength, 2> {};
+
+template <size_t HashLength>
+struct MakeBlockLookupStrategy3: public MakeBlockLookupStrategy<HashLength, 3> {};
+
+template <size_t HashLength>
+struct MakeBlockLookupStrategy4: public MakeBlockLookupStrategy<HashLength, 4> {};
+
+template <size_t HashLength>
+struct MakeBlockLookupStrategy5: public MakeBlockLookupStrategy<HashLength, 5> {};
+
+template <size_t HashLength>
+struct MakeBlockLookupStrategy6: public MakeBlockLookupStrategy<HashLength, 6> {};
+
+template <size_t HashLength>
+struct MakeBlockLookupStrategy7: public MakeBlockLookupStrategy<HashLength, 7> {};
+
+template <size_t HashLength>
+struct MakeBlockLookupStrategy8: public MakeBlockLookupStrategy<HashLength, 8> {};
 
 std::unique_ptr<LookupStrategy> make_lookup_strategy(
   const HashsetHeader& hsh,
   const HashsetHint& hnt,
   const HashsetData& hsd)
 {
-  switch (hnt.hint_type) {
-  case HintType::RADIUS:
-    return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  case HintType::RANGE:
-    return std::unique_ptr<LookupStrategy>(
+  // TODO: check that hnt is long enough to hold data?
 
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
+  if (hnt.hint_type == 0x6208) {
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<MakeBlockLookupStrategy8>(
+        hsh.hash_length, hsd.beg, hsd.end,
+        make_blocks<8>(hnt)
       )
     );
-  case HintType::BLOCK:
+  }
+  else {
     return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  case HintType::BLOCK_LINEAR:
-    return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
-        hsh.hash_length, hsd.beg, hsd.end
-      )
-    );
-  default:
-    return std::unique_ptr<LookupStrategy>(
-      hashset_dispatcher<Make_BLS>(
+      hashset_dispatcher<MakeBasicLookupStrategy>(
         hsh.hash_length, hsd.beg, hsd.end
       )
     );
   }
+
+/*
+  switch (hnt.hint_type) {
+  case HintType::RADIUS:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<MakeRadiusLookupStrategy>(
+        hsh.hash_length, hsd.beg, hsd.end,
+        *static_cast<const uint32_t*>(hnt.beg)
+      )
+    );
+  case HintType::RANGE:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<MakeRangeLookupStrategy>(
+        hsh.hash_length, hsd.beg, hsd.end,
+        *static_cast<const int64_t*>(hnt.beg),
+        *(static_cast<const int64_t*>(hnt.beg) + 1)
+      )
+    );
+  case HintType::BLOCK:
+    {
+// TODO: bounds check
+      const uint8_t bits = *static_cast<const uint8_t*>(hnt.beg);
+      switch (bits) {
+      case 1:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy1>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<1>(hnt)
+          )
+        );
+      case 2:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy2>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<2>(hnt)
+          )
+        );
+      case 3:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy3>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<3>(hnt)
+          )
+        );
+      case 4:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy4>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<4>(hnt)
+          )
+        );
+      case 5:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy5>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<5>(hnt)
+          )
+        );
+
+      case 6:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy6>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<6>(hnt)
+          )
+        );
+      case 7:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy7>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<7>(hnt)
+          )
+        );
+      case 8:
+        return std::unique_ptr<LookupStrategy>(
+          hashset_dispatcher<MakeBlockLookupStrategy8>(
+            hsh.hash_length, hsd.beg, hsd.end,
+            make_blocks<8>(hnt)
+          )
+        );
+      }
+    }
+  case HintType::BLOCK_LINEAR:
+    // TODO
+  default:
+    return std::unique_ptr<LookupStrategy>(
+      hashset_dispatcher<MakeBasicLookupStrategy>(
+        hsh.hash_length, hsd.beg, hsd.end
+      )
+    );
+  }
+*/
 }
 
 State::Type parse_hint(const Chunk& ch, Holder& h) {
@@ -258,9 +392,13 @@ State::Type parse_hint(const Chunk& ch, Holder& h) {
 
   const char* cur = ch.dbeg;
 
-  hnt.hint_type = read_le<uint16_t>(ch.dbeg, cur, ch.dend);
+  hnt.hint_type = read_be<uint16_t>(ch.dbeg, cur, ch.dend);
 
 // TODO: check for recognized type?
+  THROW_IF(
+    hnt.hint_type != 0x6208,
+    "bad hint type " << std::hex << std::setw(4) << std::setfill('0') << hnt.hint_type
+  );
 
   hnt.beg = cur;
   hnt.end = ch.dend;
