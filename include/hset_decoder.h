@@ -32,7 +32,7 @@ enum HintType {
   BASIC = 0,
   RADIUS = 1,
   RANGE = 2,
-  BLOCK = 3,
+  BLOCK = 'b',
   BLOCK_LINEAR = 4
 };
 
