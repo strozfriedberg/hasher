@@ -24,6 +24,7 @@
 #include "hasher/hashset.h"
 
 void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
+  THROW_IF(std::strchr(src, '-'), src << " is not nonnegative");
   *reinterpret_cast<uint64_t*>(dst) = boost::lexical_cast<uint64_t>(src);
 }
 
