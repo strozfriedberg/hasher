@@ -23,7 +23,6 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/error.cpp \
 	src/lib/fuzzy_matcher.cpp \
 	src/lib/hash_types.cpp \
-	src/lib/hashset.cpp \
 	src/lib/hashsetinfo.cpp \
 	src/lib/parser.cpp \
 	src/lib/rwutil.cpp \
