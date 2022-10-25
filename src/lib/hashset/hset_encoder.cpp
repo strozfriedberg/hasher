@@ -19,6 +19,7 @@
 
 #include "hex.h"
 #include "rwutil.h"
+#include "util.h"
 #include "hashset/util.h"
 #include "hasher/hashset.h"
 
@@ -41,25 +42,26 @@ const std::map<SFHASH_HashAlgorithm, HashInfo> HASH_INFO{
   { SFHASH_SIZE,      HashInfo{SFHASH_SIZE, "sizes", 8, size_to_u64 } }
 };
 
-// TODO: return a std::vector<std::string_view>
-std::vector<std::string> split(const std::string& s, char delim) {
-  std::vector<std::string> splits;
+struct Writer {
+  ssize_t (*write_func)(void*, const void*, size_t);
+  void* wctx;
 
-  auto i = s.begin();
-  do {
-    auto j = std::find(i, s.end(), delim);
-    splits.emplace_back(i, j);
-    i = j != s.end() ? j + 1 : j;
-  } while (i != s.end());
+  void write(const void* buf, size_t len) {
+    write_func(wctx, buf, len);
+  }
+};
 
-  return splits;
+template <>
+size_t write_to(Writer& out, const void* buf, size_t len) {
+  out.write(buf, len);
+  return len;
 }
 
 size_t write_chunk(
   const char* chunk_type,
   const char* chunk_bytes,
   size_t chunk_length,
-  std::ostream& out)
+  Writer& out)
 {
   size_t wlen = 0;
   out.write(chunk_type, 4);
@@ -81,18 +83,18 @@ size_t write_chunk(
 size_t write_chunk(
   const char* chunk_type,
   std::vector<char> chunk_bytes,
-  std::ostream& out)
+  Writer& out)
 {
   return write_chunk(chunk_type, chunk_bytes.data(), chunk_bytes.size(), out);
 }
 
-size_t write_page_alignment_padding(uint64_t pos, std::ostream& out) {
+size_t write_page_alignment_padding(uint64_t pos, Writer& out) {
   std::vector<char> padding(4096 - pos % 4096);
   out.write(padding.data(), padding.size());
   return padding.size();
 }
 
-size_t write_magic(std::ostream& out) {
+size_t write_magic(Writer& out) {
   out.write("SetOHash", 8);
   return 8;
 }
@@ -102,7 +104,7 @@ size_t write_fhdr(
   const std::string& hashset_name,
   const std::string& hashset_desc,
   const char* timestamp,
-  std::ostream& out)
+  Writer& out)
 {
   std::vector<char> chbuf;
   write_le<uint64_t>(version, chbuf);
@@ -128,7 +130,7 @@ std::string make_hhnn_str(uint32_t hash_type) {
 size_t write_hhnn(
   const HashInfo& hi,
   size_t hash_count,
-  std::ostream& out)
+  Writer& out)
 {
   std::vector<char> chbuf;
   write_pstring(hi.name, chbuf);
@@ -164,7 +166,7 @@ std::vector<std::pair<int64_t, int64_t>> make_block_bounds(
 
 size_t write_hint(
   const std::vector<std::vector<char>>& hashes,
-  std::ostream& out)
+  Writer& out)
 {
   const auto block_bounds = make_block_bounds<8>(hashes);
 
@@ -193,7 +195,7 @@ size_t write_hint(
 
 size_t write_hdat(
   const std::vector<std::vector<char>>& hashes,
-  std::ostream& out)
+  Writer& out)
 {
   std::vector<char> chbuf;
   for (const auto& h: hashes) {
@@ -205,7 +207,7 @@ size_t write_hdat(
 
 size_t write_ridx(
   const std::vector<uint64_t>& ridx,
-  std::ostream& out)
+  Writer& out)
 {
   return write_chunk(
     "RIDX",
@@ -218,8 +220,8 @@ size_t write_ridx(
 size_t write_rhdr(
   const std::vector<HashInfo>& hash_infos,
   uint64_t record_count,
-  std::ostream& out
-) {
+  Writer& out)
+{
   std::vector<char> chbuf;
   write_le<uint64_t>(
     std::accumulate(
@@ -243,9 +245,10 @@ size_t write_rhdr(
 }
 
 size_t write_rdat(
-  std::vector<std::vector<std::vector<char>>> records,
-  std::ostream& out
-) {
+  const std::vector<HashInfo>& hash_infos,
+  const std::vector<std::vector<std::vector<char>>>& records,
+  Writer& out)
+{
   std::vector<char> chbuf;
   for (const auto& record: records) {
     for (const auto& field: record) {
@@ -257,8 +260,8 @@ size_t write_rdat(
 }
 
 size_t write_ftoc(
-  std::vector<std::pair<uint64_t, std::string>>& toc,
-  std::ostream& out)
+  const std::vector<std::pair<uint64_t, std::string>>& toc,
+  Writer& out)
 {
   std::vector<char> chbuf;
   for (const auto& [offset, chtype]: toc) {
@@ -270,51 +273,54 @@ size_t write_ftoc(
   return write_chunk("FTOC", chbuf, out);
 }
 
-size_t encode_hset(
-  const std::string hashset_name,
-  const std::string hashset_desc,
-  char const* const* hash_type_names,
-  size_t hash_type_names_count,
-  std::istream& in,
-  std::ostream& out)
+SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
+  const char* hashset_name,
+  const char* hashset_desc,
+  const SFHASH_HashAlgorithm* record_order,
+  size_t record_order_length)
+{
+// TODO: would be nice to do this in-place with some sort of range adapter
+  std::vector<HashInfo> hash_infos;
+  for (size_t i = 0; i < record_order_length; ++i) {
+// TODO: handle unrecognized type
+    hash_infos.push_back(HASH_INFO.at(record_order[i]));
+  }
+
+  return new SFHASH_HashsetBuildCtx{
+    hashset_name,
+    hashset_desc,
+    std::move(hash_infos),
+    {}
+  };
+}
+
+void sfhash_add_hashset_record(
+  SFHASH_HashsetBuildCtx* bctx,
+  const void* record)
+{
+  std::vector<std::vector<char>> rec;
+
+  const char* ri = static_cast<const char*>(record);
+  for (const auto& hi: bctx->hash_infos) {
+    if (*ri) {
+      rec.emplace_back(ri + 1, ri + 1 + hi.length);
+    }
+    else {
+      rec.emplace_back();
+    }
+    ri += 1 + hi.length;
+  }
+
+  bctx->records.push_back(std::move(rec));
+}
+
+size_t sfhash_save_hashset_close(
+  SFHASH_HashsetBuildCtx* bctx,
+  ssize_t (*write_func)(void*, const void*, size_t),
+  void* wctx,
+  SFHASH_Error** err)
 {
   const uint32_t version = 2;
-
-  std::vector<HashInfo> hash_infos;
-
-  for (size_t i = 0; i < hash_type_names_count; ++i) {
-// TODO: handle unrecognized type
-    hash_infos.push_back(HASH_INFO.at(std::string(hash_type_names[i])));
-  }
-
-  // read the input into records
-  std::vector<std::vector<std::vector<char>>> records;
-
-  std::string line;
-  while (in) {
-    std::getline(in, line);
-
-    if (line.empty()) {
-      continue;
-    }
-
-    std::vector<std::vector<char>> rec;
-
-    const auto& cols = split(line, ' ');
-
-    std::transform(
-      cols.begin(), cols.end(),
-      hash_infos.begin(),
-      std::back_inserter(rec),
-      [](const auto& col, const auto& hinfo) {
-        std::vector<char> b(hinfo.length);
-        hinfo.conv(reinterpret_cast<uint8_t*>(b.data()), col.c_str(), hinfo.length);
-        return b;
-      }
-    );
-
-    records.push_back(std::move(rec));
-  }
 
   // set the timestamp
   const auto tt = std::time(nullptr);
@@ -329,17 +335,23 @@ size_t encode_hset(
   std::vector<std::pair<uint64_t, std::string>> toc;
   uint64_t pos = 0;
 
+  Writer out{write_func, wctx};
+
   // Magic
   pos += write_magic(out);
+
+  const auto& [hashset_name, hashset_desc, hash_infos, records] = *bctx;
 
   // FHDR
   toc.emplace_back(pos, "FHDR");
   pos += write_fhdr(version, hashset_name, hashset_desc, timestamp, out);
 
-  for (auto i = 0u; i < hash_infos.size(); ++i) {
+  for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
     std::vector<std::pair<std::vector<char>, size_t>> recs;
     for (auto ri = 0u; ri < records.size(); ++ri) {
-      recs.emplace_back(records[ri][i], ri);
+      if (!records[ri][i].empty()) {
+        recs.emplace_back(records[ri][i], ri);
+      }
     }
     std::sort(recs.begin(), recs.end());
 
@@ -377,11 +389,82 @@ size_t encode_hset(
 
   // RDAT
   toc.emplace_back(pos, "RDAT");
-  pos += write_rdat(records, out);
+  pos += write_rdat(hash_infos, records, out);
 
   // FTOC
   toc.emplace_back(pos, "FTOC");
   pos += write_ftoc(toc, out);
 
   return pos;
+}
+
+void sfhash_save_hashset_destroy(SFHASH_HashsetBuildCtx* bctx) {
+  delete bctx;
+}
+
+ssize_t write_it(void* ctx, const void* buf, size_t len) {
+  static_cast<std::ostream*>(ctx)->write(static_cast<const char*>(buf), len);
+  return *static_cast<std::ostream*>(ctx) ? len : -1;
+}
+
+// TODO: return a std::vector<std::string_view>
+// even better would be to lazily produce the string_views
+std::vector<std::string> split(const std::string& s, char delim) {
+  std::vector<std::string> splits;
+
+  auto i = s.begin();
+  do {
+    auto j = std::find(i, s.end(), delim);
+    splits.emplace_back(i, j);
+    i = j != s.end() ? j + 1 : j;
+  } while (i != s.end());
+
+  return splits;
+}
+
+size_t write_hashset(
+  const char* hashset_name,
+  const char* hashset_desc,
+  const SFHASH_HashAlgorithm* htypes,
+  size_t htypes_len,
+  std::istream& in,
+  std::ostream& out
+)
+{
+  auto bctx = make_unique_del(
+    sfhash_save_hashset_open(hashset_name, hashset_desc, htypes, htypes_len),
+    sfhash_save_hashset_destroy
+  );
+
+  std::string line;
+  while (in) {
+    std::getline(in, line);
+
+    if (line.empty()) {
+      continue;
+    }
+
+    std::vector<char> rec;
+
+    const auto& cols = split(line, ' ');
+
+    for (size_t i = 0; i < bctx->hash_infos.size(); ++i) {
+      rec.insert(rec.end(), bctx->hash_infos[i].length, 0);
+      bctx->hash_infos[i].conv(
+        reinterpret_cast<uint8_t*>(rec.data() + rec.size() - bctx->hash_infos[i].length),
+        cols[i].c_str(),
+        bctx->hash_infos[i].length
+      );
+    }
+
+    sfhash_add_hashset_record(bctx.get(), rec.data());
+  }
+
+  SFHASH_Error* err = nullptr;
+  return sfhash_save_hashset_close(
+    bctx.get(),
+    write_it,
+    &out,
+    &err
+  );
 }
