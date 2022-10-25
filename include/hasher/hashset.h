@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <sys/types.h>
 
 #include <hasher/common.h>
 
@@ -107,6 +108,36 @@ size_t sfhash_save_hashset_close(
 );
 
 void sfhash_save_hashset_destroy(SFHASH_HashsetBuildCtx* bctx);
+
+void sfhash_union_hashsets(
+  const SFHASH_Hashset* l,
+  const SFHASH_Hashset* r,
+  const char* result_hashset_name,
+  const char* result_hashset_desc,
+  ssize_t (*write_func)(void*, const void*, size_t),
+  void* wctx,
+  SFHASH_Error** err
+);
+
+void sfhash_intersect_hashsets(
+  const SFHASH_Hashset* l,
+  const SFHASH_Hashset* r,
+  const char* result_hashset_name,
+  const char* result_hashset_desc,
+  ssize_t (*write_func)(void*, const void*, size_t),
+  void* wctx,
+  SFHASH_Error** err
+);
+
+void sfhash_difference_hashsets(
+  const SFHASH_Hashset* l,
+  const SFHASH_Hashset* r,
+  const char* result_hashset_name,
+  const char* result_hashset_desc,
+  ssize_t (*write_func)(void*, const void*, size_t),
+  void* wctx,
+  SFHASH_Error** err
+);
 
 #ifdef __cplusplus
 }
