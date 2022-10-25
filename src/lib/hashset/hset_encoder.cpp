@@ -45,15 +45,6 @@ const std::map<SFHASH_HashAlgorithm, HashInfo> HASH_INFO{
   { SFHASH_SIZE,      HashInfo{SFHASH_SIZE, "sizes", 8, size_to_u64 } }
 };
 
-struct Writer {
-  ssize_t (*write_func)(void*, const void*, size_t);
-  void* wctx;
-
-  void write(const void* buf, size_t len) {
-    write_func(wctx, buf, len);
-  }
-};
-
 template <>
 size_t write_to(Writer& out, const void* buf, size_t len) {
   out.write(buf, len);
