@@ -90,8 +90,8 @@ size_t write_chunk(
   return write_chunk(chunk_type, chunk_bytes.data(), chunk_bytes.size(), out);
 }
 
-size_t write_page_alignment_padding(uint64_t pos, Writer& out) {
-  std::vector<char> padding(4096 - pos % 4096);
+size_t write_page_alignment_padding(uint64_t pos, uint64_t align, Writer& out) {
+  std::vector<char> padding((align - pos % align) % align);
   out.write(padding.data(), padding.size());
   return padding.size();
 }
@@ -376,7 +376,7 @@ size_t sfhash_save_hashset_close(
     }
 
     // HDAT
-    pos += write_page_alignment_padding(pos, out);
+    pos += write_page_alignment_padding(pos, 4096, out);
     toc.emplace_back(pos, "HDAT");
     pos += write_hdat(hashes, out);
 

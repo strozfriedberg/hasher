@@ -47,3 +47,5 @@ size_t write_chunk(
   size_t chunk_length,
   Writer& out
 );
+
+size_t write_page_alignment_padding(uint64_t pos, uint64_t align, Writer& out);

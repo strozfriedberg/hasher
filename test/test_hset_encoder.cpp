@@ -1,6 +1,7 @@
 #include "hset_encoder.h"
 #include "hex.h"
 
+#include <algorithm>
 #include <cstring>
 #include <initializer_list>
 #include <utility>
@@ -83,3 +84,30 @@ TEST_CASE("write_chunk_nonempty") {
 
   CHECK(std::equal(c, c + hash.size(), reinterpret_cast<const char*>(hash.data())));
 }
+
+TEST_CASE("write_page_alignment_padding_at_0") {
+  std::vector<char> out;
+  Writer w{write_vec, &out};
+
+  CHECK(write_page_alignment_padding(0, 4096, w) == 0);
+  CHECK(out.size() == 0);
+}
+
+TEST_CASE("write_page_alignment_padding_aligned") {
+  std::vector<char> out;
+  Writer w{write_vec, &out};
+
+  CHECK(write_page_alignment_padding(8192, 4096, w) == 0);
+  CHECK(out.size() == 0);
+}
+
+TEST_CASE("write_page_alignment_padding_not_aligned") {
+  std::vector<char> out;
+  Writer w{write_vec, &out};
+
+  CHECK(write_page_alignment_padding(75, 4096, w) == 4096 - 75);
+  CHECK(out.size() == 4096 - 75);
+  CHECK(std::all_of(out.begin(), out.end(), [](char c){ return c == '\0'; }));
+}
+
+
