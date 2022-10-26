@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstring>
 #include <initializer_list>
+#include <tuple>
 #include <utility>
 
 #include <catch2/catch_test_macros.hpp>
@@ -84,30 +85,80 @@ TEST_CASE("write_chunk_nonempty") {
 
   CHECK(std::equal(c, c + hash.size(), reinterpret_cast<const char*>(hash.data())));
 }
+*/
 
-TEST_CASE("write_page_alignment_padding_at_0") {
-  std::vector<char> out;
-  Writer w{write_vec, &out};
+TEST_CASE("length_alignment_padding") {
+  const std::initializer_list<std::tuple<uint64_t, uint64_t, size_t>> tests = {
+    {    0, 4096,    0 },
+    {    1, 4096, 4095 },
+    { 4095, 4096,    1 },
+    { 4096, 4096,    0 }
+  };
 
-  CHECK(write_page_alignment_padding(0, 4096, w) == 0);
-  CHECK(out.size() == 0);
+  for (const auto& [pos, align, plen]: tests) {
+    CHECK(length_alignment_padding(pos, align) == plen);
+  }
 }
 
-TEST_CASE("write_page_alignment_padding_aligned") {
-  std::vector<char> out;
-  Writer w{write_vec, &out};
+TEST_CASE("write_alignment_padding") {
+  const std::initializer_list<std::tuple<uint64_t, uint64_t, size_t>> tests = {
+    {    0, 4096,    0 },
+    {    1, 4096, 4095 },
+    { 4095, 4096,    1 },
+    { 4096, 4096,    0 }
+  };
 
-  CHECK(write_page_alignment_padding(8192, 4096, w) == 0);
-  CHECK(out.size() == 0);
+  char buf[4096];
+
+  for (const auto& [pos, align, plen]: tests) {
+    std::fill(std::begin(buf), std::end(buf), 0xFF);
+    // Is it reporting the expected amount of padding?
+    CHECK(write_alignment_padding(pos, align, buf) == plen);
+    // Did it write at least the expected amount of padding?
+    CHECK(std::all_of(std::begin(buf), std::begin(buf) + plen, [](char c){ return c == '\x00'; }));
+    // Did it write no more than the expected amount of padding?
+    CHECK(std::all_of(std::begin(buf) + plen, std::end(buf), [](char c){ return c == '\xFF'; }));
+  }
 }
 
-TEST_CASE("write_page_alignment_padding_not_aligned") {
-  std::vector<char> out;
-  Writer w{write_vec, &out};
-
-  CHECK(write_page_alignment_padding(75, 4096, w) == 4096 - 75);
-  CHECK(out.size() == 4096 - 75);
-  CHECK(std::all_of(out.begin(), out.end(), [](char c){ return c == '\0'; }));
+TEST_CASE("length_magic") {
+  CHECK(length_magic() == 8);
 }
 
+TEST_CASE("write_magic") {
+  char buf[8];
+  CHECK(write_magic(buf) == 8);
+  CHECK(!std::memcmp(buf, "SetOHash", 8));
+}
 
+TEST_CASE("length_fhdr") {
+  CHECK(length_fhdr("123", "4567", "890") == 68);
+}
+
+TEST_CASE("write_fhdr") {
+  const uint32_t version = 2;
+  const char name[] = "name";
+  const char desc[] = "desc";
+  const char ts[] = "2022-10-26T18:13:07Z";
+
+  const uint8_t exp[] = {
+    'F', 'H', 'D', 'R',
+    0x2A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x04, 0x00,
+    'n', 'a', 'm', 'e',
+    0x14, 0x00,
+    '2', '0', '2', '2', '-', '1', '0', '-', '2', '6', 'T', '1', '8', ':', '1', '3', ':', '0', '7', 'Z',
+    0x04, 0x00,
+    'd', 'e', 's', 'c',
+    0xDB, 0x66, 0x60, 0x21, 0x5B, 0x46, 0x2E, 0xCB,
+    0xBF, 0x2B, 0x6C, 0x87, 0x9E, 0x64, 0x15, 0x75,
+    0x47, 0x96, 0x0D, 0x4A, 0xCE, 0x90, 0xBA, 0x54,
+    0x8A, 0x8F, 0x14, 0x10, 0xCC, 0x0B, 0x10, 0x31
+  };
+
+  std::vector<char> buf(length_fhdr(name, desc, ts));
+  CHECK(buf.size() == sizeof(exp));
+  CHECK(write_fhdr(version, name, desc, ts, buf.data()) == buf.size());
+  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+}
