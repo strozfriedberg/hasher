@@ -75,3 +75,17 @@ size_t write_fhdr(
 size_t length_hhnn(
   const HashInfo& hi
 );
+
+size_t write_hhnn(
+  const HashInfo& hi,
+  size_t hash_count,
+  char* out
+);
+
+size_t length_hint();
+
+size_t write_hint(
+  const std::vector<std::vector<char>>& hashes,
+  char* out
+);
+

@@ -129,12 +129,12 @@ TEST_CASE("write_fhdr") {
 }
 
 TEST_CASE("length_hhnn") {
-  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20 };
+  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20, nullptr};
   CHECK(length_hhnn(hi) == 67);
 }
 
 TEST_CASE("write_hhnn") {
-  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20 };
+  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20 , nullptr};
 
   const uint8_t exp[] = {
     // chunk type
