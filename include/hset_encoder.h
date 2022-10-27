@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "hasher/hashset.h"
@@ -124,3 +125,9 @@ size_t write_rdat(
   char* out
 );
 
+size_t length_ftoc(size_t chunk_count);
+
+size_t write_ftoc(
+  const std::vector<std::pair<uint64_t, std::string>>& toc,
+  char* out
+);
