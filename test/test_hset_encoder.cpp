@@ -276,6 +276,64 @@ TEST_CASE("write_ridx") {
   CHECK(!std::memcmp(buf.data(), exp, buf.size()));
 }
 
+TEST_CASE("length_rhdr") {
+  const std::vector<HashInfo> hash_infos{
+    {SFHASH_MD5, "MD5", 16, nullptr},
+    {SFHASH_SHA_1, "SHA-1", 20, nullptr}
+  };
+  CHECK(length_rhdr(hash_infos) == 92);
+}
+
+TEST_CASE("write_rhdr") {
+  const std::vector<HashInfo> hash_infos{
+    {SFHASH_MD5, "MD5", 16, nullptr},
+    {SFHASH_SHA_1, "SHA-1", 20, nullptr}
+  };
+
+  const uint8_t exp[] = {
+    // chunk type
+    'R', 'H', 'D', 'R',
+    // chunk data length
+    0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // record length
+    0x26, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // record count
+    0x12, 0x34, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00,
+    //
+    //hash info 0
+    //
+    // hash type
+    0x00, 0x00,
+    // hash type name length
+    0x03, 0x00,
+    // hash type name
+    'M', 'D', '5',
+    // hash length
+    0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    //
+    // hash info 1
+    //
+    // hash type
+    0x01, 0x00,
+    // hash type name length
+    0x05, 0x00,
+    // hash type name
+    'S', 'H', 'A', '-', '1',
+    // hash length
+    0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // chunk hash
+    0x6F, 0x39, 0x55, 0x01, 0x6E, 0x81, 0x38, 0x29,
+    0x0F, 0xCA, 0x12, 0xCA, 0x1A, 0x1A, 0x54, 0xCE,
+    0xD3, 0x0A, 0x06, 0x96, 0x91, 0xEC, 0x8E, 0xDA,
+    0xDC, 0x85, 0xF3, 0xA9, 0xC9, 0xF6, 0x38, 0x72
+  };
+
+  std::vector<char> buf(length_rhdr(hash_infos));
+  CHECK(buf.size() == sizeof(exp));
+  CHECK(write_rhdr(hash_infos, 5649426, buf.data()) == buf.size());
+  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+}
+
 /*
   for (char c: buf) {
     std::cerr << std::hex << std::setw(2) << std::setfill('0') << (c & 0xFF) << ' ';

@@ -103,3 +103,13 @@ size_t write_ridx(
   char* out
 );
 
+size_t length_rhdr(
+  const std::vector<HashInfo>& hash_infos
+);
+
+size_t write_rhdr(
+  const std::vector<HashInfo>& hash_infos,
+  uint64_t record_count,
+  char* out
+);
+
