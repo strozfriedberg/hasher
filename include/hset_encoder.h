@@ -86,7 +86,7 @@ size_t write_hhnn(
 size_t length_hint();
 
 size_t write_hint(
-  const std::vector<std::vector<uint8_t>>& hashes,
+  const std::vector<std::pair<int64_t, int64_t>>& block_bounds,
   char* out
 );
 

@@ -1,5 +1,6 @@
 #include "hset_encoder.h"
 #include "hex.h"
+#include "rwutil.h"
 
 #include <algorithm>
 #include <cstring>
@@ -163,38 +164,49 @@ TEST_CASE("write_hhnn") {
 }
 
 TEST_CASE("length_hint") {
-//  CHECK(length_hhnn(hi) == 4142);
+  CHECK(length_hint() == 4142);
 }
 
 TEST_CASE("write_hint") {
-/*
-  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20 };
+  std::vector<std::pair<int64_t, int64_t>> block_bounds(256);
+  for (size_t i = 0; i < block_bounds.size(); ++i) {
+    block_bounds[i] = { 2*i, 2*i + 1 };
+  }
 
-  const uint8_t exp[] = {
+  const uint8_t exp_leading[] = {
     // chunk type
-    'H', 'H', 0x00, 0x01,
+    'H', 'I', 'N', 'T',
     // chunk data length
-    0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // hash type name length
-    0x05, 0x00,
-    // hash type name
-    'S', 'H', 'A', '-', '1',
-    // hash length
-    0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // hash count
-    0x89, 0x67, 0x45, 0x23, 0x01, 0x00, 0x00, 0x00,
-    // chunk hash
-    0x7A, 0xCC, 0x42, 0x6D, 0x65, 0x73, 0x5B, 0x47,
-    0x8F, 0x85, 0x84, 0xC0, 0xAD, 0x66, 0xDA, 0x38,
-    0x2B, 0xEB, 0x27, 0xDF, 0x32, 0x32, 0x08, 0x27,
-    0x4C, 0x03, 0xDF, 0x51, 0xF9, 0x5E, 0x55, 0xD0
+    0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // hint type
+    'b', 0x08,
   };
 
-  std::vector<char> buf(length_hhnn(hi));
+  const uint8_t exp_trailing[] = {
+    // chunk hash
+    0x8B, 0xD3, 0xD1, 0x45, 0x6A, 0x53, 0x82, 0x57,
+    0x53, 0x5B, 0x08, 0xD2, 0x23, 0x22, 0x5B, 0x74,
+    0x30, 0x2B, 0x50, 0xAE, 0xA6, 0x6E, 0x04, 0x3B,
+    0x0B, 0xE6, 0x79, 0x7E, 0xD9, 0x14, 0x82, 0x3B
+  };
+
+  uint8_t exp[sizeof(exp_leading) + sizeof(int64_t) * 2 * 256 + sizeof(exp_trailing)];
+
+  std::memcpy(exp, exp_leading, sizeof(exp_leading));
+
+  // block bounds
+  char* cur = reinterpret_cast<char*>(exp + sizeof(exp_leading));
+  for (const auto& bb: block_bounds) {
+    cur += write_le<int64_t>(bb.first, cur);
+    cur += write_le<int64_t>(bb.second, cur);
+  }
+
+  std::memcpy(cur, exp_trailing, sizeof(exp_trailing));
+
+  std::vector<char> buf(length_hint());
   CHECK(buf.size() == sizeof(exp));
-  CHECK(write_hinthnn(hi, 4886718345, buf.data()) == buf.size());
+  CHECK(write_hint(block_bounds, buf.data()) == buf.size());
   CHECK(!std::memcmp(buf.data(), exp, buf.size()));
-*/
 }
 
 TEST_CASE("length_hdat") {
