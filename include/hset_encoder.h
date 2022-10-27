@@ -48,4 +48,30 @@ size_t write_chunk(
   Writer& out
 );
 
-size_t write_page_alignment_padding(uint64_t pos, uint64_t align, Writer& out);
+size_t length_alignment_padding(uint64_t pos, uint64_t align);
+
+size_t write_alignment_padding(uint64_t pos, uint64_t align, char* out);
+
+size_t write_alignment_padding(uint64_t pos, uint64_t align, Writer& out);
+
+size_t length_magic();
+
+size_t write_magic(char* out);
+
+size_t length_fhdr(
+  const std::string& hashset_name,
+  const std::string& hashset_desc,
+  const std::string& timestamp
+);
+
+size_t write_fhdr(
+  uint32_t version,
+  const std::string& hashset_name,
+  const std::string& hashset_desc,
+  const std::string& timestamp,
+  char* out
+);
+
+size_t length_hhnn(
+  const HashInfo& hi
+);

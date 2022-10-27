@@ -162,3 +162,20 @@ TEST_CASE("write_fhdr") {
   CHECK(write_fhdr(version, name, desc, ts, buf.data()) == buf.size());
   CHECK(!std::memcmp(buf.data(), exp, buf.size()));
 }
+
+TEST_CASE("length_hhnn") {
+  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20 };
+  CHECK(length_hhnn(hi) == 67);
+}
+
+TEST_CASE("write_hhnn") {
+/*
+  const HashInfo hi{ };
+
+  std::vector<char> buf(length_hhnn(hi));
+  CHECK(buf.size() == sizeof(exp));
+  CHECK(write_hhnn(hi, 27, buf.data()) == buf.size());
+  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+*/
+
+}
