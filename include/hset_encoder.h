@@ -113,3 +113,14 @@ size_t write_rhdr(
   char* out
 );
 
+size_t length_rdat(
+  const std::vector<HashInfo>& hash_infos,
+  size_t record_count
+);
+
+size_t write_rdat(
+  const std::vector<HashInfo>& hash_infos,
+  const std::vector<std::vector<std::vector<uint8_t>>>& records,
+  char* out
+);
+
