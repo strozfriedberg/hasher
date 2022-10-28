@@ -76,23 +76,6 @@ std::ostream& operator<<(std::ostream& out, const RecordData& rdat) {
              << ' ' << rdat.end;
 }
 
-struct Chunk {
-  enum Type {
-    FHDR = 0x46484452,
-    FTOC = 0x46544F43,
-    HDAT = 0x48444154,
-    HHDR = 0x48480000,
-    HINT = 0x48494E54,
-    RIDX = 0x52494458,
-    RHDR = 0x52484452,
-    RDAT = 0x52444154
-  };
-
-  uint32_t type;
-  const char* dbeg;
-  const char* dend;
-};
-
 std::string printable_chunk_type(uint32_t type) {
   const uint32_t t = to_be(type);
   const char* tt = reinterpret_cast<const char*>(&t);

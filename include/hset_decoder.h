@@ -78,4 +78,23 @@ struct Holder {
   RecordData rdat;
 };
 
+struct Chunk {
+  enum Type {
+    FHDR = 0x46484452,
+    FTOC = 0x46544F43,
+    HDAT = 0x48444154,
+    HHDR = 0x48480000,
+    HINT = 0x48494E54,
+    RIDX = 0x52494458,
+    RHDR = 0x52484452,
+    RDAT = 0x52444154
+  };
+
+  uint32_t type;
+  const char* dbeg;
+  const char* dend;
+};
+
+Chunk decode_chunk(const char* beg, const char*& cur, const char* end);
+
 Holder decode_hset(const char* beg, const char* end);
