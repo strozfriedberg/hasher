@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iosfwd>
 #include <memory>
 #include <string_view>
 #include <tuple>
@@ -17,6 +18,8 @@ struct FileHeader {
   bool operator==(const FileHeader&) const = default;
 };
 
+std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr);
+
 struct HashsetHeader {
   uint32_t hash_type;
   std::string_view hash_name;
@@ -25,6 +28,8 @@ struct HashsetHeader {
 
   bool operator==(const HashsetHeader&) const = default;
 };
+
+std::ostream& operator<<(std::ostream& out, const HashsetHeader& hhdr);
 
 struct HashsetHint {
   uint16_t hint_type;
