@@ -46,75 +46,90 @@ void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
 }
 
 template <>
-size_t write_to(Writer& out, const void* buf, size_t len) {
-  out.write(buf, len);
+size_t write_to(char* out, const void* buf, size_t len) {
+  std::memcpy(out, buf, len);
   return len;
 }
 
-size_t write_chunk(
-  const char* chunk_type,
-  const char* chunk_bytes,
-  size_t chunk_length,
-  Writer& out)
+// TODO: would be better to have the destination as a buffer, write directly
+// into it
+
+SFHASH_HashValues hash_chunk_data(
+  const char* chunk_beg,
+  const char* chunk_end)
 {
-  size_t wlen = 0;
-  out.write(chunk_type, 4);
-  wlen += 4;
-
-  wlen += write_le<uint64_t>(chunk_length, out);
-
-  out.write(chunk_bytes, chunk_length);
-  wlen += chunk_length;
-
   // hash the chunk data
   auto hasher = make_unique_del(
     sfhash_create_hasher(SFHASH_SHA_2_256), sfhash_destroy_hasher
   );
 
-  sfhash_update_hasher(hasher.get(), chunk_bytes, chunk_bytes + chunk_length);
+  sfhash_update_hasher(hasher.get(), chunk_beg, chunk_end);
 
   SFHASH_HashValues hashes;
   sfhash_get_hashes(hasher.get(), &hashes);
 
-  out.write(hashes.Sha2_256, sizeof(hashes.Sha2_256));
-  wlen += sizeof(hashes.Sha2_256);
-
-  return wlen;
+  return hashes;
 }
 
-size_t write_chunk(
-  const char* chunk_type,
-  std::vector<char> chunk_bytes,
-  Writer& out)
-{
-  return write_chunk(chunk_type, chunk_bytes.data(), chunk_bytes.size(), out);
+size_t length_alignment_padding(uint64_t pos, uint64_t align) {
+  return (align - pos % align) % align;
 }
 
-size_t write_page_alignment_padding(uint64_t pos, uint64_t align, Writer& out) {
-  std::vector<char> padding((align - pos % align) % align);
-  out.write(padding.data(), padding.size());
-  return padding.size();
+size_t write_alignment_padding(uint64_t pos, uint64_t align, char* out) {
+  return write_byte(length_alignment_padding(pos, align), 0, out);
 }
 
-size_t write_magic(Writer& out) {
-  out.write("SetOHash", 8);
+size_t length_magic() {
   return 8;
+}
+
+size_t write_magic(char* out) {
+  std::memcpy(out, "SetOHash", 8);
+  return 8;
+}
+
+size_t length_fhdr(
+  const std::string& hashset_name,
+  const std::string& hashset_desc,
+  const std::string& timestamp)
+{
+  return 4 + // chunk type
+         8 + // chunk data length
+         8 + // version
+         2 + // hashset_name length
+         hashset_name.size() +
+         2 + // timestamp length
+         timestamp.size() +
+         2 + // hashset_desc length
+         hashset_desc.size() +
+         32; // chunk hash
 }
 
 size_t write_fhdr(
   uint32_t version,
   const std::string& hashset_name,
   const std::string& hashset_desc,
-  const char* timestamp,
-  Writer& out)
+  const std::string& timestamp,
+  char* out)
 {
-  std::vector<char> chbuf;
-  write_le<uint64_t>(version, chbuf);
-  write_pstring(hashset_name, chbuf);
-  write_pstring(timestamp, chbuf);
-  write_pstring(hashset_desc, chbuf);
+  const char* beg = out;
 
-  return write_chunk("FHDR", chbuf, out);
+  out += write_bytes("FHDR", 4, out);
+
+  char* lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
+  out += write_le<uint64_t>(version, out);
+  out += write_pstring(hashset_name, out);
+  out += write_pstring(timestamp, out);
+  out += write_pstring(hashset_desc, out);
+
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
+
+  const auto hashes = hash_chunk_data(dbeg, out);
+  out += write_bytes(hashes.Sha2_256, sizeof(hashes.Sha2_256), out);
+  return out - beg;
 }
 
 std::string make_hhnn_str(uint32_t hash_type) {
@@ -129,22 +144,45 @@ std::string make_hhnn_str(uint32_t hash_type) {
   };
 }
 
+size_t length_hhnn(
+  const HashInfo& hi)
+{
+  return 4 + // chunk type
+         8 + // chunk data length
+         2 + // hi.name length
+         hi.name.size() +
+         8 + // hi.length
+         8 + // hash_count
+         32; // chunk hash
+}
+
 size_t write_hhnn(
   const HashInfo& hi,
   size_t hash_count,
-  Writer& out)
+  char* out)
 {
-  std::vector<char> chbuf;
-  write_pstring(hi.name, chbuf);
-  write_le<uint64_t>(hi.length, chbuf);
-  write_le<uint64_t>(hash_count, chbuf);
+  const char* beg = out;
 
-  return write_chunk(make_hhnn_str(hi.type).c_str(), chbuf, out);
+  out += write_bytes(make_hhnn_str(hi.type).c_str(), 4, out);
+
+  char* lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
+  out += write_pstring(hi.name, out);
+  out += write_le<uint64_t>(hi.length, out);
+  out += write_le<uint64_t>(hash_count, out);
+
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
+
+  const auto hashes = hash_chunk_data(dbeg, out);
+  out += write_bytes(hashes.Sha2_256, sizeof(hashes.Sha2_256), out);
+  return out - beg;
 }
 
 template <size_t BlockBits>
 std::vector<std::pair<int64_t, int64_t>> make_block_bounds(
-  const std::vector<std::vector<char>>& hashes)
+  const std::vector<std::vector<uint8_t>>& hashes)
 {
   std::vector<std::pair<int64_t, int64_t>> block_bounds(
     1 << BlockBits,
@@ -166,12 +204,18 @@ std::vector<std::pair<int64_t, int64_t>> make_block_bounds(
   return block_bounds;
 }
 
-size_t write_hint(
-  const std::vector<std::vector<char>>& hashes,
-  Writer& out)
-{
-  const auto block_bounds = make_block_bounds<8>(hashes);
+size_t length_hint() {
+  return 4 + // chunk type
+         8 + // chunk data length
+         2 + // hint type
+         256 * 8 * 2 + // bounds for 8-bit buckets
+         32; // chunk hash
+}
 
+size_t write_hint(
+  const std::vector<std::pair<int64_t, int64_t>>& block_bounds,
+  char* out)
+{
 /*
   for (size_t b = 0; b < block_bounds.size(); ++b) {
      std::cerr << std::hex << std::setw(2) << std::setfill('0') << b << ' '
@@ -183,96 +227,270 @@ size_t write_hint(
    std::cerr << '\n';
 */
 
-  std::vector<char> chbuf;
-// TODO: set a real hint type
-  write_be<uint16_t>(0x6208, chbuf);  // b8 = blocks, 8-bit
+  const char* beg = out;
+
+  out += write_bytes("HINT", 4, out);
+
+  char* lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
+  // TODO: set a real hint type
+  out += write_be<uint16_t>(0x6208, out);  // b8 = blocks, 8-bit
 
   for (const auto& bb: block_bounds) {
-    write_le<int64_t>(bb.first, chbuf);
-    write_le<int64_t>(bb.second, chbuf);
+    out += write_le<int64_t>(bb.first, out);
+    out += write_le<int64_t>(bb.second, out);
   }
 
-  return write_chunk("HINT", chbuf, out);
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
+
+  const auto h = hash_chunk_data(dbeg, out);
+  out += write_bytes(h.Sha2_256, sizeof(h.Sha2_256), out);
+  return out - beg;
+}
+
+size_t length_hdat(size_t hash_count, size_t hash_size) {
+  return 4 + // chunk type
+         8 + // chunk data length
+         hash_count * hash_size +
+         32; // chunk hash
 }
 
 size_t write_hdat(
-  const std::vector<std::vector<char>>& hashes,
-  Writer& out)
+  const std::vector<std::vector<uint8_t>>& hashes,
+  char* out)
 {
-  std::vector<char> chbuf;
+  const char* beg = out;
+
+  out += write_bytes("HDAT", 4, out);
+
+  char* lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
   for (const auto& h: hashes) {
-    chbuf.insert(chbuf.end(), h.begin(), h.end());
+    out += write_bytes(h.data(), h.size(), out);
   }
 
-  return write_chunk("HDAT", chbuf, out);
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
+
+  const auto h = hash_chunk_data(dbeg, out);
+  out += write_bytes(h.Sha2_256, sizeof(h.Sha2_256), out);
+  return out - beg;
+}
+
+size_t length_ridx(size_t record_count) {
+  return 4 + // chunk type
+         8 + // chunk data length
+         record_count * 8 +
+         32; // chunk hash
 }
 
 size_t write_ridx(
   const std::vector<uint64_t>& ridx,
-  Writer& out)
+  char* out)
 {
-  return write_chunk(
-    "RIDX",
+  const char* beg = out;
+
+  out += write_bytes("RIDX", 4, out);
+
+  char *lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
+  out += write_bytes(
     reinterpret_cast<const char*>(ridx.data()),
     ridx.size() * sizeof(std::remove_reference<decltype(ridx)>::type::value_type),
     out
   );
+
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
+
+  const auto hashes = hash_chunk_data(dbeg, out);
+  out += write_bytes(hashes.Sha2_256, sizeof(hashes.Sha2_256), out);
+  return out - beg;
+}
+
+size_t length_rhdr(
+  const std::vector<HashInfo>& hash_infos)
+{
+  return 4 + // chunk type
+         8 + // chunk data length
+         8 + // record length
+         8 + // record count
+         std::accumulate(
+           hash_infos.begin(), hash_infos.end(),
+           0,
+           [](size_t a, const HashInfo& hi) {
+             return a +
+                    2 + // hi.type
+                    2 + // hi.name length
+                    hi.name.length() +
+                    8; // hi.length
+           }
+         ) +
+         32; // chunk hash
 }
 
 size_t write_rhdr(
   const std::vector<HashInfo>& hash_infos,
   uint64_t record_count,
-  Writer& out)
+  char* out)
 {
-  std::vector<char> chbuf;
-  write_le<uint64_t>(
+  const char* beg = out;
+
+  out += write_bytes("RHDR", 4, out);
+
+  char* lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
+  // record length
+  out += write_le<uint64_t>(
     std::accumulate(
       hash_infos.begin(), hash_infos.end(),
       0,
       [](uint64_t a, const HashInfo& hi) {
-        return a + hi.length;
+        return a + 1 + hi.length;
       }
     ),
-    chbuf
+    out
   );
-  write_le<uint64_t>(record_count, chbuf);
+
+  out += write_le<uint64_t>(record_count, out);
 
   for (const auto& hi: hash_infos) {
-    write_le<uint16_t>(hi.type, chbuf);
-    write_pstring(hi.name, chbuf);
-    write_le<uint64_t>(hi.length, chbuf);
+    out += write_le<uint16_t>(std::floor(std::log2(static_cast<uint32_t>(hi.type))), out);
+    out += write_pstring(hi.name, out);
+    out += write_le<uint64_t>(hi.length, out);
   }
 
-  return write_chunk("RHDR", chbuf, out);
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
+
+  const auto hashes = hash_chunk_data(dbeg, out);
+  out += write_bytes(hashes.Sha2_256, sizeof(hashes.Sha2_256), out);
+  return out - beg;
+}
+
+size_t length_rdat(
+  const std::vector<HashInfo>& hash_infos,
+  size_t record_count)
+{
+  return 4 + // chunk type
+         8 + // chunk data length
+         record_count * std::accumulate(
+           hash_infos.begin(), hash_infos.end(),
+           0,
+           [](size_t a, const HashInfo& hi) {
+             return a + 1 + hi.length;
+           }
+         ) +
+         32; // chunk hash
 }
 
 size_t write_rdat(
   const std::vector<HashInfo>& hash_infos,
-  const std::vector<std::vector<std::vector<char>>>& records,
-  Writer& out)
+  const std::vector<std::vector<std::vector<uint8_t>>>& records,
+  char* out)
 {
-  std::vector<char> chbuf;
+  const char* beg = out;
+
+  out += write_bytes("RDAT", 4, out);
+
+  char* lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
   for (const auto& record: records) {
-    for (const auto& field: record) {
-      chbuf.insert(chbuf.end(), field.begin(), field.end());
+    for (size_t i = 0; i < record.size(); ++i) {
+      if (record[i].empty()) {
+        out += write_byte(1 + hash_infos[i].length, 0, out);
+      }
+      else {
+        out += write_byte(1, 1, out);
+        out += write_bytes(record[i].data(), record[i].size(), out);
+      }
     }
   }
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
 
-  return write_chunk("RDAT", chbuf, out);
+  const auto hashes = hash_chunk_data(dbeg, out);
+  out += write_bytes(hashes.Sha2_256, sizeof(hashes.Sha2_256), out);
+  return out - beg;
+}
+
+size_t length_ftoc(size_t chunk_count) {
+  return 4 + // chunk type
+         8 + // chunk data length
+         chunk_count * (
+           8 + // offset
+           4   // chunk type
+         ) +
+         32; // chunk hash
 }
 
 size_t write_ftoc(
   const std::vector<std::pair<uint64_t, std::string>>& toc,
-  Writer& out)
+  char* out)
 {
-  std::vector<char> chbuf;
+  const char* beg = out;
+
+  out += write_bytes("FTOC", 4, out);
+
+  char* lbeg = out;
+  out += 8; // skip length
+  char* dbeg = out;
+
   for (const auto& [offset, chtype]: toc) {
-    write_le<uint64_t>(offset, chbuf);
-// TODO: assert that string is length 4?
-    chbuf.insert(chbuf.end(), chtype.c_str(), chtype.c_str() + 4);
+    out += write_le<uint64_t>(offset, out);
+// TODO: assert that string is length 4? or make the member a char[4]?
+    out += write_bytes(chtype.c_str(), 4, out);
+  }
+  write_le<uint64_t>(out - dbeg, lbeg); // data length
+
+  const auto hashes = hash_chunk_data(dbeg, out);
+  out += write_bytes(hashes.Sha2_256, sizeof(hashes.Sha2_256), out);
+  return out - beg;
+}
+
+size_t length_hset(
+  const std::string& hashset_name,
+  const std::string& hashset_desc,
+  const std::string& timestamp,
+  const std::vector<HashInfo>& hash_infos,
+  size_t record_count)
+{
+  size_t len = length_magic() +
+               length_fhdr(hashset_name, hashset_desc, timestamp);
+
+  for (const auto& hi: hash_infos) {
+    len += length_hhnn(hi) +
+           length_hint();
+
+    len += length_alignment_padding(len, 4096);
+
+    len += length_hdat(record_count, hi.length) +
+           length_ridx(record_count);
   }
 
-  return write_chunk("FTOC", chbuf, out);
+  len += length_rhdr(hash_infos) +
+         length_rdat(hash_infos, record_count) +
+         length_ftoc(4 + 4 * hash_infos.size());
+
+  return len;
+}
+
+std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
+  // set the timestamp
+  const auto tm = std::gmtime(&tt);
+// TODO: check max length
+  std::string ts(30, '\0');
+
+// TODO: check return value
+// TODO: fractional seconds
+  ts.resize(std::strftime(ts.data(), ts.size(), "%FT%TZ", tm));
+  return ts;
 }
 
 SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
@@ -288,9 +506,13 @@ SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
     hash_infos.push_back(HASH_INFO.at(record_order[i]));
   }
 
+// TODO: check that name, desc lengths fit in 16 bits
+// TODO: check that record order does not contain duplicates
+
   return new SFHASH_HashsetBuildCtx{
     hashset_name,
     hashset_desc,
+    make_timestamp(),
     std::move(hash_infos),
     {}
   };
@@ -300,9 +522,9 @@ void sfhash_add_hashset_record(
   SFHASH_HashsetBuildCtx* bctx,
   const void* record)
 {
-  std::vector<std::vector<char>> rec;
+  std::vector<std::vector<uint8_t>> rec;
 
-  const char* ri = static_cast<const char*>(record);
+  const uint8_t* ri = static_cast<const uint8_t*>(record);
   for (const auto& hi: bctx->hash_infos) {
     if (*ri) {
       rec.emplace_back(ri + 1, ri + 1 + hi.length);
@@ -316,40 +538,41 @@ void sfhash_add_hashset_record(
   bctx->records.push_back(std::move(rec));
 }
 
+size_t sfhash_save_hashset_size(const SFHASH_HashsetBuildCtx* bctx) {
+  return length_hset(
+    bctx->hashset_name,
+    bctx->hashset_desc,
+    bctx->timestamp,
+    bctx->hash_infos,
+    bctx->records.size()
+  );
+}
+
 size_t sfhash_save_hashset_close(
   SFHASH_HashsetBuildCtx* bctx,
-  ssize_t (*write_func)(void*, const void*, size_t),
-  void* wctx,
+  void* outp,
   SFHASH_Error** err)
 {
+  char* out = static_cast<char*>(outp);
+
   const uint32_t version = 2;
 
-  // set the timestamp
-  const auto tt = std::time(nullptr);
-  const auto tm = std::gmtime(&tt);
-// TODO: check max length
-  char timestamp[30];
-
-// TODO: check return value
-// TODO: fractional seconds
-  std::strftime(timestamp, sizeof(timestamp), "%FT%TZ", tm);
-
   std::vector<std::pair<uint64_t, std::string>> toc;
-  uint64_t pos = 0;
-
-  Writer out{write_func, wctx};
+  const char* beg = out;
 
   // Magic
-  pos += write_magic(out);
+  out += write_magic(out);
 
-  const auto& [hashset_name, hashset_desc, hash_infos, records] = *bctx;
+  const auto& [hashset_name, hashset_desc, timestamp, hash_infos, records] = *bctx;
+
+//  std::sort(records.begin(), records.end());
 
   // FHDR
-  toc.emplace_back(pos, "FHDR");
-  pos += write_fhdr(version, hashset_name, hashset_desc, timestamp, out);
+  toc.emplace_back(out - beg, "FHDR");
+  out += write_fhdr(version, hashset_name, hashset_desc, timestamp, out);
 
   for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
-    std::vector<std::pair<std::vector<char>, size_t>> recs;
+    std::vector<std::pair<std::vector<uint8_t>, size_t>> recs;
     for (auto ri = 0u; ri < records.size(); ++ri) {
       if (!records[ri][i].empty()) {
         recs.emplace_back(records[ri][i], ri);
@@ -357,7 +580,7 @@ size_t sfhash_save_hashset_close(
     }
     std::sort(recs.begin(), recs.end());
 
-    std::vector<std::vector<char>> hashes;
+    std::vector<std::vector<uint8_t>> hashes;
     std::vector<uint64_t> ridx;
 
     for (const auto& [h, ri]: recs) {
@@ -366,47 +589,42 @@ size_t sfhash_save_hashset_close(
     }
 
     // HHnn
-    toc.emplace_back(pos, make_hhnn_str(hash_infos[i].type));
-    pos += write_hhnn(hash_infos[i], hashes.size(), out);
+    toc.emplace_back(out - beg, make_hhnn_str(hash_infos[i].type));
+    out += write_hhnn(hash_infos[i], hashes.size(), out);
 
     // HINT
     if (hash_infos[i].type != SFHASH_SIZE) {
-      toc.emplace_back(pos, "HINT");
-      pos += write_hint(hashes, out);
+      toc.emplace_back(out - beg, "HINT");
+      out += write_hint(make_block_bounds<8>(hashes), out);
     }
 
     // HDAT
-    pos += write_page_alignment_padding(pos, 4096, out);
-    toc.emplace_back(pos, "HDAT");
-    pos += write_hdat(hashes, out);
+    out += write_alignment_padding(out - beg, 4096, out);
+    toc.emplace_back(out - beg, "HDAT");
+    out += write_hdat(hashes, out);
 
     // RIDX
-    toc.emplace_back(pos, "RIDX");
-    pos += write_ridx(ridx, out);
+    toc.emplace_back(out - beg, "RIDX");
+    out += write_ridx(ridx, out);
   }
 
   // RHDR
-  toc.emplace_back(pos, "RHDR");
-  pos += write_rhdr(hash_infos, records.size(), out);
+  toc.emplace_back(out - beg, "RHDR");
+  out += write_rhdr(hash_infos, records.size(), out);
 
   // RDAT
-  toc.emplace_back(pos, "RDAT");
-  pos += write_rdat(hash_infos, records, out);
+  toc.emplace_back(out - beg, "RDAT");
+  out += write_rdat(hash_infos, records, out);
 
   // FTOC
-  toc.emplace_back(pos, "FTOC");
-  pos += write_ftoc(toc, out);
+  toc.emplace_back(out - beg, "FTOC");
+  out += write_ftoc(toc, out);
 
-  return pos;
+  return out - beg;
 }
 
 void sfhash_save_hashset_destroy(SFHASH_HashsetBuildCtx* bctx) {
   delete bctx;
-}
-
-ssize_t write_it(void* ctx, const void* buf, size_t len) {
-  static_cast<std::ostream*>(ctx)->write(static_cast<const char*>(buf), len);
-  return *static_cast<std::ostream*>(ctx) ? len : -1;
 }
 
 // TODO: return a std::vector<std::string_view>
@@ -462,11 +680,21 @@ size_t write_hashset(
     sfhash_add_hashset_record(bctx.get(), rec.data());
   }
 
+  const auto hset_size = sfhash_save_hashset_size(bctx.get());
+  std::vector<char> buf(hset_size);
+
+  std::cerr << "buf.size() == " << buf.size() << std::endl;
+
   SFHASH_Error* err = nullptr;
-  return sfhash_save_hashset_close(
+  const auto wlen = sfhash_save_hashset_close(
     bctx.get(),
-    write_it,
-    &out,
+    buf.data(),
     &err
   );
+
+  std::cerr << "wlen == " << wlen << std::endl;
+  buf.resize(wlen);
+
+  out.write(buf.data(), buf.size());
+  return wlen;
 }

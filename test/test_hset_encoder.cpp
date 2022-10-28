@@ -471,7 +471,7 @@ TEST_CASE("write_ftoc") {
 
 /*
   // for troubleshooting: dump a buffer
-  std::cerr << std::hex << std::setfill('0')
+  std::cerr << std::hex << std::setfill('0');
   for (char c: buf) {
     std::cerr << std::setw(2) << (c & 0xFF) << ' ';
   }

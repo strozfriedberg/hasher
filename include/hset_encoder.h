@@ -33,27 +33,9 @@ size_t write_hashset(
 
 void size_to_u64(uint8_t* dst, const char* src, size_t dlen);
 
-struct Writer {
-  ssize_t (*write_func)(void*, const void*, size_t);
-  void* wctx;
-
-  void write(const void* buf, size_t len) {
-    write_func(wctx, buf, len);
-  }
-};
-
-size_t write_chunk(
-  const char* chunk_type,
-  const char* chunk_bytes,
-  size_t chunk_length,
-  Writer& out
-);
-
 size_t length_alignment_padding(uint64_t pos, uint64_t align);
 
 size_t write_alignment_padding(uint64_t pos, uint64_t align, char* out);
-
-size_t write_alignment_padding(uint64_t pos, uint64_t align, Writer& out);
 
 size_t length_magic();
 

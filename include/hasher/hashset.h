@@ -100,10 +100,13 @@ void sfhash_add_hashset_record(
   const void* record
 );
 
+size_t sfhash_save_hashset_size(
+  const SFHASH_HashsetBuildCtx* bctx
+);
+
 size_t sfhash_save_hashset_close(
   SFHASH_HashsetBuildCtx* bctx,
-  ssize_t (*write_func)(void*, const void*, size_t),
-  void* wctx,
+  void* out,
   SFHASH_Error** err
 );
 
