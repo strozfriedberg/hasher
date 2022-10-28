@@ -93,6 +93,8 @@ struct Chunk {
   uint32_t type;
   const char* dbeg;
   const char* dend;
+
+  bool operator==(const Chunk&) const = default;
 };
 
 Chunk decode_chunk(const char* beg, const char*& cur, const char* end);
