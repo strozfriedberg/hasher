@@ -13,6 +13,8 @@ struct FileHeader {
   std::string_view hashset_name;
   std::string_view hashset_time;
   std::string_view hashset_desc;
+
+  bool operator==(const FileHeader&) const = default;
 };
 
 struct HashsetHeader {
