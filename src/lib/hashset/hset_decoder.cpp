@@ -107,18 +107,6 @@ Chunk decode_chunk(const char* beg, const char*& cur, const char* end) {
   return Chunk{ type, dbeg, dbeg + len };
 }
 
-struct State {
-  enum Type {
-    INIT,
-    SBRK, // section break
-    HHDR,
-    HINT,
-    HDAT,
-    RHDR,
-    DONE
-  };
-};
-
 State::Type parse_fhdr(const Chunk& ch, Holder& h) {
   // INIT -> FHDR
 

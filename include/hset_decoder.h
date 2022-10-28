@@ -99,4 +99,16 @@ struct Chunk {
 
 Chunk decode_chunk(const char* beg, const char*& cur, const char* end);
 
+struct State {
+  enum Type {
+    INIT,
+    SBRK, // section break
+    HHDR,
+    HINT,
+    HDAT,
+    RHDR,
+    DONE
+  };
+};
+
 Holder decode_hset(const char* beg, const char* end);
