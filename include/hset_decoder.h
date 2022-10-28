@@ -23,7 +23,7 @@ struct HashsetHeader {
   uint64_t hash_length;
   uint64_t hash_count;
 
-  bool operator==(const FileHeader&) const = default;
+  bool operator==(const HashsetHeader&) const = default;
 };
 
 struct HashsetHint {
@@ -31,7 +31,7 @@ struct HashsetHint {
   const void* beg;
   const void* end;
 
-  bool operator==(const FileHeader&) const = default;
+  bool operator==(const HashsetHint&) const = default;
 };
 
 enum HintType {
@@ -46,14 +46,14 @@ struct HashsetData {
   const void* beg;
   const void* end;
 
-  bool operator==(const FileHeader&) const = default;
+  bool operator==(const HashsetData&) const = default;
 };
 
 struct RecordIndex {
   const void* beg;
   const void* end;
 
-  bool operator==(const FileHeader&) const = default;
+  bool operator==(const RecordIndex&) const = default;
 };
 
 struct RecordFieldDescriptor {
