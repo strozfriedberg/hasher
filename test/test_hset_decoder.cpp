@@ -1,0 +1,30 @@
+#include "hset_decoder.h"
+
+#include "helper.h"
+
+#include <catch2/catch_test_macros.hpp>
+
+TEST_CASE("decode_chunk") {
+  const uint8_t in[] = {
+    // chunk type
+    'A', 'B', 'C', 'D',
+    // chunk data length
+    0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // chunk data    
+    '1', '2', '3', '4',
+    // chunk hash
+    0x03, 0xac, 0x67, 0x42, 0x16, 0xf3, 0xe1, 0x5c,
+    0x76, 0x1e, 0xe1, 0xa5, 0xe2, 0x55, 0xf0, 0x67,
+    0x95, 0x36, 0x23, 0xc8, 0xb3, 0x88, 0xb4, 0x45,
+    0x9e, 0x13, 0xf9, 0x78, 0xd7, 0xc8, 0x46, 0xf4
+  };
+
+  const char* beg = reinterpret_cast<const char*>(in);
+  const char* end = beg + sizeof(in);
+  const char* cur = beg;
+
+  const Chunk exp{ 0x41424344, beg + 12, beg + 16 };
+
+  CHECK(decode_chunk(beg, cur, end) == exp);
+  CHECK(cur == end);
+}
