@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cstring>
 #include <initializer_list>
+#include <span>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
@@ -41,6 +43,30 @@ TEST_CASE("size_to_u64_bad") {
       CHECK_THROWS(size_to_u64(dst, in, 8));
     }
   }
+}
+
+TEST_CASE("write_chunk") {
+  const auto f = [](const std::string_view x, char* out) {
+    return std::copy(x.begin(), x.end(), out) - out;
+  };
+
+  const uint8_t exp[] = {
+    // chunk type
+    'A', 'B', 'C', 'D',
+    // chunk data length
+    0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // chunk data
+    '1', '2', '3', '4',
+    // chunk hash
+    0x03, 0xac, 0x67, 0x42, 0x16, 0xf3, 0xe1, 0x5c,
+    0x76, 0x1e, 0xe1, 0xa5, 0xe2, 0x55, 0xf0, 0x67,
+    0x95, 0x36, 0x23, 0xc8, 0xb3, 0x88, 0xb4, 0x45,
+    0x9e, 0x13, 0xf9, 0x78, 0xd7, 0xc8, 0x46, 0xf4
+  };
+
+  std::vector<char> buf(sizeof(exp));
+  CHECK(write_chunk<decltype(f), f>(buf.data(), "ABCD", "1234") == sizeof(exp));
+  CHECK(!std::memcmp(buf.data(), exp, sizeof(exp)));
 }
 
 TEST_CASE("length_alignment_padding") {
@@ -91,17 +117,20 @@ TEST_CASE("length_fhdr") {
   CHECK(length_fhdr("123", "4567", "890") == 68);
 }
 
-TEST_CASE("write_fhdr") {
+template <typename Func, Func func, typename... Args>
+void chunk_data_tester(const std::span<const uint8_t> exp, Args&&... args) {
+  std::vector<char> buf(exp.size());
+  CHECK(func(std::forward<Args>(args)..., buf.data()) == exp.size());
+  CHECK(!std::memcmp(buf.data(), exp.data(), exp.size()));
+}
+
+TEST_CASE("write_fhdr_data") {
   const uint32_t version = 2;
   const char name[] = "name";
   const char desc[] = "desc";
   const char ts[] = "2022-10-26T18:13:07Z";
 
   const uint8_t exp[] = {
-    // chunk type
-    'F', 'H', 'D', 'R',
-    // chunk data length
-    0x2A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // version
     0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // hashset name length
@@ -116,17 +145,11 @@ TEST_CASE("write_fhdr") {
     0x04, 0x00,
     // hashset description
     'd', 'e', 's', 'c',
-    // chunk hash
-    0xDB, 0x66, 0x60, 0x21, 0x5B, 0x46, 0x2E, 0xCB,
-    0xBF, 0x2B, 0x6C, 0x87, 0x9E, 0x64, 0x15, 0x75,
-    0x47, 0x96, 0x0D, 0x4A, 0xCE, 0x90, 0xBA, 0x54,
-    0x8A, 0x8F, 0x14, 0x10, 0xCC, 0x0B, 0x10, 0x31
   };
 
-  std::vector<char> buf(length_fhdr(name, desc, ts));
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_fhdr(version, name, desc, ts, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_fhdr_data), write_fhdr_data>(
+    std::span{exp}, version, name, desc, ts
+  );
 }
 
 TEST_CASE("length_hhnn") {
@@ -134,14 +157,11 @@ TEST_CASE("length_hhnn") {
   CHECK(length_hhnn(hi) == 67);
 }
 
-TEST_CASE("write_hhnn") {
+TEST_CASE("write_hhnn_data") {
   const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20 , nullptr};
+  const size_t hash_count = 4886718345;
 
   const uint8_t exp[] = {
-    // chunk type
-    'H', 'H', 0x00, 0x01,
-    // chunk data length
-    0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // hash type name length
     0x05, 0x00,
     // hash type name
@@ -150,70 +170,46 @@ TEST_CASE("write_hhnn") {
     0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // hash count
     0x89, 0x67, 0x45, 0x23, 0x01, 0x00, 0x00, 0x00,
-    // chunk hash
-    0x6F, 0xA9, 0xE5, 0xDC, 0xAF, 0x7B, 0x01, 0xCD,
-    0x36, 0xB7, 0x83, 0x5F, 0x32, 0xE1, 0xF8, 0x92,
-    0x04, 0x27, 0x0F, 0xAD, 0xF2, 0xF2, 0xB6, 0x7D,
-    0x13, 0x3F, 0x9E, 0x37, 0xA5, 0xCA, 0x65, 0x7D
   };
 
-  std::vector<char> buf(length_hhnn(hi));
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_hhnn(hi, 4886718345, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_hhnn_data), write_hhnn_data>(
+    std::span{exp}, hi, hash_count
+  );
 }
 
 TEST_CASE("length_hint") {
   CHECK(length_hint() == 4142);
 }
 
-TEST_CASE("write_hint") {
+TEST_CASE("write_hint_data") {
   std::vector<std::pair<int64_t, int64_t>> block_bounds(256);
   for (size_t i = 0; i < block_bounds.size(); ++i) {
     block_bounds[i] = { 2*i, 2*i + 1 };
   }
 
-  const uint8_t exp_leading[] = {
-    // chunk type
-    'H', 'I', 'N', 'T',
-    // chunk data length
-    0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // hint type
-    'b', 0x08,
-  };
+  uint8_t exp[2 + sizeof(int64_t) * 2 * 256];
 
-  const uint8_t exp_trailing[] = {
-    // chunk hash
-    0x8B, 0xD3, 0xD1, 0x45, 0x6A, 0x53, 0x82, 0x57,
-    0x53, 0x5B, 0x08, 0xD2, 0x23, 0x22, 0x5B, 0x74,
-    0x30, 0x2B, 0x50, 0xAE, 0xA6, 0x6E, 0x04, 0x3B,
-    0x0B, 0xE6, 0x79, 0x7E, 0xD9, 0x14, 0x82, 0x3B
-  };
-
-  uint8_t exp[sizeof(exp_leading) + sizeof(int64_t) * 2 * 256 + sizeof(exp_trailing)];
-
-  std::memcpy(exp, exp_leading, sizeof(exp_leading));
+  // hint type
+  exp[0] = 'b';
+  exp[1] = 0x08;
 
   // block bounds
-  char* cur = reinterpret_cast<char*>(exp + sizeof(exp_leading));
+  char* cur = reinterpret_cast<char*>(exp + 2);
   for (const auto& bb: block_bounds) {
     cur += write_le<int64_t>(bb.first, cur);
     cur += write_le<int64_t>(bb.second, cur);
   }
 
-  std::memcpy(cur, exp_trailing, sizeof(exp_trailing));
-
-  std::vector<char> buf(length_hint());
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_hint(block_bounds, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_hint_data), write_hint_data>(
+    std::span{exp}, block_bounds
+  );
 }
 
 TEST_CASE("length_hdat") {
   CHECK(length_hdat(3914, 20) == 78324);
 }
 
-TEST_CASE("write_hdat") {
+TEST_CASE("write_hdat_data") {
   const std::vector<std::vector<uint8_t>> hashes{
     {
       0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -228,10 +224,6 @@ TEST_CASE("write_hdat") {
   };
 
   const uint8_t exp[] = {
-    // chunk type
-    'H', 'D', 'A', 'T',
-    // chunk data length
-    0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // hash 0
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
     0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
@@ -240,24 +232,18 @@ TEST_CASE("write_hdat") {
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x01, 0x01, 0x01,
-    // chunk hash
-    0xBC, 0xBB, 0x2A, 0x5B, 0x55, 0x86, 0x1C, 0x40,
-    0xA6, 0x47, 0x71, 0x0D, 0x1D, 0xE6, 0xA0, 0x30,
-    0xA9, 0xE8, 0x95, 0x54, 0x46, 0xEE, 0xC9, 0x29,
-    0x3C, 0x11, 0x1E, 0x54, 0x8E, 0x93, 0xAC, 0x0D
   };
 
-  std::vector<char> buf(length_hdat(hashes.size(), 20));
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_hdat(hashes, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_hdat_data), write_hdat_data>(
+    std::span{exp}, hashes
+  );
 }
 
 TEST_CASE("length_ridx") {
   CHECK(length_ridx(134) == 1116);
 }
 
-TEST_CASE("write_ridx") {
+TEST_CASE("write_ridx_data") {
   const std::vector<uint64_t> ridx{
     0,
     97,
@@ -265,27 +251,17 @@ TEST_CASE("write_ridx") {
   };
 
   const uint8_t exp[] = {
-    // chunk type
-    'R', 'I', 'D', 'X',
-    // chunk data length
-    0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // index 0
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // index 1
     0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // index 2
     0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // chunk hash
-    0x4F, 0xE4, 0xC9, 0x93, 0x6F, 0x17, 0x19, 0xB6,
-    0x0B, 0xB1, 0x40, 0x55, 0x3F, 0xEC, 0x12, 0x9A,
-    0xF4, 0x7D, 0x12, 0xC7, 0x35, 0xB3, 0x6E, 0x2B,
-    0x8A, 0x47, 0x28, 0x0B, 0x59, 0x6C, 0xF4, 0x9B
   };
 
-  std::vector<char> buf(length_ridx(ridx.size()));
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_ridx(ridx, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_ridx_data), write_ridx_data>(
+    std::span{exp}, ridx
+  );
 }
 
 TEST_CASE("length_rhdr") {
@@ -296,17 +272,15 @@ TEST_CASE("length_rhdr") {
   CHECK(length_rhdr(hash_infos) == 92);
 }
 
-TEST_CASE("write_rhdr") {
+TEST_CASE("write_rhdr_data") {
   const std::vector<HashInfo> hash_infos{
     {SFHASH_MD5, "MD5", 16, nullptr},
     {SFHASH_SHA_1, "SHA-1", 20, nullptr}
   };
 
+  const uint64_t record_count = 5649426;
+
   const uint8_t exp[] = {
-    // chunk type
-    'R', 'H', 'D', 'R',
-    // chunk data length
-    0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // record length
     0x26, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // record count
@@ -333,17 +307,11 @@ TEST_CASE("write_rhdr") {
     'S', 'H', 'A', '-', '1',
     // hash length
     0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // chunk hash
-    0x6F, 0x39, 0x55, 0x01, 0x6E, 0x81, 0x38, 0x29,
-    0x0F, 0xCA, 0x12, 0xCA, 0x1A, 0x1A, 0x54, 0xCE,
-    0xD3, 0x0A, 0x06, 0x96, 0x91, 0xEC, 0x8E, 0xDA,
-    0xDC, 0x85, 0xF3, 0xA9, 0xC9, 0xF6, 0x38, 0x72
   };
 
-  std::vector<char> buf(length_rhdr(hash_infos));
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_rhdr(hash_infos, 5649426, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_rhdr_data), write_rhdr_data>(
+    std::span{exp}, hash_infos, record_count
+  );
 }
 
 TEST_CASE("length_rdat") {
@@ -354,7 +322,7 @@ TEST_CASE("length_rdat") {
   CHECK(length_rdat(hash_infos, 87) == 3350);
 }
 
-TEST_CASE("write_rdat") {
+TEST_CASE("write_rdat_data") {
   const std::vector<HashInfo> hash_infos{
     {SFHASH_MD5, "MD5", 16, nullptr},
     {SFHASH_SHA_1, "SHA-1", 20, nullptr}
@@ -385,10 +353,6 @@ TEST_CASE("write_rdat") {
   };
 
   const uint8_t exp[] = {
-    // chunk type
-    'R', 'D', 'A', 'T',
-    // chunk data length
-    0x4C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     //
     // record 0
     //
@@ -412,25 +376,19 @@ TEST_CASE("write_rdat") {
     // SHA-1
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
-    0x01, 0x23, 0x45, 0x67,
-    // chunk hash
-    0xCC, 0x70, 0x2D, 0xDB, 0xC4, 0xE2, 0x6F, 0x73,
-    0x14, 0x6D, 0x92, 0x80, 0x33, 0x9A, 0xED, 0x5D,
-    0xC6, 0x3B, 0x88, 0x41, 0x21, 0x97, 0x0E, 0xAC,
-    0x6C, 0x1E, 0x73, 0x0A, 0x98, 0xFA, 0x10, 0x1C
+    0x01, 0x23, 0x45, 0x67
   };
 
-  std::vector<char> buf(length_rdat(hash_infos, records.size()));
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_rdat(hash_infos, records, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_rdat_data), write_rdat_data>(
+    std::span{exp}, hash_infos, records
+  );
 }
 
 TEST_CASE("length_ftoc") {
   CHECK(length_ftoc(57) == 728);
 }
 
-TEST_CASE("write_ftoc") {
+TEST_CASE("write_ftoc_data") {
   const std::vector<std::pair<uint64_t, std::string>> toc{
     { 8, "FHDR" },
     { 356, { 'H', 'H', 0x00, 0x01 } },
@@ -443,10 +401,6 @@ TEST_CASE("write_ftoc") {
   };
 
   const uint8_t exp[] = {
-    // chunk type
-    'F', 'T', 'O', 'C',
-    // chunk data length
-    0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // entries
     0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'F', 'H', 'D', 'R',
     0x64, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'H', 'H', 0x00, 0x01,
@@ -456,17 +410,11 @@ TEST_CASE("write_ftoc") {
     0xB0, 0xAD, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 'R', 'H', 'D', 'R',
     0xC0, 0xD4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 'R', 'D', 'A', 'T',
     0xD0, 0xFB, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 'F', 'T', 'O', 'C',
-    // chunk hash
-    0x46, 0xB4, 0x42, 0xEA, 0x27, 0x91, 0xB5, 0x9A,
-    0x91, 0x41, 0x1E, 0x11, 0x11, 0x2F, 0x01, 0x15,
-    0x36, 0x0D, 0x2C, 0x6E, 0x84, 0x40, 0x20, 0xAD,
-    0x80, 0xA1, 0x33, 0x74, 0x16, 0xB3, 0xF8, 0xB7
   };
 
-  std::vector<char> buf(length_ftoc(toc.size()));
-  CHECK(buf.size() == sizeof(exp));
-  CHECK(write_ftoc(toc, buf.data()) == buf.size());
-  CHECK(!std::memcmp(buf.data(), exp, buf.size()));
+  chunk_data_tester<decltype(write_ftoc_data), write_ftoc_data>(
+    std::span{exp}, toc
+  );
 }
 
 /*
