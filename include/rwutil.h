@@ -72,24 +72,57 @@ T read_pstring(const char* beg, const char*& i, const char* end) {
 template <class Out>
 size_t write_to(Out& out, const void* buf, size_t len);
 
+template <class Out>
+size_t write_to(Out* out, const void* buf, size_t len);
+
 template <class T, T (*EndianFunc)(T), class Out>
-size_t write_i(T i, Out& out) {
+size_t write_i(T i, Out&& out) {
   const T l = EndianFunc(i);
-  return write_to(out, reinterpret_cast<const char*>(&l), sizeof(i));
+  return write_to(std::forward<Out>(out), &l, sizeof(i));
 }
 
 template <class T, class Out>
-size_t write_le(T i, Out& out) {
-  return write_i<T, to_le>(i, out);
+size_t write_le(T i, Out&& out) {
+  return write_i<T, to_le>(i, std::forward<Out>(out));
 }
 
 template <class T, class Out>
-size_t write_be(T i, Out& out) {
-  return write_i<T, to_be>(i, out);
+size_t write_be(T i, Out&& out) {
+  return write_i<T, to_be>(i, std::forward<Out>(out));
 }
 
 template <class Out>
 size_t write_pstring(const std::string_view s, Out& out) {
   return write_le<uint16_t>(s.length(), out) +
          write_to(out, s.data(), s.length());
+}
+
+template <class Out>
+size_t write_pstring(const std::string_view s, Out* out) {
+  const auto beg = out;
+  out += write_le<uint16_t>(s.length(), out);
+  out += write_to(out, s.data(), s.length());
+  return out - beg;
+}
+
+template <class Out>
+size_t write_bytes(const void* buf, size_t len, Out&& out) {
+  return write_to(std::forward<Out>(out), buf, len);
+}
+
+template <class Out>
+size_t write_byte(size_t len, uint8_t b, Out& out) {
+  for (size_t i = 0; i < len; ++i) {
+    write_to(out, &b, 1);
+  }
+  return len;
+}
+
+template <class Out>
+size_t write_byte(size_t len, uint8_t b, Out* out) {
+  // TODO: specialize this to use std::memset
+  for (size_t i = 0; i < len; ++i) {
+    out += write_to(out, &b, 1);
+  }
+  return len;
 }
