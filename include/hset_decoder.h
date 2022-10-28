@@ -22,12 +22,16 @@ struct HashsetHeader {
   std::string_view hash_name;
   uint64_t hash_length;
   uint64_t hash_count;
+
+  bool operator==(const FileHeader&) const = default;
 };
 
 struct HashsetHint {
   uint16_t hint_type;
   const void* beg;
   const void* end;
+
+  bool operator==(const FileHeader&) const = default;
 };
 
 enum HintType {
@@ -41,11 +45,15 @@ enum HintType {
 struct HashsetData {
   const void* beg;
   const void* end;
+
+  bool operator==(const FileHeader&) const = default;
 };
 
 struct RecordIndex {
   const void* beg;
   const void* end;
+
+  bool operator==(const FileHeader&) const = default;
 };
 
 struct RecordFieldDescriptor {
