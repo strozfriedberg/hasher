@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "rwutil.h"
-#include "throw.h"
 #include "hashset/lookupstrategy.h"
 
 struct FileHeader {
@@ -214,19 +212,7 @@ public:
   bool operator!=(const TOCIterator&) const noexcept = default;
 
 private:
-  void advance_chunk() {
-    const uint64_t ch_off = read_le<uint64_t>(beg, toc_cur, toc_end);
-    const uint32_t ch_type = read_be<uint32_t>(beg, toc_cur, toc_end);
-
-    const uint8_t* cur = beg + ch_off;
-    ch = decode_chunk(beg, cur, end);
-
-    THROW_IF(
-      ch_type != ch.type,
-      "expected " << printable_chunk_type(ch_type) << ", "
-      "found " << printable_chunk_type(ch.type)
-    );
-  }
+  void advance_chunk();
 
   const uint8_t* beg;
   const uint8_t* toc_cur;
