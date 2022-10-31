@@ -87,7 +87,11 @@ std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr);
 struct RecordData {
   const void* beg;
   const void* end;
+
+  bool operator==(const RecordData&) const = default;
 };
+
+std::ostream& operator<<(std::ostream& out, const RecordData& rdat);
 
 struct Holder {
   FileHeader fhdr;
@@ -146,5 +150,7 @@ std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch);
 std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch);
 
 std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch);
+
+std::pair<State::Type, RecordData> parse_rdat(const Chunk& ch);
 
 Holder decode_hset(const uint8_t* beg, const uint8_t* end);

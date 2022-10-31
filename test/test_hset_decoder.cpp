@@ -185,3 +185,16 @@ TEST_CASE("parse_rhdr") {
 
   CHECK(parse_rhdr(ch) == std::make_pair(State::RHDR, exp));
 }
+
+TEST_CASE("parse_rdat") {
+  const uint8_t buf[] = {
+    // data!
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
+  };
+
+  const Chunk ch{Chunk::Type::RDAT, buf, buf + sizeof(buf)};
+
+  const RecordData exp{ buf, buf + sizeof(buf) };
+
+  CHECK(parse_rdat(ch) == std::make_pair(State::SBRK, exp));
+}

@@ -375,12 +375,17 @@ State::Type parse_hint(const Chunk& ch, Holder& h) {
   return State::HINT;
 }
 
-std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch) {
-  // HDAT -> RIDX;
+template <State::Type state, class T>
+std::pair<State::Type, T> parse_data_chunk(const Chunk& ch) {
   return {
-    State::SBRK,
+    state,
     { ch.dbeg, ch.dend }
   };
+}
+
+std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch) {
+  // HDAT -> RIDX;
+  return parse_data_chunk<State::SBRK, RecordIndex>(ch);
 }
 
 State::Type parse_hdat(const Chunk& ch, Holder& h) {
@@ -402,15 +407,9 @@ State::Type parse_hdat(const Chunk& ch, Holder& h) {
   return State::HDAT;
 }
 
-State::Type parse_rdat(const Chunk& ch, Holder& h) {
+std::pair<State::Type, RecordData> parse_rdat(const Chunk& ch) {
   // RHDR -> RDAT;
-
-  h.rdat.beg = ch.dbeg;
-  h.rdat.end = ch.dend;
-
-//  std::cerr << h.rdat << "\n\n";
-
-  return State::SBRK;
+  return parse_data_chunk<State::SBRK, RecordData>(ch);
 }
 
 constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
@@ -666,7 +665,9 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
 
       case State::RHDR:
         if (ch->type == Chunk::RDAT) {
-          state = parse_rdat(*ch++, h);
+          std::tie(state, h.rdat) = parse_rdat(*ch++);
+
+          // TODO: check that rdat has the expected length
         }
         else {
           throw UnexpectedChunkType();
