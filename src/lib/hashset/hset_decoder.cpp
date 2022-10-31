@@ -422,25 +422,7 @@ void check_magic(const uint8_t*& i, const uint8_t* end) {
 class UnexpectedChunkType: public std::exception {
 };
 
-Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
-  // check magic
-  const uint8_t* cur = beg;
-  check_magic(cur, end);
-
-  // read FTOC start offset from the last FTOC entry
-  cur = end - 32 - 4 - 8; // end - SHA256 - chunk type - offset
-  cur = beg + read_le<uint64_t>(beg, cur, end);
-
-  // get the FTOC chunk
-  const Chunk toc_ch = decode_chunk(beg, cur, end);
-
-  THROW_IF(
-    toc_ch.type != Chunk::FTOC,
-    "expected FTOC, found " << printable_chunk_type(toc_ch.type)
-  );
-
-  TOCIterator ch(beg, toc_ch.dbeg, toc_ch.dend, end), ch_end(end);
-
+Holder decode_hset(TOCIterator ch, TOCIterator ch_end) {
   Holder h;
   State::Type state = State::INIT;
 
@@ -552,4 +534,25 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
   }
 
   return h;
+}
+
+Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
+  // check magic
+  const uint8_t* cur = beg;
+  check_magic(cur, end);
+
+  // read FTOC start offset from the last FTOC entry
+  cur = end - 32 - 4 - 8; // end - SHA256 - chunk type - offset
+  cur = beg + read_le<uint64_t>(beg, cur, end);
+
+  // get the FTOC chunk
+  const Chunk toc_ch = decode_chunk(beg, cur, end);
+
+  THROW_IF(
+    toc_ch.type != Chunk::FTOC,
+    "expected FTOC, found " << printable_chunk_type(toc_ch.type)
+  );
+
+  TOCIterator ch(beg, toc_ch.dbeg, toc_ch.dend, end), ch_end(end);
+  return decode_hset(ch, ch_end);
 }
