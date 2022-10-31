@@ -19,7 +19,7 @@ TEST_CASE("decode_chunk") {
     'A', 'B', 'C', 'D',
     // chunk data length
     0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // chunk data    
+    // chunk data
     '1', '2', '3', '4',
     // chunk hash
     0x03, 0xac, 0x67, 0x42, 0x16, 0xf3, 0xe1, 0x5c,
@@ -130,7 +130,7 @@ TEST_CASE("parse_ridx") {
 
 TEST_CASE("parse_rhdr") {
   const uint8_t buf[] = {
-    // record length 
+    // record length
     0x26, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // record count
     0x12, 0x34, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -138,7 +138,7 @@ TEST_CASE("parse_rhdr") {
     // field descriptor 0
     //
     // hash type
-    0x00, 0x00,    
+    0x00, 0x00,
     // hash type name length
     0x03, 0x00,
     // hash type name
@@ -149,7 +149,7 @@ TEST_CASE("parse_rhdr") {
     // field descriptor 1
     //
     // hash type
-    0x01, 0x00,    
+    0x01, 0x00,
     // hash type name length
     0x05, 0x00,
     // hash type name
@@ -162,7 +162,7 @@ TEST_CASE("parse_rhdr") {
 
   const RecordHeader exp{
     38,
-    5649426, 
+    5649426,
     {
       { 0, "MD5", 16 },
       { 1, "SHA-1", 20 }
