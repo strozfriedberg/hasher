@@ -15,8 +15,8 @@ SFHASH_Hashset* sfhash_load_hashset(
   try {
     return new SFHASH_Hashset{
       decode_hset(
-        static_cast<const char*>(beg),
-        static_cast<const char*>(end)
+        static_cast<const uint8_t*>(beg),
+        static_cast<const uint8_t*>(end)
       )
     };
   }

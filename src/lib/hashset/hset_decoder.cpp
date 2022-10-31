@@ -97,10 +97,12 @@ std::ostream& operator<<(std::ostream& out, const Chunk& ch) {
              << "]";
 }
 
-Chunk decode_chunk(const char* beg, const char*& cur, const char* end) {
+// TODO: optionally? check chunk hash
+
+Chunk decode_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end) {
   const uint32_t type = read_be<uint32_t>(beg, cur, end);
   const uint64_t len = read_le<uint64_t>(beg, cur, end);
-  const char* dbeg = cur;
+  const uint8_t* dbeg = cur;
 
   cur = dbeg + len + 32;  // 32 is the length of the trailing hash
 
@@ -356,7 +358,7 @@ State::Type parse_hint(const Chunk& ch, Holder& h) {
 
   auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
 
-  const char* cur = ch.dbeg;
+  const uint8_t* cur = ch.dbeg;
 
   hnt.hint_type = read_be<uint16_t>(ch.dbeg, cur, ch.dend);
 
@@ -422,14 +424,14 @@ State::Type parse_rdat(const Chunk& ch, Holder& h) {
   h.rdat.beg = ch.dbeg;
   h.rdat.end = ch.dend;
 
-  std::cerr << h.rdat << "\n\n";
+//  std::cerr << h.rdat << "\n\n";
 
   return State::SBRK;
 }
 
 constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
 
-void check_magic(const char*& i, const char* end) {
+void check_magic(const uint8_t*& i, const uint8_t* end) {
   // read magic
   THROW_IF(i + sizeof(MAGIC) > end, "out of data reading magic");
   THROW_IF(std::memcmp(i, MAGIC, sizeof(MAGIC)), "bad magic");
@@ -449,7 +451,7 @@ public:
   using reference = const value_type&;
   using difference_type = std::ptrdiff_t;
 
-  ChunkIterator(const char* beg, const char* end):
+  ChunkIterator(const uint8_t* beg, const uint8_t* end):
     beg(beg), cur(beg), end(end)
   {
     if (beg != end) {
@@ -457,7 +459,7 @@ public:
     }
   }
 
-  ChunkIterator(const char* end): ChunkIterator(end, end) {}
+  ChunkIterator(const uint8_t* end): ChunkIterator(end, end) {}
 
   reference operator*() const noexcept {
     return ch;
@@ -485,9 +487,9 @@ public:
   friend bool operator!=(const ChunkIterator& a, const ChunkIterator& b) noexcept;
 
 private:
-  const char* beg;
-  const char* cur;
-  const char* end;
+  const uint8_t* beg;
+  const uint8_t* cur;
+  const uint8_t* end;
 
   Chunk ch;
 };
@@ -508,7 +510,7 @@ public:
   using reference = const value_type&;
   using difference_type = std::ptrdiff_t;
 
-  TOCIterator(const char* beg, const char* toc_cur, const char* toc_end, const char* end):
+  TOCIterator(const uint8_t* beg, const uint8_t* toc_cur, const uint8_t* toc_end, const uint8_t* end):
     beg(beg), toc_cur(toc_cur), toc_end(toc_end), end(end)
   {
     if (toc_cur < toc_end) {
@@ -516,7 +518,7 @@ public:
     }
   }
 
-  TOCIterator(const char* toc_end):
+  TOCIterator(const uint8_t* toc_end):
     TOCIterator(toc_end, toc_end, toc_end, toc_end) {}
 
   reference operator*() const noexcept {
@@ -548,7 +550,7 @@ private:
     const uint64_t ch_off = read_le<uint64_t>(beg, toc_cur, toc_end);
     const uint32_t ch_type = read_be<uint32_t>(beg, toc_cur, toc_end);
 
-    const char* cur = beg + ch_off;
+    const uint8_t* cur = beg + ch_off;
     ch = decode_chunk(beg, cur, end);
 
     THROW_IF(
@@ -558,10 +560,10 @@ private:
     );
   }
 
-  const char* beg;
-  const char* toc_cur;
-  const char* toc_end;
-  const char* end;
+  const uint8_t* beg;
+  const uint8_t* toc_cur;
+  const uint8_t* toc_end;
+  const uint8_t* end;
 
   Chunk ch;
 };
@@ -574,9 +576,9 @@ bool operator!=(const TOCIterator& a, const TOCIterator& b) noexcept {
   return a.toc_cur != b.toc_cur;
 }
 
-Holder decode_hset(const char* beg, const char* end) {
+Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
   // check magic
-  const char* cur = beg;
+  const uint8_t* cur = beg;
   check_magic(cur, end);
 
   // read FTOC start offset from the last FTOC entry

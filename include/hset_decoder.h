@@ -115,13 +115,13 @@ struct Chunk {
   };
 
   uint32_t type;
-  const char* dbeg;
-  const char* dend;
+  const uint8_t* dbeg;
+  const uint8_t* dend;
 
   bool operator==(const Chunk&) const = default;
 };
 
-Chunk decode_chunk(const char* beg, const char*& cur, const char* end);
+Chunk decode_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end);
 
 struct State {
   enum Type {
