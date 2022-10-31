@@ -351,29 +351,17 @@ std::unique_ptr<LookupStrategy> make_lookup_strategy(
 */
 }
 
-State::Type parse_hint(const Chunk& ch, Holder& h) {
+std::pair<State::Type, HashsetHint> parse_hint(const Chunk& ch) {
   // HHDR -> HINT
-
-  auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
-
   const uint8_t* cur = ch.dbeg;
-
-  hnt.hint_type = read_be<uint16_t>(ch.dbeg, cur, ch.dend);
-
-// TODO: check for recognized type?
-  THROW_IF(
-    hnt.hint_type != 0x6208,
-    "bad hint type " << std::hex << std::setw(4) << std::setfill('0') << hnt.hint_type
-  );
-
-  hnt.beg = cur;
-  hnt.end = ch.dend;
-
-  ls = make_lookup_strategy(hsh, hnt, hsd);
-
-  std::cerr << hnt << "\n\n";
-
-  return State::HINT;
+  return {
+    State::HINT,
+    {
+      read_be<uint16_t>(ch.dbeg, cur, ch.dend),
+      cur,
+      ch.dend
+    }
+  };
 }
 
 template <State::Type state, class T>
@@ -619,7 +607,19 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
       case State::HHDR:
         switch (ch->type) {
         case Chunk::HINT:
-          state = parse_hint(*ch++, h);
+          {
+            auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
+
+            std::tie(state, hnt) = parse_hint(*ch++);
+
+            // TODO: check for recognized type?
+            THROW_IF(
+              hnt.hint_type != 0x6208,
+              "bad hint type " << std::hex << std::setw(4) << std::setfill('0') << hnt.hint_type
+            );
+
+            ls = make_lookup_strategy(hsh, hnt, hsd);
+          }
           break;
         default:
           throw UnexpectedChunkType();

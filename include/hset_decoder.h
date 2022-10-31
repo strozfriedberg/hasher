@@ -40,6 +40,8 @@ struct HashsetHint {
   bool operator==(const HashsetHint&) const = default;
 };
 
+std::ostream& operator<<(std::ostream& out, const HashsetHint& hint);
+
 enum HintType {
   BASIC = 0,
   RADIUS = 1,
@@ -145,11 +147,11 @@ struct State {
   };
 };
 
-State::Type parse_fhdr(const Chunk& ch, Holder& h);
-
 std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch);
 
 std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch);
+
+std::pair<State::Type, HashsetHint> parse_hint(const Chunk& ch);
 
 std::pair<State::Type, HashsetData> parse_hdat(const Chunk& ch);
 

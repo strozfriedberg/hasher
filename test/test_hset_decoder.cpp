@@ -112,10 +112,20 @@ TEST_CASE("parse_hhdr") {
   CHECK(parse_hhdr(ch) == std::make_pair(State::HHDR, exp));
 }
 
-/*
 TEST_CASE("parse_hint") {
+  const uint8_t buf[] = {
+    // hint type
+    0x12, 0x34,
+    // data!
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
+  };
+
+  const Chunk ch{Chunk::Type::HINT, buf, buf + sizeof(buf)};
+
+  const HashsetHint exp{ 0x1234, buf + 2, buf + sizeof(buf) };
+
+  CHECK(parse_hint(ch) == std::make_pair(State::HINT, exp));
 }
-*/
 
 TEST_CASE("parse_hdat") {
   const uint8_t buf[] = {
