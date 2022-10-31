@@ -186,8 +186,8 @@ public:
     }
   }
 
-  TOCIterator(const uint8_t* toc_end):
-    TOCIterator(toc_end, toc_end, toc_end, toc_end) {}
+  TOCIterator():
+    beg(nullptr), toc_cur(nullptr), toc_end(nullptr), end(nullptr) {}
 
   reference operator*() const noexcept {
     return ch;
@@ -200,6 +200,9 @@ public:
   TOCIterator& operator++() {
     if (toc_cur < toc_end) {
       advance_chunk();
+    }
+    else {
+      toc_cur = toc_end = nullptr;
     }
     return *this;
   }

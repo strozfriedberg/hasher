@@ -553,6 +553,6 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
     "expected FTOC, found " << printable_chunk_type(toc_ch.type)
   );
 
-  TOCIterator ch(beg, toc_ch.dbeg, toc_ch.dend, end), ch_end(end);
+  TOCIterator ch(beg, toc_ch.dbeg, toc_ch.dend, end), ch_end;
   return decode_hset(ch, ch_end);
 }
