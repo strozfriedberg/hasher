@@ -13,6 +13,7 @@
 #include <exception>
 #include <map>
 #include <ostream>
+#include <string_view>
 
 #include <iostream>
 
@@ -383,11 +384,13 @@ std::pair<State::Type, T> parse_data_chunk(const Chunk& ch) {
   };
 }
 
-void check_data_length(const Chunk& ch, const char* ch_name, uint64_t exp_len) {
+void check_data_length(const Chunk& ch, uint64_t exp_len) {
   const uint64_t act_len = static_cast<const uint8_t*>(ch.dend) - static_cast<const uint8_t*>(ch.dbeg);
   THROW_IF(
     act_len != exp_len,
-    "expected " << exp_len << "bytes in " << ch_name << ", found " << act_len
+    "expected " << exp_len << "bytes in "
+                << std::string_view(reinterpret_cast<const char*>(&ch.type), 4)
+                << ", found " << act_len
   );
 }
 
@@ -631,7 +634,7 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
           const auto& hhdr = std::get<HashsetHeader>(hset);
           auto& hdat = std::get<HashsetData>(hset);
 
-          check_data_length(*ch, "HDAT", hhdr.hash_count * hhdr.hash_length);
+          check_data_length(*ch, hhdr.hash_count * hhdr.hash_length);
           std::tie(state, hdat) = parse_hdat(*ch++);
         }
         else {
@@ -645,7 +648,7 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
           const auto& hhdr = std::get<HashsetHeader>(hset);
           auto& ridx = std::get<RecordIndex>(hset);
 
-          check_data_length(*ch, "RIDX", hhdr.hash_count * sizeof(uint64_t));
+          check_data_length(*ch, hhdr.hash_count * sizeof(uint64_t));
           std::tie(state, ridx) = parse_ridx(*ch++);
         }
         else {
@@ -655,7 +658,7 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
 
       case State::RHDR:
         if (ch->type == Chunk::RDAT) {
-          check_data_length(*ch, "RDAT", h.rhdr.record_count * h.rhdr.record_length);
+          check_data_length(*ch, h.rhdr.record_count * h.rhdr.record_length);
           std::tie(state, h.rdat) = parse_rdat(*ch++);
         }
         else {

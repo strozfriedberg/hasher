@@ -131,6 +131,8 @@ struct Chunk {
 
 Chunk decode_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end);
 
+void check_data_length(const Chunk& ch, uint64_t exp_len);
+
 struct State {
   enum Type {
     INIT,

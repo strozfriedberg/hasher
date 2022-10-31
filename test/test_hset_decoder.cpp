@@ -38,6 +38,24 @@ TEST_CASE("decode_chunk") {
   CHECK(cur == end);
 }
 
+TEST_CASE("check_data_length_good") {
+  const Chunk ch{
+    0x41424344,
+    reinterpret_cast<const uint8_t*>(0),
+    reinterpret_cast<const uint8_t*>(100)
+  };
+  CHECK_NOTHROW(check_data_length(ch, 100));
+}
+
+TEST_CASE("check_data_length_bad") {
+  const Chunk ch{
+    0x41424344,
+    reinterpret_cast<const uint8_t*>(0),
+    reinterpret_cast<const uint8_t*>(100)
+  };
+  CHECK_THROWS(check_data_length(ch, 99));
+}
+
 TEST_CASE("parse_fhdr") {
   const uint8_t buf[] = {
     // version
