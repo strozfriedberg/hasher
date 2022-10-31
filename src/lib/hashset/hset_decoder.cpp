@@ -164,13 +164,10 @@ std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch) {
   };
 }
 
-State::Type parse_ftoc(const Chunk& ch, Holder& h) {
+State::Type parse_ftoc(const Chunk&) {
   // section break -> DONE
 
   // Nothing to do here, as we've already read the FTOC to drive parsing
-
-  std::cerr << ch << "\n\n";
-
   return State::DONE;
 }
 
