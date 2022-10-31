@@ -55,6 +55,8 @@ struct HashsetData {
   bool operator==(const HashsetData&) const = default;
 };
 
+std::ostream& operator<<(std::ostream& out, const HashsetData& hdat);
+
 struct RecordIndex {
   const void* beg;
   const void* end;
@@ -146,6 +148,8 @@ State::Type parse_fhdr(const Chunk& ch, Holder& h);
 std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch);
 
 std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch);
+
+std::pair<State::Type, HashsetData> parse_hdat(const Chunk& ch);
 
 std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch);
 

@@ -97,34 +97,20 @@ TEST_CASE("parse_hhdr") {
 /*
 TEST_CASE("parse_hint") {
 }
+*/
 
 TEST_CASE("parse_hdat") {
   const uint8_t buf[] = {
-    // hash data
-    0x05, 0x00,
-    // hash type name
-    'S', 'H', 'A', '-', '1',
-    // hash length
-    0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // hash count
-    0x89, 0x67, 0x45, 0x23, 0x01, 0x00, 0x00, 0x00
+    // data!
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
   };
 
-  const uint32_t htype = static_cast<uint32_t>(std::floor(std::log2(static_cast<uint32_t>(SFHASH_SHA_1))));
+  const Chunk ch{Chunk::Type::HDAT, buf, buf + sizeof(buf)};
 
-  const Chunk ch{Chunk::Type::HHDR | htype, buf, buf + sizeof(buf)};
+  const HashsetData exp{ buf, buf + sizeof(buf) };
 
-  const HashsetHeader exp{
-    SFHASH_SHA_1,
-    "SHA-1",
-    20,
-    4886718345
-  };
-
-  CHECK(parse_hhdr(ch) == std::make_pair(State::HHDR, exp));
+  CHECK(parse_hdat(ch) == std::make_pair(State::HDAT, exp));
 }
-
-*/
 
 TEST_CASE("parse_ridx") {
   const uint8_t buf[] = {
