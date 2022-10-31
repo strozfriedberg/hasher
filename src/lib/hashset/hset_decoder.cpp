@@ -428,8 +428,6 @@ Holder decode_hset(TOCIterator ch, TOCIterator ch_end) {
 
   try {
     while (state != State::DONE) {
-      std::cerr << state << "\n\n";
-
       THROW_IF(ch == ch_end, "exhausted FTOC expecting more data");
 
       switch (state) {
