@@ -383,28 +383,21 @@ std::pair<State::Type, T> parse_data_chunk(const Chunk& ch) {
   };
 }
 
+void check_data_length(const Chunk& ch, const char* ch_name, uint64_t exp_len) {
+  const uint64_t act_len = static_cast<const uint8_t*>(ch.dend) - static_cast<const uint8_t*>(ch.dbeg);
+  THROW_IF(
+    act_len != exp_len,
+    "expected " << exp_len << "bytes in " << ch_name << ", found " << act_len
+  );
+}
+
 std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch) {
   // HDAT -> RIDX;
   return parse_data_chunk<State::SBRK, RecordIndex>(ch);
 }
 
-State::Type parse_hdat(const Chunk& ch, Holder& h) {
-  auto& hset = h.hsets.back();
-
-  const uint64_t exp_hash_data = std::get<HashsetHeader>(hset).hash_count * std::get<HashsetHeader>(hset).hash_length;
-
-  THROW_IF(
-    static_cast<uint64_t>(ch.dend - ch.dbeg) != exp_hash_data,
-    "expected " << exp_hash_data << "bytes in HDAT, found "
-                << (ch.dend - ch.dbeg)
-  );
-
-  std::get<HashsetData>(hset).beg = ch.dbeg;
-  std::get<HashsetData>(hset).end = ch.dend;
-
-  std::cerr << std::get<HashsetData>(hset) << "\n\n";
-
-  return State::HDAT;
+std::pair<State::Type, HashsetData> parse_hdat(const Chunk& ch) {
+  return parse_data_chunk<State::HDAT, HashsetData>(ch);
 }
 
 std::pair<State::Type, RecordData> parse_rdat(const Chunk& ch) {
@@ -625,17 +618,21 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
         case Chunk::HINT:
           state = parse_hint(*ch++, h);
           break;
-        case Chunk::HDAT:
-          state = parse_hdat(*ch++, h);
-          break;
         default:
           throw UnexpectedChunkType();
+        case Chunk::HDAT:
+          // intentional fall-through to HINT state
+          ;
         }
-        break;
 
       case State::HINT:
         if (ch->type == Chunk::HDAT) {
-          state = parse_hdat(*ch++, h);
+          auto& hset = h.hsets.back();
+          const auto& hhdr = std::get<HashsetHeader>(hset);
+          auto& hdat = std::get<HashsetData>(hset);
+
+          check_data_length(*ch, "HDAT", hhdr.hash_count * hhdr.hash_length);
+          std::tie(state, hdat) = parse_hdat(*ch++);
         }
         else {
           throw UnexpectedChunkType();
@@ -648,15 +645,8 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
           const auto& hhdr = std::get<HashsetHeader>(hset);
           auto& ridx = std::get<RecordIndex>(hset);
 
+          check_data_length(*ch, "RIDX", hhdr.hash_count * sizeof(uint64_t));
           std::tie(state, ridx) = parse_ridx(*ch++);
-
-          // check that ridx has the expected length given the number of hashes
-          const uint64_t exp_ridx_data = hhdr.hash_count * sizeof(uint64_t);
-          const uint64_t dlen = static_cast<const uint8_t*>(ridx.end) - static_cast<const uint8_t*>(ridx.beg);
-          THROW_IF(
-            dlen != exp_ridx_data,
-            "expected " << exp_ridx_data << "bytes in RIDX, found " << dlen
-          );
         }
         else {
           state = State::SBRK;
@@ -665,9 +655,8 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
 
       case State::RHDR:
         if (ch->type == Chunk::RDAT) {
+          check_data_length(*ch, "RDAT", h.rhdr.record_count * h.rhdr.record_length);
           std::tie(state, h.rdat) = parse_rdat(*ch++);
-
-          // TODO: check that rdat has the expected length
         }
         else {
           throw UnexpectedChunkType();
