@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -160,5 +161,7 @@ std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch);
 std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch);
 
 std::pair<State::Type, RecordData> parse_rdat(const Chunk& ch);
+
+std::string printable_chunk_type(uint32_t type);
 
 Holder decode_hset(const uint8_t* beg, const uint8_t* end);

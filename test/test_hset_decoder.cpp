@@ -56,6 +56,14 @@ TEST_CASE("check_data_length_bad") {
   CHECK_THROWS(check_data_length(ch, 99));
 }
 
+TEST_CASE("printable_chunk_type_ABCD") {
+  CHECK(printable_chunk_type(0x41424344) == "ABCD");
+}
+
+TEST_CASE("printable_chunk_type_HH02") {
+  CHECK(printable_chunk_type(0x48480002) == "HH 0002");
+}
+
 TEST_CASE("parse_fhdr") {
   const uint8_t buf[] = {
     // version
