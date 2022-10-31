@@ -5,6 +5,7 @@
 #include <memory>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "hashset/lookupstrategy.h"
@@ -65,13 +66,21 @@ struct RecordFieldDescriptor {
   uint16_t hash_type;
   std::string_view hash_name;
   uint64_t hash_length;
+
+  bool operator==(const RecordFieldDescriptor&) const = default;
 };
+
+std::ostream& operator<<(std::ostream& out, const RecordFieldDescriptor& rfd);
 
 struct RecordHeader {
   uint64_t record_length;
   uint64_t record_count;
   std::vector<RecordFieldDescriptor> fields;
+
+  bool operator==(const RecordHeader&) const = default;
 };
+
+std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr);
 
 struct RecordData {
   const void* beg;
@@ -126,4 +135,12 @@ struct State {
   };
 };
 
-Holder decode_hset(const char* beg, const char* end);
+State::Type parse_fhdr(const Chunk& ch, Holder& h);
+
+std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch);
+
+std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch);
+
+std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch);
+
+Holder decode_hset(const uint8_t* beg, const uint8_t* end);

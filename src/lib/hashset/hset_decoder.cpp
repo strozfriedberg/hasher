@@ -107,53 +107,47 @@ Chunk decode_chunk(const char* beg, const char*& cur, const char* end) {
   return Chunk{ type, dbeg, dbeg + len };
 }
 
-State::Type parse_fhdr(const Chunk& ch, Holder& h) {
+std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch) {
   // INIT -> FHDR
-
-  const char* cur = ch.dbeg;
-  h.fhdr.version = read_le<uint64_t>(ch.dbeg, cur, ch.dend);
-  h.fhdr.hashset_name = read_pstring<std::string_view>(ch.dbeg, cur, ch.dend);
-  h.fhdr.hashset_time = read_pstring<std::string_view>(ch.dbeg, cur, ch.dend);
-  h.fhdr.hashset_desc = read_pstring<std::string_view>(ch.dbeg, cur, ch.dend);
-
-  std::cerr << h.fhdr << "\n\n";
-
-  return State::SBRK;
+  const uint8_t* cur = ch.dbeg;
+  return {
+    State::SBRK,
+    FileHeader{
+      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend)
+    }
+  }; 
 }
 
-State::Type parse_hhdr(const Chunk& ch, Holder& h) {
+std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch) {
   // section break -> HHDR
-
-  const char* cur = ch.dbeg;
-
-  h.hsets.emplace_back(
+  const uint8_t* cur = ch.dbeg;
+  return {
+    State::HHDR,
     HashsetHeader{
       1u << (ch.type & 0x0000FFFF),
       read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
       read_le<uint64_t>(ch.dbeg, cur, ch.dend),
       read_le<uint64_t>(ch.dbeg, cur, ch.dend)
-    },
-    HashsetHint(),
-    HashsetData(),
-    nullptr,
-    RecordIndex()
-  );
-
-  std::cerr << std::get<HashsetHeader>(h.hsets.back()) << "\n\n";
-
-  return State::HHDR;
+    }
+  };
 }
-
-State::Type parse_rhdr(const Chunk& ch, Holder& h) {
+ 
+std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch) {
   // section break -> RHDR
 
-  const char* cur = ch.dbeg;
+  const uint8_t* cur = ch.dbeg;
 
-  h.rhdr.record_length = read_le<uint64_t>(ch.dbeg, cur, ch.dend);
-  h.rhdr.record_count = read_le<uint64_t>(ch.dbeg, cur, ch.dend);
+  RecordHeader rhdr{
+    read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+    read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+    {}
+  };
 
   while (cur < ch.dend) {
-    h.rhdr.fields.emplace_back(
+    rhdr.fields.emplace_back(
       RecordFieldDescriptor{
         read_le<uint16_t>(ch.dbeg, cur, ch.dend),
         read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
@@ -162,9 +156,10 @@ State::Type parse_rhdr(const Chunk& ch, Holder& h) {
     );
   }
 
-  std::cerr << h.rhdr << "\n\n";
-
-  return State::RHDR;
+  return {
+    State::RHDR,
+    rhdr
+  };
 }
 
 State::Type parse_ftoc(const Chunk& ch, Holder& h) {
@@ -610,7 +605,7 @@ Holder decode_hset(const char* beg, const char* end) {
       switch (state) {
       case State::INIT:
         if (ch->type == Chunk::FHDR) {
-          state = parse_fhdr(*ch++, h);
+          std::tie(state, h.fhdr) = parse_fhdr(*ch++);
         }
         else {
           throw UnexpectedChunkType();
@@ -619,10 +614,18 @@ Holder decode_hset(const char* beg, const char* end) {
 
       case State::SBRK:
         if ((ch->type & 0xFFFF0000) == Chunk::HHDR) {
-          state = parse_hhdr(*ch++, h);
+          HashsetHeader hhdr;
+          std::tie(state, hhdr) = parse_hhdr(*ch++);
+          h.hsets.emplace_back(
+            std::move(hhdr),
+            HashsetHint(),
+            HashsetData(),
+            nullptr,
+            RecordIndex()
+          );
         }
         else if (ch->type == Chunk::RHDR) {
-          state = parse_rhdr(*ch++, h);
+          std::tie(state, h.rhdr) = parse_rhdr(*ch++);
         }
         else if (ch->type == Chunk::FTOC) {
           state = parse_ftoc(*ch++, h);
