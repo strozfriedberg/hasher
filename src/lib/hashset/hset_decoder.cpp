@@ -410,65 +410,6 @@ void check_magic(const uint8_t*& i, const uint8_t* end) {
 class UnexpectedChunkType: public std::exception {
 };
 
-class ChunkIterator {
-public:
-  using iterator_category = std::input_iterator_tag;
-  using value_type = Chunk;
-  using pointer = const value_type*;
-  using reference = const value_type&;
-  using difference_type = std::ptrdiff_t;
-
-  ChunkIterator(const uint8_t* beg, const uint8_t* end):
-    beg(beg), cur(beg), end(end)
-  {
-    if (beg != end) {
-      ++(*this);
-    }
-  }
-
-  ChunkIterator(const uint8_t* end): ChunkIterator(end, end) {}
-
-  reference operator*() const noexcept {
-    return ch;
-  }
-
-  pointer operator->() const noexcept {
-    return &ch;
-  }
-
-  ChunkIterator& operator++() {
-    if (cur < end) {
-
-      ch = decode_chunk(beg, cur, end);
-    }
-    return *this;
-  }
-
-  ChunkIterator operator++(int) {
-    ChunkIterator itr{*this};
-    ++(*this);
-    return itr;
-  }
-
-  friend bool operator==(const ChunkIterator& a, const ChunkIterator& b) noexcept;
-  friend bool operator!=(const ChunkIterator& a, const ChunkIterator& b) noexcept;
-
-private:
-  const uint8_t* beg;
-  const uint8_t* cur;
-  const uint8_t* end;
-
-  Chunk ch;
-};
-
-bool operator==(const ChunkIterator& a, const ChunkIterator& b) noexcept {
-  return a.cur == b.cur;
-}
-
-bool operator!=(const ChunkIterator& a, const ChunkIterator& b) noexcept {
-  return a.cur != b.cur;
-}
-
 class TOCIterator {
 public:
   using iterator_category = std::input_iterator_tag;
