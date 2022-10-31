@@ -614,7 +614,7 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
           std::tie(state, h.rhdr) = parse_rhdr(*ch++);
         }
         else if (ch->type == Chunk::FTOC) {
-          state = parse_ftoc(*ch++, h);
+          state = parse_ftoc(*ch++);
         }
         else {
           throw UnexpectedChunkType();
