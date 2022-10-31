@@ -173,7 +173,12 @@ public:
   using reference = const value_type&;
   using difference_type = std::ptrdiff_t;
 
-  TOCIterator(const uint8_t* beg, const uint8_t* toc_cur, const uint8_t* toc_end, const uint8_t* end):
+  TOCIterator(
+    const uint8_t* beg,
+    const uint8_t* toc_cur,
+    const uint8_t* toc_end,
+    const uint8_t* end
+  ):
     beg(beg), toc_cur(toc_cur), toc_end(toc_end), end(end)
   {
     if (toc_cur < toc_end) {
