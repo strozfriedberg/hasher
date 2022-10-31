@@ -62,6 +62,8 @@ struct RecordIndex {
   bool operator==(const RecordIndex&) const = default;
 };
 
+std::ostream& operator<<(std::ostream& out, const RecordIndex& ridx);
+
 struct RecordFieldDescriptor {
   uint16_t hash_type;
   std::string_view hash_name;
@@ -140,6 +142,8 @@ State::Type parse_fhdr(const Chunk& ch, Holder& h);
 std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch);
 
 std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch);
+
+std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch);
 
 std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch);
 

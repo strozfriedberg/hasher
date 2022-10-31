@@ -375,25 +375,12 @@ State::Type parse_hint(const Chunk& ch, Holder& h) {
   return State::HINT;
 }
 
-State::Type parse_ridx(const Chunk& ch, Holder& h) {
+std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch) {
   // HDAT -> RIDX;
-
-  auto& hset = h.hsets.back();
-
-  const uint64_t exp_ridx_data = std::get<HashsetHeader>(hset).hash_count * sizeof(uint64_t);
-
-  THROW_IF(
-    static_cast<uint64_t>(ch.dend - ch.dbeg) != exp_ridx_data,
-    "expected " << exp_ridx_data << "bytes in RIDX, found "
-                << (ch.dend - ch.dbeg)
-  );
-
-  std::get<RecordIndex>(hset).beg = ch.dbeg;
-  std::get<RecordIndex>(hset).end = ch.dend;
-
-  std::cerr << std::get<RecordIndex>(hset) << "\n\n";
-
-  return State::SBRK;
+  return {
+    State::SBRK,
+    { ch.dbeg, ch.dend }
+  };
 }
 
 State::Type parse_hdat(const Chunk& ch, Holder& h) {
@@ -658,7 +645,19 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
 
       case State::HDAT:
         if (ch->type == Chunk::RIDX) {
-          state = parse_ridx(*ch++, h);
+          auto& hset = h.hsets.back();
+          const auto& hhdr = std::get<HashsetHeader>(hset);
+          auto& ridx = std::get<RecordIndex>(hset);
+
+          std::tie(state, ridx) = parse_ridx(*ch++);
+
+          // check that ridx has the expected length given the number of hashes
+          const uint64_t exp_ridx_data = hhdr.hash_count * sizeof(uint64_t);
+          const uint64_t dlen = static_cast<const uint8_t*>(ridx.end) - static_cast<const uint8_t*>(ridx.beg);
+          THROW_IF(
+            dlen != exp_ridx_data,
+            "expected " << exp_ridx_data << "bytes in RIDX, found " << dlen
+          );
         }
         else {
           state = State::SBRK;
