@@ -26,6 +26,9 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  // turn off synchronization of C++ streams with C streams
+  std::ios_base::sync_with_stdio(false);
+
   std::vector<SFHASH_HashAlgorithm> htypes;
   for (int i = 3; i < argc; ++i) {
 // TODO: handle errors
