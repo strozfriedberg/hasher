@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -9,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "rwutil.h"
+#include "throw.h"
 #include "hashset/lookupstrategy.h"
 
 struct FileHeader {
@@ -163,5 +166,74 @@ std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch);
 std::pair<State::Type, RecordData> parse_rdat(const Chunk& ch);
 
 std::string printable_chunk_type(uint32_t type);
+
+class TOCIterator {
+public:
+  using iterator_category = std::input_iterator_tag;
+  using value_type = Chunk;
+  using pointer = const value_type*;
+  using reference = const value_type&;
+  using difference_type = std::ptrdiff_t;
+
+  TOCIterator(const uint8_t* beg, const uint8_t* toc_cur, const uint8_t* toc_end, const uint8_t* end):
+    beg(beg), toc_cur(toc_cur), toc_end(toc_end), end(end)
+  {
+    if (toc_cur < toc_end) {
+      ++(*this);
+    }
+  }
+
+  TOCIterator(const uint8_t* toc_end):
+    TOCIterator(toc_end, toc_end, toc_end, toc_end) {}
+
+  reference operator*() const noexcept {
+    return ch;
+  }
+
+  pointer operator->() const noexcept {
+    return &ch;
+  }
+
+  TOCIterator& operator++() {
+    if (toc_cur < toc_end) {
+      advance_chunk();
+    }
+    return *this;
+  }
+
+  TOCIterator operator++(int) {
+    TOCIterator itr{*this};
+    ++(*this);
+    return itr;
+  }
+
+  bool operator==(const TOCIterator& other) const noexcept {
+    return toc_cur == other.toc_cur;
+  }
+
+  bool operator!=(const TOCIterator&) const noexcept = default;
+
+private:
+  void advance_chunk() {
+    const uint64_t ch_off = read_le<uint64_t>(beg, toc_cur, toc_end);
+    const uint32_t ch_type = read_be<uint32_t>(beg, toc_cur, toc_end);
+
+    const uint8_t* cur = beg + ch_off;
+    ch = decode_chunk(beg, cur, end);
+
+    THROW_IF(
+      ch_type != ch.type,
+      "expected " << printable_chunk_type(ch_type) << ", "
+      "found " << printable_chunk_type(ch.type)
+    );
+  }
+
+  const uint8_t* beg;
+  const uint8_t* toc_cur;
+  const uint8_t* toc_end;
+  const uint8_t* end;
+
+  Chunk ch;
+};
 
 Holder decode_hset(const uint8_t* beg, const uint8_t* end);
