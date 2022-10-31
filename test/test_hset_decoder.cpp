@@ -124,9 +124,23 @@ TEST_CASE("parse_hdat") {
   CHECK(parse_hhdr(ch) == std::make_pair(State::HHDR, exp));
 }
 
-TEST_CASE("parse_ridx") {
-}
 */
+
+TEST_CASE("parse_ridx") {
+  const uint8_t buf[] = {
+    // indices
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  };
+
+  const Chunk ch{Chunk::Type::RIDX, buf, buf + sizeof(buf)};
+
+  const RecordIndex exp{ buf, buf + sizeof(buf) };
+
+  CHECK(parse_ridx(ch) == std::make_pair(State::SBRK, exp));
+}
 
 TEST_CASE("parse_rhdr") {
   const uint8_t buf[] = {
@@ -171,4 +185,3 @@ TEST_CASE("parse_rhdr") {
 
   CHECK(parse_rhdr(ch) == std::make_pair(State::RHDR, exp));
 }
-
