@@ -14,6 +14,14 @@
 #include "throw.h"
 #include "hashset/lookupstrategy.h"
 
+struct TableOfContents {
+  std::vector<std::pair<uint64_t, uint32_t>> entries;
+
+  bool operator==(const TableOfContents&) const = default;
+};
+
+std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc);
+
 struct FileHeader {
   uint64_t version;
   std::string_view hashset_name;
@@ -150,6 +158,8 @@ struct State {
     DONE
   };
 };
+
+TableOfContents parse_ftoc(const Chunk& ch);
 
 FileHeader parse_fhdr(const Chunk& ch);
 

@@ -15,6 +15,14 @@
 
 #include <iostream>
 
+std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc) {
+  out << "FTOC\n";
+  for (const auto [off, type]: ftoc.entries) {
+    out << off << ' ' << type << '\n';
+  }
+  return out;
+}
+
 std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
   return out << "FHDR\n"
              << ' ' << fhdr.version << '\n'
@@ -372,6 +380,20 @@ HashsetData parse_hdat(const Chunk& ch) {
 
 RecordData parse_rdat(const Chunk& ch) {
   return { ch.dbeg, ch.dend };
+}
+
+TableOfContents parse_ftoc(const Chunk& ch) {
+  const uint8_t* cur = ch.dbeg;
+
+  TableOfContents toc;
+
+  while (cur < ch.dend) {
+    const uint64_t pos = read_le<uint64_t>(ch.dbeg, cur, ch.dend);
+    const uint32_t type = read_be<uint32_t>(ch.dbeg, cur, ch.dend);
+    toc.entries.emplace_back(pos, type);
+  }
+
+  return toc;
 }
 
 constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
