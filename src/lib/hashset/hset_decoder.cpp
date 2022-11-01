@@ -482,7 +482,6 @@ State::Type handle_rdat(const Chunk& ch, Holder& h) {
   return State::SBRK;
 }
 
-
 TableOfContents read_ftoc_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end) {
   // read FTOC start offset from the last FTOC entry
   cur = end - 32 - 4 - 8; // end - SHA256 - chunk type - offset
