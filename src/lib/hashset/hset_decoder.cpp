@@ -352,11 +352,6 @@ HashsetHint parse_hint(const Chunk& ch) {
   };
 }
 
-template <class T>
-T parse_data_chunk(const Chunk& ch) {
-  return { ch.dbeg, ch.dend };
-}
-
 void check_data_length(const Chunk& ch, uint64_t exp_len) {
   const uint64_t act_len = static_cast<const uint8_t*>(ch.dend) - static_cast<const uint8_t*>(ch.dbeg);
   THROW_IF(
@@ -368,15 +363,15 @@ void check_data_length(const Chunk& ch, uint64_t exp_len) {
 }
 
 RecordIndex parse_ridx(const Chunk& ch) {
-  return parse_data_chunk<RecordIndex>(ch);
+  return { ch.dbeg, ch.dend };
 }
 
 HashsetData parse_hdat(const Chunk& ch) {
-  return parse_data_chunk<HashsetData>(ch);
+  return { ch.dbeg, ch.dend };
 }
 
 RecordData parse_rdat(const Chunk& ch) {
-  return parse_data_chunk<RecordData>(ch);
+  return { ch.dbeg, ch.dend };
 }
 
 constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
