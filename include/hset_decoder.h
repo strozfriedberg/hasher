@@ -151,19 +151,19 @@ struct State {
   };
 };
 
-std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch);
+FileHeader parse_fhdr(const Chunk& ch);
 
-std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch);
+HashsetHeader parse_hhdr(const Chunk& ch);
 
-std::pair<State::Type, HashsetHint> parse_hint(const Chunk& ch);
+HashsetHint parse_hint(const Chunk& ch);
 
-std::pair<State::Type, HashsetData> parse_hdat(const Chunk& ch);
+HashsetData parse_hdat(const Chunk& ch);
 
-std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch);
+RecordIndex parse_ridx(const Chunk& ch);
 
-std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch);
+RecordHeader parse_rhdr(const Chunk& ch);
 
-std::pair<State::Type, RecordData> parse_rdat(const Chunk& ch);
+RecordData parse_rdat(const Chunk& ch);
 
 std::string printable_chunk_type(uint32_t type);
 

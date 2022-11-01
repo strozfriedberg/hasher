@@ -91,7 +91,7 @@ TEST_CASE("parse_fhdr") {
     "desc"
   };
 
-  CHECK(parse_fhdr(ch) == std::make_pair(State::SBRK, exp));
+  CHECK(parse_fhdr(ch) == exp);
 }
 
 TEST_CASE("parse_hhdr") {
@@ -117,7 +117,7 @@ TEST_CASE("parse_hhdr") {
     4886718345
   };
 
-  CHECK(parse_hhdr(ch) == std::make_pair(State::HHDR, exp));
+  CHECK(parse_hhdr(ch) == exp);
 }
 
 TEST_CASE("parse_hint") {
@@ -132,7 +132,7 @@ TEST_CASE("parse_hint") {
 
   const HashsetHint exp{ 0x1234, buf + 2, buf + sizeof(buf) };
 
-  CHECK(parse_hint(ch) == std::make_pair(State::HINT, exp));
+  CHECK(parse_hint(ch) == exp);
 }
 
 TEST_CASE("parse_hdat") {
@@ -145,7 +145,7 @@ TEST_CASE("parse_hdat") {
 
   const HashsetData exp{ buf, buf + sizeof(buf) };
 
-  CHECK(parse_hdat(ch) == std::make_pair(State::HDAT, exp));
+  CHECK(parse_hdat(ch) == exp);
 }
 
 TEST_CASE("parse_ridx") {
@@ -161,7 +161,7 @@ TEST_CASE("parse_ridx") {
 
   const RecordIndex exp{ buf, buf + sizeof(buf) };
 
-  CHECK(parse_ridx(ch) == std::make_pair(State::SBRK, exp));
+  CHECK(parse_ridx(ch) == exp);
 }
 
 TEST_CASE("parse_rhdr") {
@@ -205,7 +205,7 @@ TEST_CASE("parse_rhdr") {
     }
   };
 
-  CHECK(parse_rhdr(ch) == std::make_pair(State::RHDR, exp));
+  CHECK(parse_rhdr(ch) == exp);
 }
 
 TEST_CASE("parse_rdat") {
@@ -218,5 +218,5 @@ TEST_CASE("parse_rdat") {
 
   const RecordData exp{ buf, buf + sizeof(buf) };
 
-  CHECK(parse_rdat(ch) == std::make_pair(State::SBRK, exp));
+  CHECK(parse_rdat(ch) == exp);
 }

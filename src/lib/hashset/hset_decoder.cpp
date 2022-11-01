@@ -122,37 +122,27 @@ void TOCIterator::advance_chunk() {
   );
 }
 
-std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch) {
-  // INIT -> FHDR
+FileHeader parse_fhdr(const Chunk& ch) {
   const uint8_t* cur = ch.dbeg;
   return {
-    State::SBRK,
-    FileHeader{
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
-      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
-      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
-      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend)
-    }
+    read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend)
   };
 }
 
-std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch) {
-  // section break -> HHDR
+HashsetHeader parse_hhdr(const Chunk& ch) {
   const uint8_t* cur = ch.dbeg;
   return {
-    State::HHDR,
-    HashsetHeader{
-      1u << (ch.type & 0x0000FFFF),
-      read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend),
-      read_le<uint64_t>(ch.dbeg, cur, ch.dend)
-    }
+    1u << (ch.type & 0x0000FFFF),
+    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+    read_le<uint64_t>(ch.dbeg, cur, ch.dend),
+    read_le<uint64_t>(ch.dbeg, cur, ch.dend)
   };
 }
 
-std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch) {
-  // section break -> RHDR
-
+RecordHeader parse_rhdr(const Chunk& ch) {
   const uint8_t* cur = ch.dbeg;
 
   RecordHeader rhdr{
@@ -171,17 +161,7 @@ std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch) {
     );
   }
 
-  return {
-    State::RHDR,
-    rhdr
-  };
-}
-
-State::Type parse_ftoc(const Chunk&) {
-  // section break -> DONE
-
-  // Nothing to do here, as we've already read the FTOC to drive parsing
-  return State::DONE;
+  return rhdr;
 }
 
 template <template <size_t> class Strategy, size_t HashLength>
@@ -363,25 +343,18 @@ std::unique_ptr<LookupStrategy> make_lookup_strategy(
 */
 }
 
-std::pair<State::Type, HashsetHint> parse_hint(const Chunk& ch) {
-  // HHDR -> HINT
+HashsetHint parse_hint(const Chunk& ch) {
   const uint8_t* cur = ch.dbeg;
   return {
-    State::HINT,
-    {
-      read_be<uint16_t>(ch.dbeg, cur, ch.dend),
-      cur,
-      ch.dend
-    }
+    read_be<uint16_t>(ch.dbeg, cur, ch.dend),
+    cur,
+    ch.dend
   };
 }
 
-template <State::Type state, class T>
-std::pair<State::Type, T> parse_data_chunk(const Chunk& ch) {
-  return {
-    state,
-    { ch.dbeg, ch.dend }
-  };
+template <class T>
+T parse_data_chunk(const Chunk& ch) {
+  return { ch.dbeg, ch.dend };
 }
 
 void check_data_length(const Chunk& ch, uint64_t exp_len) {
@@ -394,18 +367,16 @@ void check_data_length(const Chunk& ch, uint64_t exp_len) {
   );
 }
 
-std::pair<State::Type, RecordIndex> parse_ridx(const Chunk& ch) {
-  // HDAT -> RIDX;
-  return parse_data_chunk<State::SBRK, RecordIndex>(ch);
+RecordIndex parse_ridx(const Chunk& ch) {
+  return parse_data_chunk<RecordIndex>(ch);
 }
 
-std::pair<State::Type, HashsetData> parse_hdat(const Chunk& ch) {
-  return parse_data_chunk<State::HDAT, HashsetData>(ch);
+HashsetData parse_hdat(const Chunk& ch) {
+  return parse_data_chunk<HashsetData>(ch);
 }
 
-std::pair<State::Type, RecordData> parse_rdat(const Chunk& ch) {
-  // RHDR -> RDAT;
-  return parse_data_chunk<State::SBRK, RecordData>(ch);
+RecordData parse_rdat(const Chunk& ch) {
+  return parse_data_chunk<RecordData>(ch);
 }
 
 constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
@@ -418,40 +389,41 @@ void check_magic(const uint8_t*& i, const uint8_t* end) {
 }
 
 State::Type handle_fhdr(const Chunk& ch, Holder& h) {
-  State::Type state;
-  std::tie(state, h.fhdr) = parse_fhdr(ch);
-  return state;
+  // INIT -> FHDR
+  h.fhdr = parse_fhdr(ch);
+  return State::SBRK;
 }
 
 State::Type handle_hhdr(const Chunk& ch, Holder& h) {
-  auto [state, hhdr] = parse_hhdr(ch);
-
+  // section break -> HHDR
   h.hsets.emplace_back(
-    std::move(hhdr),
+    parse_hhdr(ch),
     HashsetHint(),
     HashsetData(),
     nullptr,
     RecordIndex()
   );
 
-  return state;
+  return State::HHDR;
 }
 
 State::Type handle_rhdr(const Chunk& ch, Holder& h) {
-  State::Type state;
-  std::tie(state, h.rhdr) = parse_rhdr(ch);
-  return state;
+  // section break -> RHDR
+  h.rhdr = parse_rhdr(ch);
+  return State::RHDR;
 }
 
-State::Type handle_ftoc(const Chunk& ch, Holder&) {
-  return parse_ftoc(ch);
+State::Type handle_ftoc(const Chunk&, Holder&) {
+  // section break -> DONE
+  // Nothing to do here, as we've already read the FTOC to drive parsing
+  return State::DONE;
 }
 
 State::Type handle_hint(const Chunk& ch, Holder& h) {
+  // HHDR -> HINT
   auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
 
-  State::Type state;
-  std::tie(state, hnt) = parse_hint(ch);
+  hnt = parse_hint(ch);
 
   // TODO: check for recognized type?
   THROW_IF(
@@ -461,7 +433,7 @@ State::Type handle_hint(const Chunk& ch, Holder& h) {
 
   ls = make_lookup_strategy(hsh, hnt, hsd);
 
-  return state;
+  return State::HINT;
 }
 
 State::Type handle_hdat(const Chunk& ch, Holder& h) {
@@ -471,28 +443,27 @@ State::Type handle_hdat(const Chunk& ch, Holder& h) {
 
   check_data_length(ch, hhdr.hash_count * hhdr.hash_length);
 
-  State::Type state;
-  std::tie(state, hdat) = parse_hdat(ch);
-  return state;
+  hdat = parse_hdat(ch);
+  return State::HDAT; 
 }
 
 State::Type handle_ridx(const Chunk& ch, Holder& h) {
+  // HDAT -> RIDX;
   auto& hset = h.hsets.back();
   const auto& hhdr = std::get<HashsetHeader>(hset);
   auto& ridx = std::get<RecordIndex>(hset);
 
   check_data_length(ch, hhdr.hash_count * sizeof(uint64_t));
 
-  State::Type state;
-  std::tie(state, ridx) = parse_ridx(ch);
-  return state;
+  ridx = parse_ridx(ch);
+  return State::SBRK;
 }
 
 State::Type handle_rdat(const Chunk& ch, Holder& h) {
+  // RHDR -> RDAT;
   check_data_length(ch, h.rhdr.record_count * h.rhdr.record_length);
-  State::Type state;
-  std::tie(state, h.rdat) = parse_rdat(ch);
-  return state;
+  h.rdat = parse_rdat(ch);
+  return State::SBRK;
 }
 
 // TODO: add validation flag
