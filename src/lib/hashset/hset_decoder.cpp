@@ -10,7 +10,7 @@
 #include "rwutil.h"
 
 #include <algorithm>
-#include <exception>
+#include <iomanip>
 #include <ostream>
 
 #include <iostream>
@@ -133,7 +133,7 @@ std::pair<State::Type, FileHeader> parse_fhdr(const Chunk& ch) {
       read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
       read_pstring<std::string_view>(ch.dbeg, cur, ch.dend)
     }
-  }; 
+  };
 }
 
 std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch) {
@@ -149,7 +149,7 @@ std::pair<State::Type, HashsetHeader> parse_hhdr(const Chunk& ch) {
     }
   };
 }
- 
+
 std::pair<State::Type, RecordHeader> parse_rhdr(const Chunk& ch) {
   // section break -> RHDR
 
@@ -417,122 +417,85 @@ void check_magic(const uint8_t*& i, const uint8_t* end) {
   i += sizeof(MAGIC);
 }
 
-// TODO: add validation flag
-
-class UnexpectedChunkType: public std::exception {
-};
-
-Holder decode_hset(TOCIterator ch, TOCIterator ch_end) {
-  Holder h;
-  State::Type state = State::INIT;
-
-  try {
-    while (state != State::DONE) {
-      THROW_IF(ch == ch_end, "exhausted FTOC expecting more data");
-
-      switch (state) {
-      case State::INIT:
-        if (ch->type == Chunk::FHDR) {
-          std::tie(state, h.fhdr) = parse_fhdr(*ch++);
-        }
-        else {
-          throw UnexpectedChunkType();
-        }
-        break;
-
-      case State::SBRK:
-        if ((ch->type & 0xFFFF0000) == Chunk::HHDR) {
-          HashsetHeader hhdr;
-          std::tie(state, hhdr) = parse_hhdr(*ch++);
-          h.hsets.emplace_back(
-            std::move(hhdr),
-            HashsetHint(),
-            HashsetData(),
-            nullptr,
-            RecordIndex()
-          );
-        }
-        else if (ch->type == Chunk::RHDR) {
-          std::tie(state, h.rhdr) = parse_rhdr(*ch++);
-        }
-        else if (ch->type == Chunk::FTOC) {
-          state = parse_ftoc(*ch++);
-        }
-        else {
-          throw UnexpectedChunkType();
-        }
-        break;
-
-      case State::HHDR:
-        switch (ch->type) {
-        case Chunk::HINT:
-          {
-            auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
-
-            std::tie(state, hnt) = parse_hint(*ch++);
-
-            // TODO: check for recognized type?
-            THROW_IF(
-              hnt.hint_type != 0x6208,
-              "bad hint type " << std::hex << std::setw(4) << std::setfill('0') << hnt.hint_type
-            );
-
-            ls = make_lookup_strategy(hsh, hnt, hsd);
-          }
-          break;
-        default:
-          throw UnexpectedChunkType();
-        case Chunk::HDAT:
-          // intentional fall-through to HINT state
-          ;
-        }
-
-      case State::HINT:
-        if (ch->type == Chunk::HDAT) {
-          auto& hset = h.hsets.back();
-          const auto& hhdr = std::get<HashsetHeader>(hset);
-          auto& hdat = std::get<HashsetData>(hset);
-
-          check_data_length(*ch, hhdr.hash_count * hhdr.hash_length);
-          std::tie(state, hdat) = parse_hdat(*ch++);
-        }
-        else {
-          throw UnexpectedChunkType();
-        }
-        break;
-
-      case State::HDAT:
-        if (ch->type == Chunk::RIDX) {
-          auto& hset = h.hsets.back();
-          const auto& hhdr = std::get<HashsetHeader>(hset);
-          auto& ridx = std::get<RecordIndex>(hset);
-
-          check_data_length(*ch, hhdr.hash_count * sizeof(uint64_t));
-          std::tie(state, ridx) = parse_ridx(*ch++);
-        }
-        else {
-          state = State::SBRK;
-        }
-        break;
-
-      case State::RHDR:
-        if (ch->type == Chunk::RDAT) {
-          check_data_length(*ch, h.rhdr.record_count * h.rhdr.record_length);
-          std::tie(state, h.rdat) = parse_rdat(*ch++);
-        }
-        else {
-          throw UnexpectedChunkType();
-        }
-        break;
-      }
-    }
-  }
-  catch (const UnexpectedChunkType&) {
-    THROW("unexpected chunk type " << printable_chunk_type(ch->type));
-  }
-
-  return h;
+State::Type handle_fhdr(const Chunk& ch, Holder& h) {
+  State::Type state;
+  std::tie(state, h.fhdr) = parse_fhdr(ch);
+  return state;
 }
+
+State::Type handle_hhdr(const Chunk& ch, Holder& h) {
+  auto [state, hhdr] = parse_hhdr(ch);
+
+  h.hsets.emplace_back(
+    std::move(hhdr),
+    HashsetHint(),
+    HashsetData(),
+    nullptr,
+    RecordIndex()
+  );
+
+  return state;
+}
+
+State::Type handle_rhdr(const Chunk& ch, Holder& h) {
+  State::Type state;
+  std::tie(state, h.rhdr) = parse_rhdr(ch);
+  return state;
+}
+
+State::Type handle_ftoc(const Chunk& ch, Holder&) {
+  return parse_ftoc(ch);
+}
+
+State::Type handle_hint(const Chunk& ch, Holder& h) {
+  auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
+
+  State::Type state;
+  std::tie(state, hnt) = parse_hint(ch);
+
+  // TODO: check for recognized type?
+  THROW_IF(
+    hnt.hint_type != 0x6208,
+    "bad hint type " << std::hex << std::setw(4) << std::setfill('0') << hnt.hint_type
+  );
+
+  ls = make_lookup_strategy(hsh, hnt, hsd);
+
+  return state;
+}
+
+State::Type handle_hdat(const Chunk& ch, Holder& h) {
+  auto& hset = h.hsets.back();
+  const auto& hhdr = std::get<HashsetHeader>(hset);
+  auto& hdat = std::get<HashsetData>(hset);
+
+  check_data_length(ch, hhdr.hash_count * hhdr.hash_length);
+
+  State::Type state;
+  std::tie(state, hdat) = parse_hdat(ch);
+  return state;
+}
+
+State::Type handle_ridx(const Chunk& ch, Holder& h) {
+  auto& hset = h.hsets.back();
+  const auto& hhdr = std::get<HashsetHeader>(hset);
+  auto& ridx = std::get<RecordIndex>(hset);
+
+  check_data_length(ch, hhdr.hash_count * sizeof(uint64_t));
+
+  State::Type state;
+  std::tie(state, ridx) = parse_ridx(ch);
+  return state;
+}
+
+State::Type handle_rdat(const Chunk& ch, Holder& h) {
+  check_data_length(ch, h.rhdr.record_count * h.rhdr.record_length);
+  State::Type state;
+  std::tie(state, h.rdat) = parse_rdat(ch);
+  return state;
+}
+
+// TODO: add validation flag
 
 Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
   // check magic

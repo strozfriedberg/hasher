@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <exception>
 #include <iosfwd>
 #include <iterator>
 #include <memory>
@@ -10,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "throw.h"
 #include "hashset/lookupstrategy.h"
 
 struct FileHeader {
@@ -202,6 +204,7 @@ public:
       advance_chunk();
     }
     else {
+      // this is the end
       toc_cur = toc_end = nullptr;
     }
     return *this;
@@ -229,5 +232,102 @@ private:
 
   Chunk ch;
 };
+
+State::Type handle_fhdr(const Chunk& ch, Holder& h);
+
+State::Type handle_hhdr(const Chunk& ch, Holder& h);
+
+State::Type handle_rhdr(const Chunk& ch, Holder& h);
+
+State::Type handle_ftoc(const Chunk& ch, Holder& h);
+
+State::Type handle_hdat(const Chunk& ch, Holder& h);
+
+State::Type handle_rdat(const Chunk& ch, Holder& h);
+
+class UnexpectedChunkType: public std::exception {
+};
+
+template <class ChunkIterator>
+Holder decode_hset(ChunkIterator ch, ChunkIterator ch_end) {
+  Holder h;
+  State::Type state = State::INIT;
+
+  try {
+    while (state != State::DONE) {
+      THROW_IF(ch == ch_end, "exhausted FTOC expecting more data");
+
+      switch (state) {
+      case State::INIT:
+        if (ch->type == Chunk::FHDR) {
+          state = handle_fhdr(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::SBRK:
+        if ((ch->type & 0xFFFF0000) == Chunk::HHDR) {
+          state = handle_hhdr(*ch++, h);
+        }
+        else if (ch->type == Chunk::RHDR) {
+          state = handle_rhdr(*ch++, h);
+        }
+        else if (ch->type == Chunk::FTOC) {
+          state = handle_ftoc(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::HHDR:
+        switch (ch->type) {
+        case Chunk::HINT:
+          state = handle_hint(*ch++, h);
+          break;
+        default:
+          throw UnexpectedChunkType();
+        case Chunk::HDAT:
+          // intentional fall-through to HINT state
+          ;
+        }
+
+      case State::HINT:
+        if (ch->type == Chunk::HDAT) {
+          state = handle_hdat(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::HDAT:
+        if (ch->type == Chunk::RIDX) {
+          state = handle_ridx(*ch++, h);
+        }
+        else {
+          state = State::SBRK;
+        }
+        break;
+
+      case State::RHDR:
+        if (ch->type == Chunk::RDAT) {
+          state = handle_rdat(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+      }
+    }
+  }
+  catch (const UnexpectedChunkType&) {
+    THROW("unexpected chunk type " << printable_chunk_type(ch->type));
+  }
+
+  return h;
+}
 
 Holder decode_hset(const uint8_t* beg, const uint8_t* end);
