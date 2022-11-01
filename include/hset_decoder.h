@@ -186,20 +186,21 @@ public:
   using difference_type = std::ptrdiff_t;
 
   TOCIterator(
+    const TableOfContents& toc,
     const uint8_t* beg,
-    const uint8_t* toc_cur,
-    const uint8_t* toc_end,
     const uint8_t* end
   ):
-    beg(beg), toc_cur(toc_cur), toc_end(toc_end), end(end)
+    beg(beg), end(end),
+    toc_cur(toc.entries.begin()), toc_end(toc.entries.end())
   {
-    if (toc_cur < toc_end) {
+    if (toc_cur != toc_end) {
       ++(*this);
     }
   }
 
   TOCIterator():
-    beg(nullptr), toc_cur(nullptr), toc_end(nullptr), end(nullptr) {}
+    beg(nullptr), end(nullptr),
+    toc_cur(), toc_end() {}
 
   reference operator*() const noexcept {
     return ch;
@@ -210,12 +211,8 @@ public:
   }
 
   TOCIterator& operator++() {
-    if (toc_cur < toc_end) {
+    if (toc_cur != toc_end) {
       advance_chunk();
-    }
-    else {
-      // this is the end
-      toc_cur = toc_end = nullptr;
     }
     return *this;
   }
@@ -235,10 +232,10 @@ public:
 private:
   void advance_chunk();
 
-  const uint8_t* beg;
-  const uint8_t* toc_cur;
-  const uint8_t* toc_end;
-  const uint8_t* end;
+  const uint8_t* const beg;
+  const uint8_t* const end;
+  decltype(TableOfContents::entries)::const_iterator toc_cur;
+  const decltype(TableOfContents::entries)::const_iterator toc_end;
 
   Chunk ch;
 };
@@ -259,7 +256,7 @@ class UnexpectedChunkType: public std::exception {
 };
 
 template <class ChunkIterator>
-Holder decode_hset(ChunkIterator ch, ChunkIterator ch_end) {
+Holder decode_chunks(ChunkIterator ch, ChunkIterator ch_end) {
   Holder h;
   State::Type state = State::INIT;
 

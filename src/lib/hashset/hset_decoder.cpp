@@ -117,8 +117,7 @@ Chunk decode_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end) 
 }
 
 void TOCIterator::advance_chunk() {
-  const uint64_t ch_off = read_le<uint64_t>(beg, toc_cur, toc_end);
-  const uint32_t ch_type = read_be<uint32_t>(beg, toc_cur, toc_end);
+  const auto [ch_off, ch_type] = *toc_cur++;
 
   const uint8_t* cur = beg + ch_off;
   ch = decode_chunk(beg, cur, end);
@@ -461,7 +460,7 @@ State::Type handle_hdat(const Chunk& ch, Holder& h) {
   check_data_length(ch, hhdr.hash_count * hhdr.hash_length);
 
   hdat = parse_hdat(ch);
-  return State::HDAT; 
+  return State::HDAT;
 }
 
 State::Type handle_ridx(const Chunk& ch, Holder& h) {
@@ -483,25 +482,35 @@ State::Type handle_rdat(const Chunk& ch, Holder& h) {
   return State::SBRK;
 }
 
-// TODO: add validation flag
 
-Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
-  // check magic
-  const uint8_t* cur = beg;
-  check_magic(cur, end);
-
+TableOfContents read_ftoc_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end) {
   // read FTOC start offset from the last FTOC entry
   cur = end - 32 - 4 - 8; // end - SHA256 - chunk type - offset
   cur = beg + read_le<uint64_t>(beg, cur, end);
 
   // get the FTOC chunk
-  const Chunk toc_ch = decode_chunk(beg, cur, end);
+  const Chunk ch = decode_chunk(beg, cur, end);
 
   THROW_IF(
-    toc_ch.type != Chunk::FTOC,
-    "expected FTOC, found " << printable_chunk_type(toc_ch.type)
+    ch.type != Chunk::FTOC,
+    "expected FTOC, found " << printable_chunk_type(ch.type)
   );
 
-  TOCIterator ch(beg, toc_ch.dbeg, toc_ch.dend, end), ch_end;
-  return decode_hset(ch, ch_end);
+  return parse_ftoc(ch);
+}
+
+// TODO: add validation flag
+
+Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
+  const uint8_t* cur = beg;
+
+  // check magic
+  check_magic(cur, end);
+
+  // read the FTOC chunk
+  const TableOfContents toc = read_ftoc_chunk(beg, cur, end);
+
+  // decode the chunks listed in the FTOC
+  TOCIterator ch(toc, beg, end), ch_end;
+  return decode_chunks(ch, ch_end);
 }
