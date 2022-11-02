@@ -231,8 +231,8 @@ TEST_CASE("parse_rhdr") {
     38,
     5649426,
     {
-      { 0, "MD5", 16 },
-      { 1, "SHA-1", 20 }
+      { SFHASH_MD5, "MD5", 16 },
+      { SFHASH_SHA_1, "SHA-1", 20 }
     }
   };
 

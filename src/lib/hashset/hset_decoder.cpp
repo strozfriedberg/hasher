@@ -161,7 +161,7 @@ RecordHeader parse_rhdr(const Chunk& ch) {
   while (cur < ch.dend) {
     rhdr.fields.emplace_back(
       RecordFieldDescriptor{
-        read_le<uint16_t>(ch.dbeg, cur, ch.dend),
+        1u << read_le<uint16_t>(ch.dbeg, cur, ch.dend),
         read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
         read_le<uint64_t>(ch.dbeg, cur, ch.dend)
       }
