@@ -18,6 +18,7 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "error.h"
 #include "hex.h"
 #include "rwutil.h"
 #include "util.h"
@@ -515,13 +516,21 @@ SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
   const char* hashset_name,
   const char* hashset_desc,
   const SFHASH_HashAlgorithm* record_order,
-  size_t record_order_length)
+  size_t record_order_length,
+  SFHASH_Error** err)
 {
 // TODO: would be nice to do this in-place with some sort of range adapter
   std::vector<HashInfo> hash_infos;
+
   for (size_t i = 0; i < record_order_length; ++i) {
 // TODO: handle unrecognized type
-    hash_infos.push_back(HASH_INFO.at(record_order[i]));
+    try {
+      hash_infos.push_back(HASH_INFO.at(record_order[i]));
+    }
+    catch (const std::out_of_range&) {
+      fill_error(err, "uknown hash type " + std::to_string(record_order[i]));
+      return nullptr;
+    }
   }
 
 // TODO: check that name, desc lengths fit in 16 bits
@@ -583,7 +592,8 @@ size_t sfhash_save_hashset_close(
 
   const auto& [hashset_name, hashset_desc, timestamp, hash_infos, records] = *bctx;
 
-//  std::sort(records.begin(), records.end());
+  std::sort(bctx->records.begin(), bctx->records.end());
+  bctx->records.erase(std::unique(bctx->records.begin(), bctx->records.end()), bctx->records.end());
 
   // FHDR
   toc.emplace_back(out - beg, "FHDR");
@@ -666,13 +676,22 @@ size_t write_hashset(
   const SFHASH_HashAlgorithm* htypes,
   size_t htypes_len,
   std::istream& in,
-  std::ostream& out
+  std::vector<uint8_t>& out
 )
 {
+  SFHASH_Error* err = nullptr;
   auto bctx = make_unique_del(
-    sfhash_save_hashset_open(hashset_name, hashset_desc, htypes, htypes_len),
+    sfhash_save_hashset_open(
+      hashset_name,
+      hashset_desc,
+      htypes,
+      htypes_len,
+      &err
+    ),
     sfhash_save_hashset_destroy
   );
+
+// TODO: check err
 
   std::string line;
   while (in) {
@@ -682,37 +701,62 @@ size_t write_hashset(
       continue;
     }
 
-    std::vector<char> rec;
-
     const auto& cols = split(line, ' ');
 
+    std::vector<std::vector<uint8_t>> rec;
+
     for (size_t i = 0; i < bctx->hash_infos.size(); ++i) {
-      rec.insert(rec.end(), bctx->hash_infos[i].length, 0);
-      bctx->hash_infos[i].conv(
-        reinterpret_cast<uint8_t*>(rec.data() + rec.size() - bctx->hash_infos[i].length),
-        cols[i].c_str(),
-        bctx->hash_infos[i].length
-      );
+      if (cols[i].empty()) {
+        rec.emplace_back();
+      }
+      else {
+        rec.emplace_back(bctx->hash_infos[i].length, 0);
+        bctx->hash_infos[i].conv(
+          rec.back().data(),
+          cols[i].c_str(),
+          bctx->hash_infos[i].length
+        );
+      }
     }
 
-    sfhash_add_hashset_record(bctx.get(), rec.data());
+    bctx->records.push_back(std::move(rec));
   }
 
   const auto hset_size = sfhash_save_hashset_size(bctx.get());
-  std::vector<char> buf(hset_size);
+  out.resize(hset_size);
 
-  std::cerr << "buf.size() == " << buf.size() << std::endl;
+//  std::cerr << "buf.size() == " << buf.size() << std::endl;
 
-  SFHASH_Error* err = nullptr;
   const auto wlen = sfhash_save_hashset_close(
     bctx.get(),
-    buf.data(),
+    out.data(),
     &err
   );
 
-  std::cerr << "wlen == " << wlen << std::endl;
-  buf.resize(wlen);
+  out.resize(wlen);
+  return wlen;
+}
 
-  out.write(buf.data(), buf.size());
+size_t write_hashset(
+  const char* hashset_name,
+  const char* hashset_desc,
+  const SFHASH_HashAlgorithm* htypes,
+  size_t htypes_len,
+  std::istream& in,
+  std::ostream& out
+)
+{
+  std::vector<uint8_t> ovec;
+
+  const auto wlen = write_hashset(
+    hashset_name,
+    hashset_desc,
+    htypes,
+    htypes_len,
+    in,
+    ovec
+  );
+
+  out.write(reinterpret_cast<const char*>(ovec.data()), ovec.size());
   return wlen;
 }

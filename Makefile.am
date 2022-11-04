@@ -37,6 +37,7 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hashset/hset.cpp \
 	src/lib/hashset/hset_decoder.cpp \
 	src/lib/hashset/hset_encoder.cpp \
+	src/lib/hashset/hset_ops.cpp \
 	src/lib/hashset/util.cpp \
 	src/lib/hex/hex.cpp \
 	src/lib/hex/hex_avx2.cpp \
@@ -130,6 +131,7 @@ test_test_SOURCES = \
 	test/test_hex.cpp \
 	test/test_hset_decoder.cpp \
 	test/test_hset_encoder.cpp \
+	test/test_hset_round_trip.cpp \
 	test/test_parser.cpp \
 	test/test_util.cpp
 

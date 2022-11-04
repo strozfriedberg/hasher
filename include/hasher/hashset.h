@@ -92,7 +92,8 @@ SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
   const char* hashset_name,
   const char* hashset_desc,
   const SFHASH_HashAlgorithm* record_order,
-  size_t record_order_length
+  size_t record_order_length,
+  SFHASH_Error** err
 );
 
 void sfhash_add_hashset_record(
@@ -112,33 +113,27 @@ size_t sfhash_save_hashset_close(
 
 void sfhash_save_hashset_destroy(SFHASH_HashsetBuildCtx* bctx);
 
-void sfhash_union_hashsets(
+SFHASH_HashsetBuildCtx* sfhash_union_hashsets_open(
   const SFHASH_Hashset* l,
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
-  ssize_t (*write_func)(void*, const void*, size_t),
-  void* wctx,
   SFHASH_Error** err
 );
 
-void sfhash_intersect_hashsets(
+SFHASH_HashsetBuildCtx* sfhash_intersect_hashsets_open(
   const SFHASH_Hashset* l,
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
-  ssize_t (*write_func)(void*, const void*, size_t),
-  void* wctx,
   SFHASH_Error** err
 );
 
-void sfhash_difference_hashsets(
+SFHASH_HashsetBuildCtx* sfhash_subtract_hashsets_open(
   const SFHASH_Hashset* l,
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
-  ssize_t (*write_func)(void*, const void*, size_t),
-  void* wctx,
   SFHASH_Error** err
 );
 

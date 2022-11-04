@@ -31,6 +31,15 @@ size_t write_hashset(
   const SFHASH_HashAlgorithm* htypes,
   size_t htypes_len,
   std::istream& in,
+  std::vector<uint8_t>& out
+);
+
+size_t write_hashset(
+  const char* hashset_name,
+  const char* hashset_desc,
+  const SFHASH_HashAlgorithm* htypes,
+  size_t htypes_len,
+  std::istream& in,
   std::ostream& out
 );
 
