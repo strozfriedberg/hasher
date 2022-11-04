@@ -54,27 +54,33 @@ bool sfhash_hashset_lookup(
   return std::get<std::unique_ptr<LookupStrategy>>(hset->holder.hsets[tidx])->contains(static_cast<const uint8_t*>(hash));
 }
 
-int sfhash_hashset_record_field_index_for_type(
-  const SFHASH_Hashset* hset,
+int hashset_record_field_index_for_type(
+  const RecordHeader& rhdr,
   SFHASH_HashAlgorithm htype
 ) {
-
   const auto i = std::find_if(
-    hset->holder.hsets.begin(),
-    hset->holder.hsets.end(),
-    [htype](const auto& t) {
-      return htype == std::get<HashsetHeader>(t).hash_type;
+    rhdr.fields.begin(),
+    rhdr.fields.end(),
+    [htype](const auto& rfd) {
+      return htype == rfd.hash_type;
     }
   );
 
 // TODO: consider storing this rather than computing it each time
-  return i == hset->holder.hsets.end() ? -1 :
+  return i == rhdr.fields.end() ? -1 :
     std::accumulate(
-      hset->holder.hsets.begin(), i, 0,
-      [](int off, const auto& h) {
-        return off + 1 + std::get<HashsetHeader>(h).hash_length;
+      rhdr.fields.begin(), i, 0,
+      [](int off, const auto& rfd) {
+        return off + 1 + rfd.hash_length;
       }
     );
+}
+
+int sfhash_hashset_record_field_index_for_type(
+  const SFHASH_Hashset* hset,
+  SFHASH_HashAlgorithm htype
+) {
+  return hashset_record_field_index_for_type(hset->holder.rhdr, htype);
 }
 
 const void* sfhash_hashset_record_field(

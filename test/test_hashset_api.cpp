@@ -182,29 +182,9 @@ TEST_CASE("hashset_lookup") {
 TEST_CASE("hashset_record_field_index_for_type") {
   SFHASH_Hashset hset;
 
-  hset.holder.hsets.emplace_back(
-    HashsetHeader{ SFHASH_SIZE, "size", 8, 0 },
-    HashsetHint{},
-    HashsetData{},
-    std::unique_ptr<LookupStrategy>(),
-    RecordIndex{}
-  );
-
-  hset.holder.hsets.emplace_back(
-    HashsetHeader{ SFHASH_MD5, "MD5", 16, 0 },
-    HashsetHint{},
-    HashsetData{},
-    std::unique_ptr<LookupStrategy>(),
-    RecordIndex{}
-  );
-
-  hset.holder.hsets.emplace_back(
-    HashsetHeader{ SFHASH_SHA_1, "SHA-1", 20, 0 },
-    HashsetHint{},
-    HashsetData{},
-    std::unique_ptr<LookupStrategy>(),
-    RecordIndex{}
-  );
+  hset.holder.rhdr.fields.emplace_back(SFHASH_SIZE, "size", 8);
+  hset.holder.rhdr.fields.emplace_back(SFHASH_MD5, "MD5", 16);
+  hset.holder.rhdr.fields.emplace_back(SFHASH_SHA_1, "SHA-1", 20);
 
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_SIZE) == 0);
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_MD5) == 9);
