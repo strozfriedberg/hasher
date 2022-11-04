@@ -126,7 +126,7 @@ size_t write_fhdr(
   const std::string& timestamp,
   char* out)
 {
-  return write_chunk<decltype(write_fhdr_data), write_fhdr_data>(
+  return write_chunk<write_fhdr_data>(
     out,
     "FHDR",
     version,
@@ -179,7 +179,7 @@ size_t write_hhnn(
   size_t hash_count,
   char* out)
 {
-  return write_chunk<decltype(write_hhnn_data), write_hhnn_data>(
+  return write_chunk<write_hhnn_data>(
     out,
     make_hhnn_str(hi.type).c_str(),
     hi,
@@ -251,7 +251,7 @@ size_t write_hint(
   const std::vector<std::pair<int64_t, int64_t>>& block_bounds,
   char* out)
 {
-  return write_chunk<decltype(write_hint_data), write_hint_data>(
+  return write_chunk<write_hint_data>(
     out,
     "HINT",
     block_bounds
@@ -282,7 +282,7 @@ size_t write_hdat(
   const std::vector<std::vector<uint8_t>>& hashes,
   char* out)
 {
-  return write_chunk<decltype(write_hdat_data), write_hdat_data>(
+  return write_chunk<write_hdat_data>(
     out,
     "HDAT",
     hashes
@@ -315,7 +315,7 @@ size_t write_ridx(
   const std::vector<uint64_t>& ridx,
   char* out)
 {
-  return write_chunk<decltype(write_ridx_data), write_ridx_data>(
+  return write_chunk<write_ridx_data>(
     out,
     "RIDX",
     ridx
@@ -378,7 +378,7 @@ size_t write_rhdr(
   uint64_t record_count,
   char* out)
 {
-  return write_chunk<decltype(write_rhdr_data), write_rhdr_data>(
+  return write_chunk<write_rhdr_data>(
     out,
     "RHDR",
     hash_infos,
@@ -429,7 +429,7 @@ size_t write_rdat(
   const std::vector<std::vector<std::vector<uint8_t>>>& records,
   char* out)
 {
-  return write_chunk<decltype(write_rdat_data), write_rdat_data>(
+  return write_chunk<write_rdat_data>(
     out,
     "RDAT",
     hash_infos,
@@ -466,7 +466,7 @@ size_t write_ftoc(
   const std::vector<std::pair<uint64_t, std::string>>& toc,
   char* out)
 {
-  return write_chunk<decltype(write_ftoc_data), write_ftoc_data>(
+  return write_chunk<write_ftoc_data>(
     out,
     "FTOC",
     toc

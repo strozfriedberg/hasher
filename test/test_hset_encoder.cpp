@@ -65,7 +65,7 @@ TEST_CASE("write_chunk") {
   };
 
   std::vector<char> buf(sizeof(exp));
-  CHECK(write_chunk<decltype(f), f>(buf.data(), "ABCD", "1234") == sizeof(exp));
+  CHECK(write_chunk<f>(buf.data(), "ABCD", "1234") == sizeof(exp));
   CHECK(!std::memcmp(buf.data(), exp, sizeof(exp)));
 }
 

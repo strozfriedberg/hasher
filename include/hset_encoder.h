@@ -50,7 +50,7 @@ SFHASH_HashValues hash_chunk_data(
   const char* chunk_end
 );
 
-template <typename Func, Func func, typename... Args>
+template <auto func, typename... Args>
 size_t write_chunk(
   char* out,
   const char* chunk_type,
