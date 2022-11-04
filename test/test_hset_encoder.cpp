@@ -114,6 +114,7 @@ TEST_CASE("write_magic") {
 }
 
 TEST_CASE("length_fhdr") {
+  CHECK(length_fhdr_data("123", "4567", "890") == 24);
   CHECK(length_fhdr("123", "4567", "890") == 68);
 }
 
@@ -154,6 +155,7 @@ TEST_CASE("write_fhdr_data") {
 
 TEST_CASE("length_hhnn") {
   const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20, nullptr};
+  CHECK(length_hhnn_data(hi) == 23);
   CHECK(length_hhnn(hi) == 67);
 }
 
@@ -178,6 +180,7 @@ TEST_CASE("write_hhnn_data") {
 }
 
 TEST_CASE("length_hint") {
+  CHECK(length_hint_data() == 4098);
   CHECK(length_hint() == 4142);
 }
 
@@ -206,6 +209,7 @@ TEST_CASE("write_hint_data") {
 }
 
 TEST_CASE("length_hdat") {
+  CHECK(length_hdat_data(3914, 20) == 78280);
   CHECK(length_hdat(3914, 20) == 78324);
 }
 
@@ -240,6 +244,7 @@ TEST_CASE("write_hdat_data") {
 }
 
 TEST_CASE("length_ridx") {
+  CHECK(length_ridx_data(134) == 1072);
   CHECK(length_ridx(134) == 1116);
 }
 
@@ -269,6 +274,7 @@ TEST_CASE("length_rhdr") {
     {SFHASH_MD5, "MD5", 16, nullptr},
     {SFHASH_SHA_1, "SHA-1", 20, nullptr}
   };
+  CHECK(length_rhdr_data(hash_infos) == 48);
   CHECK(length_rhdr(hash_infos) == 92);
 }
 
@@ -319,6 +325,7 @@ TEST_CASE("length_rdat") {
     {SFHASH_MD5, "MD5", 16, nullptr},
     {SFHASH_SHA_1, "SHA-1", 20, nullptr}
   };
+  CHECK(length_rdat_data(hash_infos, 87) == 3306);
   CHECK(length_rdat(hash_infos, 87) == 3350);
 }
 
@@ -385,6 +392,7 @@ TEST_CASE("write_rdat_data") {
 }
 
 TEST_CASE("length_ftoc") {
+  CHECK(length_ftoc_data(57) == 684);
   CHECK(length_ftoc(57) == 728);
 }
 

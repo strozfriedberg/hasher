@@ -80,6 +80,12 @@ size_t length_magic();
 
 size_t write_magic(char* out);
 
+size_t length_fhdr_data(
+  const std::string& hashset_name,
+  const std::string& hashset_desc,
+  const std::string& timestamp
+);
+
 size_t length_fhdr(
   const std::string& hashset_name,
   const std::string& hashset_desc,
@@ -102,6 +108,10 @@ size_t write_fhdr(
   char* out
 );
 
+size_t length_hhnn_data(
+  const HashInfo& hi
+);
+
 size_t length_hhnn(
   const HashInfo& hi
 );
@@ -118,6 +128,8 @@ size_t write_hhnn(
   char* out
 );
 
+size_t length_hint_data();
+
 size_t length_hint();
 
 size_t write_hint_data(
@@ -129,6 +141,8 @@ size_t write_hint(
   const std::vector<std::pair<int64_t, int64_t>>& block_bounds,
   char* out
 );
+
+size_t length_hdat_data(size_t hash_count, size_t hash_size);
 
 size_t length_hdat(size_t hash_count, size_t hash_size);
 
@@ -142,6 +156,8 @@ size_t write_hdat(
   char* out
 );
 
+size_t length_ridx_data(size_t record_count);
+
 size_t length_ridx(size_t record_count);
 
 size_t write_ridx_data(
@@ -152,6 +168,10 @@ size_t write_ridx_data(
 size_t write_ridx(
   const std::vector<uint64_t>& ridx,
   char* out
+);
+
+size_t length_rhdr_data(
+  const std::vector<HashInfo>& hash_infos
 );
 
 size_t length_rhdr(
@@ -170,6 +190,11 @@ size_t write_rhdr(
   char* out
 );
 
+size_t length_rdat_data(
+  const std::vector<HashInfo>& hash_infos,
+  size_t record_count
+);
+
 size_t length_rdat(
   const std::vector<HashInfo>& hash_infos,
   size_t record_count
@@ -186,6 +211,8 @@ size_t write_rdat(
   const std::vector<std::vector<std::vector<uint8_t>>>& records,
   char* out
 );
+
+size_t length_ftoc_data(size_t chunk_count);
 
 size_t length_ftoc(size_t chunk_count);
 
