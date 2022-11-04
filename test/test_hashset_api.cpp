@@ -261,10 +261,6 @@ constexpr size_t HASH_LENGTH[] = {
   8
 };
 
-// There's no obvious way presently to deal with missing record values
-// Do we care about this? We'd need to add a byte to each field to indicate
-// whether the field is populated.
-
 template <class Tests>
 void do_record_lookups(
   const SFHASH_Hashset* hset,
@@ -274,7 +270,7 @@ void do_record_lookups(
   const auto tidx = sfhash_hashset_index_for_type(hset, htype);
   REQUIRE(tidx != -1);
 
-  // list out all the hash types in the hashset 
+  // list out all the hash types in the hashset
   std::vector<std::pair<SFHASH_HashAlgorithm, int>> rec_offs;
   for (auto t: HASH_TYPES) {
     const auto toff = sfhash_hashset_record_field_index_for_type(hset, t);
@@ -342,8 +338,8 @@ TEST_CASE("hashset_record_lookup") {
       std::array<uint8_t, 20>,
       uint64_t
     >, 10
-  > recs;  
-     
+  > recs;
+
   std::array<uint64_t, 10> md5s_r, sha1s_r, sizes_r;
 
   for (int i = 0; i < 10; ++i) {
@@ -422,7 +418,7 @@ TEST_CASE("hashset_record_lookup") {
 
   for (int i = 0; i < 10; ++i) {
     tests_16.emplace_back(
-      md5s[i], 
+      md5s[i],
       std::map<SFHASH_HashAlgorithm,
         std::variant<
           std::array<uint8_t, 16>,
@@ -470,7 +466,7 @@ TEST_CASE("hashset_record_lookup") {
 
   for (int i = 0; i < 10; ++i) {
     tests_20.emplace_back(
-      sha1s[i], 
+      sha1s[i],
       std::map<SFHASH_HashAlgorithm,
         std::variant<
           std::array<uint8_t, 16>,
