@@ -117,7 +117,7 @@ TEST_CASE("length_fhdr") {
   CHECK(length_fhdr("123", "4567", "890") == 68);
 }
 
-template <typename Func, Func func, typename... Args>
+template <auto func, typename... Args>
 void chunk_data_tester(const std::span<const uint8_t> exp, Args&&... args) {
   std::vector<char> buf(exp.size());
   CHECK(func(std::forward<Args>(args)..., buf.data()) == exp.size());
@@ -147,7 +147,7 @@ TEST_CASE("write_fhdr_data") {
     'd', 'e', 's', 'c',
   };
 
-  chunk_data_tester<decltype(write_fhdr_data), write_fhdr_data>(
+  chunk_data_tester<write_fhdr_data>(
     std::span{exp}, version, name, desc, ts
   );
 }
@@ -172,7 +172,7 @@ TEST_CASE("write_hhnn_data") {
     0x89, 0x67, 0x45, 0x23, 0x01, 0x00, 0x00, 0x00
   };
 
-  chunk_data_tester<decltype(write_hhnn_data), write_hhnn_data>(
+  chunk_data_tester<write_hhnn_data>(
     std::span{exp}, hi, hash_count
   );
 }
@@ -200,7 +200,7 @@ TEST_CASE("write_hint_data") {
     cur += write_le<int64_t>(bb.second, cur);
   }
 
-  chunk_data_tester<decltype(write_hint_data), write_hint_data>(
+  chunk_data_tester<write_hint_data>(
     std::span{exp}, block_bounds
   );
 }
@@ -234,7 +234,7 @@ TEST_CASE("write_hdat_data") {
     0x01, 0x01, 0x01, 0x01,
   };
 
-  chunk_data_tester<decltype(write_hdat_data), write_hdat_data>(
+  chunk_data_tester<write_hdat_data>(
     std::span{exp}, hashes
   );
 }
@@ -259,7 +259,7 @@ TEST_CASE("write_ridx_data") {
     0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00,
   };
 
-  chunk_data_tester<decltype(write_ridx_data), write_ridx_data>(
+  chunk_data_tester<write_ridx_data>(
     std::span{exp}, ridx
   );
 }
@@ -309,7 +309,7 @@ TEST_CASE("write_rhdr_data") {
     0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   };
 
-  chunk_data_tester<decltype(write_rhdr_data), write_rhdr_data>(
+  chunk_data_tester<write_rhdr_data>(
     std::span{exp}, hash_infos, record_count
   );
 }
@@ -379,7 +379,7 @@ TEST_CASE("write_rdat_data") {
     0x01, 0x23, 0x45, 0x67
   };
 
-  chunk_data_tester<decltype(write_rdat_data), write_rdat_data>(
+  chunk_data_tester<write_rdat_data>(
     std::span{exp}, hash_infos, records
   );
 }
@@ -412,7 +412,7 @@ TEST_CASE("write_ftoc_data") {
     0xD0, 0xFB, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 'F', 'T', 'O', 'C'
   };
 
-  chunk_data_tester<decltype(write_ftoc_data), write_ftoc_data>(
+  chunk_data_tester<write_ftoc_data>(
     std::span{exp}, toc
   );
 }
