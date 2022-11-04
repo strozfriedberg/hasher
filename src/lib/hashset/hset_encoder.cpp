@@ -1,7 +1,7 @@
 #include "hset_encoder.h"
 
 #include <algorithm>
-#include <cmath>
+#include <bit>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -156,8 +156,7 @@ size_t write_fhdr(
 
 std::string make_hhnn_str(uint32_t hash_type) {
   // nn is stored big-endian
-  // TODO: Use std::bit_width in C++20
-  hash_type = to_be<uint16_t>(std::floor(std::log2(hash_type)));
+  hash_type = to_be<uint16_t>(std::bit_width(hash_type) - 1);
   return {
     'H',
     'H',
@@ -392,7 +391,7 @@ size_t write_rhdr_data(
   out += write_le<uint64_t>(record_count, out);
 
   for (const auto& hi: hash_infos) {
-    out += write_le<uint16_t>(std::floor(std::log2(static_cast<uint32_t>(hi.type))), out);
+    out += write_le<uint16_t>(std::bit_width(static_cast<uint32_t>(hi.type)) - 1, out);
     out += write_pstring(hi.name, out);
     out += write_le<uint64_t>(hi.length, out);
   }

@@ -4,7 +4,7 @@
 
 #include "helper.h"
 
-#include <cmath>
+#include <bit>
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -137,7 +137,7 @@ TEST_CASE("parse_hhdr") {
     0x89, 0x67, 0x45, 0x23, 0x01, 0x00, 0x00, 0x00
   };
 
-  const uint32_t htype = static_cast<uint32_t>(std::floor(std::log2(static_cast<uint32_t>(SFHASH_SHA_1))));
+  const uint32_t htype = std::bit_width(static_cast<uint32_t>(SFHASH_SHA_1)) - 1;
 
   const Chunk ch{Chunk::Type::HHDR | htype, buf, buf + sizeof(buf)};
 
