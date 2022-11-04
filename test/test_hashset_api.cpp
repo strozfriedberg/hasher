@@ -173,7 +173,7 @@ TEST_CASE("hashset_lookup") {
     tests_20.emplace_back(h, true);
   }
 
-  do_lookups(&hset, X_SFHASH_SHA_1, tests_20);
+  do_lookups(&hset, SFHASH_SHA_1, tests_20);
 }
 
 // TODO: lookup with bad hset ptr?
