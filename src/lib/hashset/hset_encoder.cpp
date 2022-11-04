@@ -535,11 +535,11 @@ size_t length_hset(
 std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   // set the timestamp
   const auto tm = std::gmtime(&tt);
-// TODO: check max length
-  std::string ts(30, '\0');
+  // 0000-00-00T00:00:00Z
+  std::string ts(20, '\0');
 
 // TODO: check return value
-// TODO: fractional seconds
+// TODO: fractional seconds?
   ts.resize(std::strftime(ts.data(), ts.size(), "%FT%TZ", tm));
   return ts;
 }
