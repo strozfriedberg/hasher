@@ -68,6 +68,15 @@ SFHASH_HashValues hash_chunk_data(
   return hashes;
 }
 
+template <auto func, typename... Args>
+size_t length_chunk(Args&&... args)
+{
+  return 4 + // chunk type
+         8 + // chunk data length
+         func(std::forward<Args>(args)...) +
+         32; // chunk hash
+}
+
 size_t length_alignment_padding(uint64_t pos, uint64_t align) {
   return (align - pos % align) % align;
 }
@@ -85,21 +94,30 @@ size_t write_magic(char* out) {
   return 8;
 }
 
-size_t length_fhdr(
+size_t length_fhdr_data(
   const std::string& hashset_name,
   const std::string& hashset_desc,
   const std::string& timestamp)
 {
-  return 4 + // chunk type
-         8 + // chunk data length
-         8 + // version
+  return 8 + // version
          2 + // hashset_name length
          hashset_name.size() +
          2 + // timestamp length
          timestamp.size() +
          2 + // hashset_desc length
-         hashset_desc.size() +
-         32; // chunk hash
+         hashset_desc.size();
+}
+
+size_t length_fhdr(
+  const std::string& hashset_name,
+  const std::string& hashset_desc,
+  const std::string& timestamp)
+{
+  return length_chunk<length_fhdr_data>(
+    hashset_name,
+    hashset_desc,
+    timestamp
+  );
 }
 
 size_t write_fhdr_data(
@@ -148,16 +166,19 @@ std::string make_hhnn_str(uint32_t hash_type) {
   };
 }
 
+size_t length_hhnn_data(
+  const HashInfo& hi)
+{
+  return 2 + // hi.name length
+         hi.name.size() +
+         8 + // hi.length
+         8; // hash_count
+}
+
 size_t length_hhnn(
   const HashInfo& hi)
 {
-  return 4 + // chunk type
-         8 + // chunk data length
-         2 + // hi.name length
-         hi.name.size() +
-         8 + // hi.length
-         8 + // hash_count
-         32; // chunk hash
+  return length_chunk<length_hhnn_data>(hi);
 }
 
 size_t write_hhnn_data(
@@ -211,12 +232,13 @@ std::vector<std::pair<int64_t, int64_t>> make_block_bounds(
   return block_bounds;
 }
 
+size_t length_hint_data() {
+  return 2 + // hint type
+         256 * 8 * 2; // bounds for 8-bit buckets
+}
+
 size_t length_hint() {
-  return 4 + // chunk type
-         8 + // chunk data length
-         2 + // hint type
-         256 * 8 * 2 + // bounds for 8-bit buckets
-         32; // chunk hash
+  return length_chunk<length_hint_data>();
 }
 
 size_t write_hint_data(
@@ -258,11 +280,12 @@ size_t write_hint(
   );
 }
 
+size_t length_hdat_data(size_t hash_count, size_t hash_size) {
+  return hash_count * hash_size;
+}
+
 size_t length_hdat(size_t hash_count, size_t hash_size) {
-  return 4 + // chunk type
-         8 + // chunk data length
-         hash_count * hash_size +
-         32; // chunk hash
+  return length_chunk<length_hdat_data>(hash_count, hash_size);
 }
 
 size_t write_hdat_data(
@@ -289,11 +312,12 @@ size_t write_hdat(
   );
 }
 
+size_t length_ridx_data(size_t record_count) {
+  return record_count * 8;
+}
+
 size_t length_ridx(size_t record_count) {
-  return 4 + // chunk type
-         8 + // chunk data length
-         record_count * 8 +
-         32; // chunk hash
+  return length_chunk<length_ridx_data>(record_count);
 }
 
 size_t write_ridx_data(
@@ -322,12 +346,10 @@ size_t write_ridx(
   );
 }
 
-size_t length_rhdr(
+size_t length_rhdr_data(
   const std::vector<HashInfo>& hash_infos)
 {
-  return 4 + // chunk type
-         8 + // chunk data length
-         8 + // record length
+  return 8 + // record length
          8 + // record count
          std::accumulate(
            hash_infos.begin(), hash_infos.end(),
@@ -339,8 +361,13 @@ size_t length_rhdr(
                     hi.name.length() +
                     8; // hi.length
            }
-         ) +
-         32; // chunk hash
+         );
+}
+
+size_t length_rhdr(
+  const std::vector<HashInfo>& hash_infos)
+{
+  return length_chunk<length_rhdr_data>(hash_infos);
 }
 
 size_t write_rhdr_data(
@@ -386,20 +413,24 @@ size_t write_rhdr(
   );
 }
 
-size_t length_rdat(
+size_t length_rdat_data(
   const std::vector<HashInfo>& hash_infos,
   size_t record_count)
 {
-  return 4 + // chunk type
-         8 + // chunk data length
-         record_count * std::accumulate(
+  return record_count * std::accumulate(
            hash_infos.begin(), hash_infos.end(),
            0,
            [](size_t a, const HashInfo& hi) {
              return a + 1 + hi.length;
            }
-         ) +
-         32; // chunk hash
+         );
+}
+
+size_t length_rdat(
+  const std::vector<HashInfo>& hash_infos,
+  size_t record_count)
+{
+  return length_chunk<length_rdat_data>(hash_infos, record_count);
 }
 
 size_t write_rdat_data(
@@ -437,14 +468,15 @@ size_t write_rdat(
   );
 }
 
-size_t length_ftoc(size_t chunk_count) {
-  return 4 + // chunk type
-         8 + // chunk data length
-         chunk_count * (
+size_t length_ftoc_data(size_t chunk_count) {
+  return chunk_count * (
            8 + // offset
            4   // chunk type
-         ) +
-         32; // chunk hash
+         );
+}
+
+size_t length_ftoc(size_t chunk_count) {
+  return length_chunk<length_ftoc_data>(chunk_count);
 }
 
 size_t write_ftoc_data(
