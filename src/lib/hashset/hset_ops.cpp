@@ -24,8 +24,6 @@ void collect_hash_types(const auto& fields, auto& types) {
 }
 
 void make_output_records(const uint8_t* ibeg, const uint8_t* iend, size_t irlen, const auto& ofields, std::vector<std::vector<uint8_t>>& out) {
-  std::cerr << "irlen == " << irlen << '\n';
-
   for (const uint8_t* ir = ibeg; ir < iend; ir += irlen) {
     std::vector<uint8_t> orec;
     for (const auto& [i, hlen]: ofields) {
