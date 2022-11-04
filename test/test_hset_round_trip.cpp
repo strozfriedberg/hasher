@@ -19,7 +19,7 @@ TEST_CASE("hset_round_trip") {
   const auto f = read_file("test/sha1");
   const std::string s(f.begin(), f.end());
 
-  std::istringstream in(s); 
+  std::istringstream in(s);
   std::stringstream out;
 
   const SFHASH_HashAlgorithm hash_types = SFHASH_SHA_1;
@@ -72,7 +72,7 @@ auto read_hset(
   const std::vector<SFHASH_HashAlgorithm>& hash_types)
 {
   std::vector<uint8_t> out;
-  
+
   {
     std::ifstream in(path);
 
@@ -104,7 +104,7 @@ auto read_hset(
 }
 
 TEST_CASE("hset_union_round_trip") {
-  
+
   auto [bufa, ha] = read_hset("test/md5_sha1_a", { SFHASH_MD5, SFHASH_SHA_1 });
   auto [bufb, hb] = read_hset("test/md5_sha1_b", { SFHASH_MD5, SFHASH_SHA_1 });
 //  auto [bufc, hc] = read_hset("test/md5_sha1", { SFHASH_MD5, SFHASH_SHA_1 });
@@ -133,8 +133,8 @@ TEST_CASE("hset_union_round_trip") {
 
   std::vector<char> bufc(sfhash_save_hashset_size(hctx.get()));
 
-//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435); 
-  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err); 
+//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
+  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err);
 
   CHECK(!err);
   if (err) {
@@ -170,7 +170,7 @@ TEST_CASE("hset_union_round_trip") {
   REQUIRE(ar <= ae);
   REQUIRE(br <= be);
   REQUIRE(cr <= ce);
- 
+
   while (cr < ce) {
     const int ca_cmp = ar < ae ? std::memcmp(cr, ar, rlen) : -1;
     const int cb_cmp = br < be ? std::memcmp(cr, br, rlen) : -1;
@@ -204,7 +204,7 @@ TEST_CASE("hset_union_round_trip") {
 }
 
 TEST_CASE("hset_intersection_round_trip") {
-  
+
   auto [bufa, ha] = read_hset("test/md5_sha1_a", { SFHASH_MD5, SFHASH_SHA_1 });
   auto [bufb, hb] = read_hset("test/md5_sha1_b", { SFHASH_MD5, SFHASH_SHA_1 });
 //  auto [bufc, hc] = read_hset("test/md5_sha1", { SFHASH_MD5, SFHASH_SHA_1 });
@@ -233,8 +233,8 @@ TEST_CASE("hset_intersection_round_trip") {
 
   std::vector<char> bufc(sfhash_save_hashset_size(hctx.get()));
 
-//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435); 
-  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err); 
+//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
+  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err);
 
   CHECK(!err);
   if (err) {
@@ -277,7 +277,7 @@ TEST_CASE("hset_intersection_round_trip") {
       // ar < br, advance ar
       ar += rlen;
     }
-    else if (ab_cmp > 0) { 
+    else if (ab_cmp > 0) {
       // br < ar, advance br
       br += rlen;
     }
@@ -298,7 +298,7 @@ TEST_CASE("hset_intersection_round_trip") {
 }
 
 TEST_CASE("hset_subtraction_round_trip") {
-  
+
   auto [bufa, ha] = read_hset("test/md5_sha1_a", { SFHASH_MD5, SFHASH_SHA_1 });
   auto [bufb, hb] = read_hset("test/md5_sha1_b", { SFHASH_MD5, SFHASH_SHA_1 });
 //  auto [bufc, hc] = read_hset("test/md5_sha1", { SFHASH_MD5, SFHASH_SHA_1 });
@@ -327,8 +327,8 @@ TEST_CASE("hset_subtraction_round_trip") {
 
   std::vector<char> bufc(sfhash_save_hashset_size(hctx.get()));
 
-//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435); 
-  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err); 
+//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
+  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err);
 
   CHECK(!err);
   if (err) {
