@@ -10,9 +10,11 @@
 #include <iostream>
 #include <istream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -543,6 +545,13 @@ std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   return ts;
 }
 
+void check_strlen(const char* s, const char* sname) {
+  THROW_IF(
+    std::strlen(s) > std::numeric_limits<uint16_t>::max(),
+    sname << " is too long, maximum length is 65535 chars"
+  );
+}
+
 SFHASH_HashsetBuildCtx* sfhash_hashset_build_open(
   const char* hashset_name,
   const char* hashset_desc,
@@ -550,22 +559,31 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_build_open(
   size_t record_order_length,
   SFHASH_Error** err)
 {
-// TODO: would be nice to do this in-place with some sort of range adapter
   std::vector<HashInfo> hash_infos;
 
-  for (size_t i = 0; i < record_order_length; ++i) {
-// TODO: handle unrecognized type
-    try {
-      hash_infos.push_back(HASH_INFO.at(record_order[i]));
-    }
-    catch (const std::out_of_range&) {
-      fill_error(err, "uknown hash type " + std::to_string(record_order[i]));
-      return nullptr;
+  try {
+    check_strlen(hashset_name, "hashset_name");
+    check_strlen(hashset_desc, "hashset_desc");
+
+// TODO: check that record order does not contain duplicates
+
+// TODO: would be nice to do this in-place with some sort of range adapter
+
+    for (size_t i = 0; i < record_order_length; ++i) {
+      try {
+        hash_infos.push_back(HASH_INFO.at(record_order[i]));
+      }
+      catch (const std::out_of_range&) {
+        throw std::runtime_error(
+          "uknown hash type " + std::to_string(record_order[i])
+        );
+      }
     }
   }
-
-// TODO: check that name, desc lengths fit in 16 bits
-// TODO: check that record order does not contain duplicates
+  catch (const std::exception& e) {
+    fill_error(err, e.what());
+    return nullptr;
+  }
 
   return new SFHASH_HashsetBuildCtx{
     hashset_name,

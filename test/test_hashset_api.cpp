@@ -481,3 +481,37 @@ TEST_CASE("hashset_record_lookup") {
 
 // { 1, "test", "2022-10-05T12:05:35Z", "a test" }
 
+TEST_CASE("hashset_build_open_overlong_name") {
+  const std::string longname(65536, 'x');
+  const SFHASH_HashAlgorithm record_order[] = { SFHASH_MD5 };
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_open(
+    longname.c_str(),
+    "123",
+    record_order,
+    sizeof(record_order),
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
+TEST_CASE("hashset_build_open_overlong_desc") {
+  const std::string longdesc(65536, 'x');
+  const SFHASH_HashAlgorithm record_order[] = { SFHASH_MD5 };
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_open(
+    "123",
+    longdesc.c_str(),
+    record_order,
+    sizeof(record_order),
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
