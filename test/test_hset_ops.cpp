@@ -197,7 +197,7 @@ TEST_CASE("setops_self") {
   CHECK(a_a == exp_a_a);
 }
 
-TEST_CASE("union_overlapping_nonequal") {
+TEST_CASE("setops_overlapping_nonequal") {
   const RecordHeader arhdr{
     38,
     2,
@@ -256,10 +256,14 @@ TEST_CASE("union_overlapping_nonequal") {
 
   const auto [aub, aub_otypes] = union_op(arhdr, ardat, brhdr, brdat);
   const auto [bua, bua_otypes] = union_op(brhdr, brdat, arhdr, ardat);
+  const auto [anb, anb_otypes] = intersect_op(arhdr, ardat, brhdr, brdat);
+  const auto [bna, bna_otypes] = intersect_op(brhdr, brdat, arhdr, ardat);
+  const auto [a_b, a_b_otypes] = difference_op(arhdr, ardat, brhdr, brdat);
+  const auto [b_a, b_a_otypes] = difference_op(brhdr, brdat, arhdr, ardat);
 
   const decltype(aub_otypes) exp_otypes = { SFHASH_MD5, SFHASH_SHA_1 };
 
-  const decltype(aub) exp = {
+  const decltype(aub) exp_u = {
     {
       0x01,
       0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
@@ -289,11 +293,59 @@ TEST_CASE("union_overlapping_nonequal") {
     }
   };
 
+  const decltype(aub) exp_n = {
+    {
+      0x01,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01, 0x23, 0x45, 0x67
+    }
+  };
+
+  const decltype(aub) exp_a_b = {
+    {
+      0x01,
+      0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+      0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+      0x01,
+      0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+      0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+      0xFE, 0xDC, 0xBA, 0x98
+    }
+  };
+
+  const decltype(aub) exp_b_a = {
+    {
+      0x01,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0x01,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF
+    }
+  };
+
   CHECK(aub_otypes == exp_otypes);
-  CHECK(aub == exp);
+  CHECK(aub == exp_u);
 
   CHECK(bua_otypes == exp_otypes);
-  CHECK(bua == exp);
+  CHECK(bua == exp_u);
+
+  CHECK(anb_otypes == exp_otypes);
+  CHECK(anb == exp_n);
+
+  CHECK(bna_otypes == exp_otypes);
+  CHECK(bna == exp_n);
+
+  CHECK(a_b_otypes == exp_otypes);
+  CHECK(a_b == exp_a_b);
+
+  CHECK(b_a_otypes == exp_otypes);
+  CHECK(b_a == exp_b_a);
 }
 
 TEST_CASE("setops_disjoint") {
@@ -464,3 +516,5 @@ TEST_CASE("setops_disjoint") {
   CHECK(b_a_otypes == exp_otypes);
   CHECK(b_a == exp_b_a);
 }
+
+
