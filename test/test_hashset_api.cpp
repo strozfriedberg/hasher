@@ -40,11 +40,25 @@ TEST_CASE("load_hashset_good") {
   CHECK(hset);
 }
 
-TEST_CASE("load_hashset_bad") {
+TEST_CASE("load_hashset_nullptr") {
   SFHASH_Error* err = nullptr;
 
   const auto hset = make_unique_del(
     sfhash_load_hashset(nullptr, nullptr, &err),
+    sfhash_destroy_hashset
+  );
+
+  REQUIRE(err);
+  REQUIRE(err->message);
+}
+
+TEST_CASE("load_hashset_bad") {
+  const char bogus[] = "12345";
+
+  SFHASH_Error* err = nullptr;
+
+  const auto hset = make_unique_del(
+    sfhash_load_hashset(bogus, bogus + sizeof(bogus), &err),
     sfhash_destroy_hashset
   );
 
