@@ -515,3 +515,36 @@ TEST_CASE("hashset_build_open_overlong_desc") {
   REQUIRE(err);
 }
 
+TEST_CASE("hashset_build_open_no_record_types") {
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_open(
+    "123",
+    "abc",
+    nullptr,
+    0,
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
+TEST_CASE("hashset_build_open_duplicate_types") {
+  // MD5, egg, sausage, and MD5 hasn't got much MD5 in it
+  const SFHASH_HashAlgorithm record_order[] = {
+    SFHASH_MD5, SFHASH_SHA_1, SFHASH_MD5, SFHASH_MD5
+  };
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_open(
+    "123",
+    "abc",
+    record_order,
+    sizeof(record_order),
+    &err
+  ));
+
+  REQUIRE(err);
+}
+

@@ -14,6 +14,7 @@
 #include <map>
 #include <numeric>
 #include <ostream>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -559,19 +560,23 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_build_open(
   size_t record_order_length,
   SFHASH_Error** err)
 {
-  std::vector<HashInfo> hash_infos;
+  std::set<HashInfo> hash_infos;
 
   try {
     check_strlen(hashset_name, "hashset_name");
     check_strlen(hashset_desc, "hashset_desc");
 
-// TODO: check that record order does not contain duplicates
-
-// TODO: would be nice to do this in-place with some sort of range adapter
+    THROW_IF(
+      record_order_length == 0,
+      "record_order_length == 0, but there must be at least one record type"
+    );
 
     for (size_t i = 0; i < record_order_length; ++i) {
       try {
-        hash_infos.push_back(HASH_INFO.at(record_order[i]));
+        THROW_IF(
+          !hash_infos.emplace(HASH_INFO.at(record_order[i])).second,
+          "duplicate hash type " << std::to_string(record_order[i])
+        );
       }
       catch (const std::out_of_range&) {
         throw std::runtime_error(
@@ -589,7 +594,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_build_open(
     hashset_name,
     hashset_desc,
     make_timestamp(),
-    std::move(hash_infos),
+    { hash_infos.begin(), hash_infos.end() },
     {}
   };
 }
