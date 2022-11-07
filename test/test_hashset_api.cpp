@@ -203,6 +203,7 @@ TEST_CASE("hashset_record_field_index_for_type") {
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_SIZE) == 0);
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_MD5) == 9);
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_SHA_1) == 26);
+  CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_BLAKE3) == -1);
 }
 
 TEST_CASE("hashset_record_field") {
