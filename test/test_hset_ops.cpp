@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-TEST_CASE("union_records_empty_sets") {
+TEST_CASE("setops_empty_sets") {
   const RecordHeader arhdr{
     38,
     0,
@@ -37,19 +37,37 @@ TEST_CASE("union_records_empty_sets") {
 
   const RecordData brdat{ nullptr, nullptr };
 
-  const auto [ab_u, ab_otypes] = union_op(arhdr, ardat, brhdr, brdat);
-  const auto [ba_u, ba_otypes] = union_op(brhdr, brdat, arhdr, ardat);
+  const auto [aub, aub_otypes] = union_op(arhdr, ardat, brhdr, brdat);
+  const auto [bua, bua_otypes] = union_op(brhdr, brdat, arhdr, ardat);
 
-  const decltype(ab_otypes) exp_otypes = { SFHASH_MD5, SFHASH_SHA_1 };
+  const auto [anb, anb_otypes] = intersect_op(arhdr, ardat, brhdr, brdat);
+  const auto [bna, bna_otypes] = intersect_op(brhdr, brdat, arhdr, ardat);
 
-  const decltype(ab_u) exp_u = {
+  const auto [a_b, a_b_otypes] = intersect_op(arhdr, ardat, brhdr, brdat);
+  const auto [b_a, b_a_otypes] = intersect_op(brhdr, brdat, arhdr, ardat);
+
+  const decltype(aub_otypes) exp_otypes = { SFHASH_MD5, SFHASH_SHA_1 };
+
+  const decltype(aub) exp = {
   };
 
-  CHECK(ab_otypes == exp_otypes);
-  CHECK(ab_u == exp_u);
+  CHECK(aub_otypes == exp_otypes);
+  CHECK(aub == exp);
 
-  CHECK(ba_otypes == exp_otypes);
-  CHECK(ba_u == exp_u);
+  CHECK(bua_otypes == exp_otypes);
+  CHECK(bua == exp);
+
+  CHECK(anb_otypes == exp_otypes);
+  CHECK(anb == exp);
+
+  CHECK(bna_otypes == exp_otypes);
+  CHECK(bna == exp);
+
+  CHECK(a_b_otypes == exp_otypes);
+  CHECK(a_b == exp);
+
+  CHECK(b_a_otypes == exp_otypes);
+  CHECK(b_a == exp);
 }
 
 TEST_CASE("union_records_one_empty_operand") {
@@ -114,8 +132,7 @@ TEST_CASE("union_records_one_empty_operand") {
   CHECK(ba_u == exp_u);
 }
 
-TEST_CASE("union_records_self") {
-
+TEST_CASE("setops_self") {
   const RecordHeader arhdr{
     38,
     1,
@@ -137,11 +154,13 @@ TEST_CASE("union_records_self") {
 
   const RecordData ardat{ abuf, abuf + sizeof(abuf) };
 
-  const auto [aa_u, aa_otypes] = union_op(arhdr, ardat, arhdr, ardat);
+  const auto [aua, aua_otypes] = union_op(arhdr, ardat, arhdr, ardat);
+  const auto [ana, ana_otypes] = intersect_op(arhdr, ardat, arhdr, ardat);
+  const auto [a_a, a_a_otypes] = difference_op(arhdr, ardat, arhdr, ardat);
 
-  const decltype(aa_otypes) exp_otypes = { SFHASH_MD5, SFHASH_SHA_1 };
+  const decltype(aua_otypes) exp_otypes = { SFHASH_MD5, SFHASH_SHA_1 };
 
-  const decltype(aa_u) exp_u = {
+  const decltype(aua) exp_aua = {
     {
       0x01,
       0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
@@ -153,8 +172,29 @@ TEST_CASE("union_records_self") {
     }
   };
 
-  CHECK(aa_otypes == exp_otypes);
-  CHECK(aa_u == exp_u);
+  const decltype(ana) exp_ana = {
+    {
+      0x01,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+      0x01, 0x23, 0x45, 0x67
+    }
+  };
+
+  const decltype(a_a) exp_a_a = {
+  };
+
+  CHECK(aua_otypes == exp_otypes);
+  CHECK(aua == exp_aua);
+
+  CHECK(ana_otypes == exp_otypes);
+  CHECK(ana == exp_ana);
+
+  CHECK(a_a_otypes == exp_otypes);
+  CHECK(a_a == exp_a_a);
 }
 
 TEST_CASE("union_records_nonempty_nonequal") {
