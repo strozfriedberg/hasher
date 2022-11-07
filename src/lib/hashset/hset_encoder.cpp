@@ -543,7 +543,7 @@ std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   return ts;
 }
 
-SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
+SFHASH_HashsetBuildCtx* sfhash_hashset_build_open(
   const char* hashset_name,
   const char* hashset_desc,
   const SFHASH_HashAlgorithm* record_order,
@@ -576,7 +576,7 @@ SFHASH_HashsetBuildCtx* sfhash_save_hashset_open(
   };
 }
 
-void sfhash_add_hashset_record(
+void sfhash_hashset_build_add_record(
   SFHASH_HashsetBuildCtx* bctx,
   const void* record)
 {
@@ -596,7 +596,7 @@ void sfhash_add_hashset_record(
   bctx->records.push_back(std::move(rec));
 }
 
-size_t sfhash_save_hashset_size(const SFHASH_HashsetBuildCtx* bctx) {
+size_t sfhash_hashset_build_required_size(const SFHASH_HashsetBuildCtx* bctx) {
   return length_hset(
     bctx->hashset_name,
     bctx->hashset_desc,
@@ -606,7 +606,7 @@ size_t sfhash_save_hashset_size(const SFHASH_HashsetBuildCtx* bctx) {
   );
 }
 
-size_t sfhash_save_hashset_close(
+size_t sfhash_hashset_build_write(
   SFHASH_HashsetBuildCtx* bctx,
   void* outp,
   SFHASH_Error** err)
@@ -682,7 +682,7 @@ size_t sfhash_save_hashset_close(
   return out - beg;
 }
 
-void sfhash_save_hashset_destroy(SFHASH_HashsetBuildCtx* bctx) {
+void sfhash_hashset_build_destroy(SFHASH_HashsetBuildCtx* bctx) {
   delete bctx;
 }
 
@@ -712,14 +712,14 @@ size_t write_hashset(
 {
   SFHASH_Error* err = nullptr;
   auto bctx = make_unique_del(
-    sfhash_save_hashset_open(
+    sfhash_hashset_build_open(
       hashset_name,
       hashset_desc,
       htypes,
       htypes_len,
       &err
     ),
-    sfhash_save_hashset_destroy
+    sfhash_hashset_build_destroy
   );
 
 // TODO: check err
@@ -753,12 +753,12 @@ size_t write_hashset(
     bctx->records.push_back(std::move(rec));
   }
 
-  const auto hset_size = sfhash_save_hashset_size(bctx.get());
+  const auto hset_size = sfhash_hashset_build_required_size(bctx.get());
   out.resize(hset_size);
 
 //  std::cerr << "buf.size() == " << buf.size() << std::endl;
 
-  const auto wlen = sfhash_save_hashset_close(
+  const auto wlen = sfhash_hashset_build_write(
     bctx.get(),
     out.data(),
     &err

@@ -114,14 +114,14 @@ TEST_CASE("hset_union_round_trip") {
   SFHASH_Error* err = nullptr;
 
   auto hctx = make_unique_del(
-    sfhash_union_hashsets_open(
+    sfhash_hashset_build_union_open(
       ha.get(),
       hb.get(),
       "c",
       "a union b",
       &err
     ),
-    sfhash_save_hashset_destroy
+    sfhash_hashset_build_destroy
   );
 
   CHECK(!err);
@@ -131,10 +131,10 @@ TEST_CASE("hset_union_round_trip") {
 
   REQUIRE(hctx);
 
-  std::vector<char> bufc(sfhash_save_hashset_size(hctx.get()));
+  std::vector<char> bufc(sfhash_hashset_build_required_size(hctx.get()));
 
 //  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
-  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err);
+  sfhash_hashset_build_write(hctx.get(), bufc.data(), &err);
 
   CHECK(!err);
   if (err) {
@@ -214,14 +214,14 @@ TEST_CASE("hset_intersection_round_trip") {
   SFHASH_Error* err = nullptr;
 
   auto hctx = make_unique_del(
-    sfhash_intersect_hashsets_open(
+    sfhash_hashset_build_intersect_open(
       ha.get(),
       hb.get(),
       "c",
       "a intersect b",
       &err
     ),
-    sfhash_save_hashset_destroy
+    sfhash_hashset_build_destroy
   );
 
   CHECK(!err);
@@ -231,10 +231,10 @@ TEST_CASE("hset_intersection_round_trip") {
 
   REQUIRE(hctx);
 
-  std::vector<char> bufc(sfhash_save_hashset_size(hctx.get()));
+  std::vector<char> bufc(sfhash_hashset_build_required_size(hctx.get()));
 
 //  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
-  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err);
+  sfhash_hashset_build_write(hctx.get(), bufc.data(), &err);
 
   CHECK(!err);
   if (err) {
@@ -297,7 +297,7 @@ TEST_CASE("hset_intersection_round_trip") {
   REQUIRE(cr == ce);
 }
 
-TEST_CASE("hset_subtraction_round_trip") {
+TEST_CASE("hset_difference_round_trip") {
 
   auto [bufa, ha] = read_hset("test/md5_sha1_a", { SFHASH_MD5, SFHASH_SHA_1 });
   auto [bufb, hb] = read_hset("test/md5_sha1_b", { SFHASH_MD5, SFHASH_SHA_1 });
@@ -308,14 +308,14 @@ TEST_CASE("hset_subtraction_round_trip") {
   SFHASH_Error* err = nullptr;
 
   auto hctx = make_unique_del(
-    sfhash_subtract_hashsets_open(
+    sfhash_hashset_build_subtract_open(
       ha.get(),
       hb.get(),
       "c",
       "a minus b",
       &err
     ),
-    sfhash_save_hashset_destroy
+    sfhash_hashset_build_destroy
   );
 
   CHECK(!err);
@@ -325,10 +325,10 @@ TEST_CASE("hset_subtraction_round_trip") {
 
   REQUIRE(hctx);
 
-  std::vector<char> bufc(sfhash_save_hashset_size(hctx.get()));
+  std::vector<char> bufc(sfhash_hashset_build_required_size(hctx.get()));
 
 //  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
-  sfhash_save_hashset_close(hctx.get(), bufc.data(), &err);
+  sfhash_hashset_build_write(hctx.get(), bufc.data(), &err);
 
   CHECK(!err);
   if (err) {
