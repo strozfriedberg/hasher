@@ -127,7 +127,6 @@ test_test_SOURCES = \
 	test/test_hasher.cpp \
 	test/test_hashset_api.cpp \
 	test/test_hashsetdata_util.cpp \
-	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
 	test/test_hset_decoder.cpp \
 	test/test_hset_encoder.cpp \
