@@ -550,3 +550,156 @@ TEST_CASE("hashset_build_open_duplicate_types") {
   REQUIRE(err);
 }
 
+// TODO: build -> builder
+// destroy -> free
+
+TEST_CASE("hashset_build_open_ok") {
+  const SFHASH_HashAlgorithm record_order[] = {
+    SFHASH_MD5, SFHASH_SHA_1
+  };
+
+  SFHASH_Error* err = nullptr;
+
+  const auto hctx = make_unique_del(
+    sfhash_hashset_build_open(
+      "123",
+      "abc",
+      record_order,
+      std::size(record_order),
+      &err
+    ),
+    sfhash_hashset_build_destroy
+  );
+
+  CHECK(!err);
+
+  if (err) {
+    FAIL(err->message);
+  }
+
+  REQUIRE(hctx);
+
+  const std::vector<HashInfo> exp_hash_infos = {
+    { SFHASH_MD5, "md5", 16 },
+    { SFHASH_SHA_1, "sha1", 20 }
+  };
+
+  CHECK(hctx->hashset_name == "123");
+  CHECK(hctx->hashset_desc == "abc");
+  CHECK(hctx->timestamp == ""); // no timestamp yet
+  CHECK(hctx->hash_infos == exp_hash_infos);
+}
+
+TEST_CASE("hashset_build_union_open_overlong_name") {
+  SFHASH_Hashset l;
+  SFHASH_Hashset r;
+
+  const std::string longname(65536, 'x');
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_union_open(
+    &l,
+    &r,
+    longname.c_str(),
+    "123",
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
+TEST_CASE("hashset_build_union_open_overlong_desc") {
+  SFHASH_Hashset l;
+  SFHASH_Hashset r;
+
+  const std::string longdesc(65536, 'x');
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_union_open(
+    &l,
+    &r,
+    "123",
+    longdesc.c_str(),
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
+TEST_CASE("hashset_build_intersect_open_overlong_name") {
+  SFHASH_Hashset l;
+  SFHASH_Hashset r;
+
+  const std::string longname(65536, 'x');
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_intersect_open(
+    &l,
+    &r,
+    longname.c_str(),
+    "123",
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
+TEST_CASE("hashset_build_intersect_open_overlong_desc") {
+  SFHASH_Hashset l;
+  SFHASH_Hashset r;
+
+  const std::string longdesc(65536, 'x');
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_intersect_open(
+    &l,
+    &r,
+    "123",
+    longdesc.c_str(),
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
+TEST_CASE("hashset_build_subtract_open_overlong_name") {
+  SFHASH_Hashset l;
+  SFHASH_Hashset r;
+
+  const std::string longname(65536, 'x');
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_subtract_open(
+    &l,
+    &r,
+    longname.c_str(),
+    "123",
+    &err
+  ));
+
+  REQUIRE(err);
+}
+
+TEST_CASE("hashset_build_subtract_open_overlong_desc") {
+  SFHASH_Hashset l;
+  SFHASH_Hashset r;
+
+  const std::string longdesc(65536, 'x');
+
+  SFHASH_Error* err = nullptr;
+
+  CHECK(!sfhash_hashset_build_subtract_open(
+    &l,
+    &r,
+    "123",
+    longdesc.c_str(),
+    &err
+  ));
+
+  REQUIRE(err);
+}
