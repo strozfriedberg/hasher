@@ -14,6 +14,7 @@
 #include <array>
 #include <cstring>
 #include <initializer_list>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <utility>
@@ -492,7 +493,7 @@ TEST_CASE("hashset_build_open_overlong_name") {
     longname.c_str(),
     "123",
     record_order,
-    sizeof(record_order),
+    std::size(record_order),
     &err
   ));
 
@@ -509,7 +510,7 @@ TEST_CASE("hashset_build_open_overlong_desc") {
     "123",
     longdesc.c_str(),
     record_order,
-    sizeof(record_order),
+    std::size(record_order),
     &err
   ));
 
@@ -542,7 +543,7 @@ TEST_CASE("hashset_build_open_duplicate_types") {
     "123",
     "abc",
     record_order,
-    sizeof(record_order),
+    std::size(record_order),
     &err
   ));
 
