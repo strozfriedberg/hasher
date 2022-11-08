@@ -491,14 +491,18 @@ TEST_CASE("hashset_build_open_overlong_name") {
 
   SFHASH_Error* err = nullptr;
 
-  CHECK(!sfhash_hashset_build_open(
-    longname.c_str(),
-    "123",
-    record_order,
-    std::size(record_order),
-    &err
-  ));
+  const auto hctx = make_unique_del(
+    sfhash_hashset_build_open(
+      longname.c_str(),
+      "123",
+      record_order,
+      std::size(record_order),
+      &err
+    ),
+    sfhash_hashset_build_destroy
+  );
 
+  CHECK(!hctx);
   REQUIRE(err);
 }
 
@@ -508,28 +512,36 @@ TEST_CASE("hashset_build_open_overlong_desc") {
 
   SFHASH_Error* err = nullptr;
 
-  CHECK(!sfhash_hashset_build_open(
-    "123",
-    longdesc.c_str(),
-    record_order,
-    std::size(record_order),
-    &err
-  ));
+  const auto hctx = make_unique_del(
+    sfhash_hashset_build_open(
+      "123",
+      longdesc.c_str(),
+      record_order,
+      std::size(record_order),
+      &err
+    ),
+    sfhash_hashset_build_destroy
+  );
 
+  CHECK(!hctx);
   REQUIRE(err);
 }
 
 TEST_CASE("hashset_build_open_no_record_types") {
   SFHASH_Error* err = nullptr;
 
-  CHECK(!sfhash_hashset_build_open(
-    "123",
-    "abc",
-    nullptr,
-    0,
-    &err
-  ));
+  const auto hctx = make_unique_del(
+    sfhash_hashset_build_open(
+      "123",
+      "abc",
+      nullptr,
+      0,
+      &err
+    ),
+    sfhash_hashset_build_destroy
+  );
 
+  CHECK(!hctx);
   REQUIRE(err);
 }
 
@@ -541,14 +553,18 @@ TEST_CASE("hashset_build_open_duplicate_types") {
 
   SFHASH_Error* err = nullptr;
 
-  CHECK(!sfhash_hashset_build_open(
-    "123",
-    "abc",
-    record_order,
-    std::size(record_order),
-    &err
-  ));
+  const auto hctx = make_unique_del(
+    sfhash_hashset_build_open(
+      "123",
+      "abc",
+      record_order,
+      std::size(record_order),
+      &err
+    ),
+    sfhash_hashset_build_destroy
+  );
 
+  CHECK(!hctx);
   REQUIRE(err);
 }
 
@@ -608,14 +624,18 @@ TEST_CASE("hashset_build_setop_open_overlong_name") {
 
   for (const auto& [func, name]: tests) {
     DYNAMIC_SECTION(name) {
-      CHECK(!func(
-        &l,
-        &r,
-        longname.c_str(),
-        "123",
-        &err
-      ));
+      const auto hctx = make_unique_del(
+        func(
+          &l,
+          &r,
+          longname.c_str(),
+          "123",
+          &err
+        ),
+        sfhash_hashset_build_destroy
+      );
 
+      CHECK(!hctx);
       REQUIRE(err);
 
       sfhash_free_error(err);
@@ -640,14 +660,18 @@ TEST_CASE("hashset_build_setop_open_overlong_desc") {
 
   for (const auto& [func, name]: tests) {
     DYNAMIC_SECTION(name) {
-      CHECK(!func(
-        &l,
-        &r,
-        "123",
-        longdesc.c_str(),
-        &err
-      ));
+      const auto hctx = make_unique_del(
+        func(
+          &l,
+          &r,
+          "123",
+          longdesc.c_str(),
+          &err
+        ),
+        sfhash_hashset_build_destroy
+      );
 
+      CHECK(!hctx);
       REQUIRE(err);
 
       sfhash_free_error(err);
@@ -673,14 +697,18 @@ TEST_CASE("hashset_build_setop_open_field_mismatch") {
 
   for (const auto& [func, name]: tests) {
     DYNAMIC_SECTION(name) {
-      CHECK(!func(
-        &l,
-        &r,
-        "123",
-        "abc",
-        &err
-      ));
+      const auto hctx = make_unique_del(
+        func(
+          &l,
+          &r,
+          "123",
+          "abc",
+          &err
+        ),
+        sfhash_hashset_build_destroy
+      );
 
+      CHECK(!hctx);
       REQUIRE(err);
 
       sfhash_free_error(err);
