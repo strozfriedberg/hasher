@@ -229,3 +229,5 @@ size_t write_ftoc(
   const std::vector<std::pair<uint64_t, std::string>>& toc,
   char* out
 );
+
+void check_strlen(const char* s, const char* sname);

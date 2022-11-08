@@ -590,7 +590,7 @@ TEST_CASE("hashset_build_open_ok") {
   CHECK(hctx->hash_infos == exp_hash_infos);
 }
 
-TEST_CASE("hashset_build_union_open_overlong_name") {
+TEST_CASE("hashset_build_setop_open_overlong_name") {
   SFHASH_Hashset l;
   SFHASH_Hashset r;
 
@@ -598,18 +598,31 @@ TEST_CASE("hashset_build_union_open_overlong_name") {
 
   SFHASH_Error* err = nullptr;
 
-  CHECK(!sfhash_hashset_build_union_open(
-    &l,
-    &r,
-    longname.c_str(),
-    "123",
-    &err
-  ));
+  const auto tests = {
+    std::make_pair(sfhash_hashset_build_union_open, "union"),
+    std::make_pair(sfhash_hashset_build_intersect_open, "intersection"),
+    std::make_pair(sfhash_hashset_build_subtract_open, "difference")
+  };
 
-  REQUIRE(err);
+  for (const auto& [func, name]: tests) {
+    DYNAMIC_SECTION(name) {
+      CHECK(!func(
+        &l,
+        &r,
+        longname.c_str(),
+        "123",
+        &err
+      ));
+
+      REQUIRE(err);
+
+      sfhash_free_error(err);
+      err = nullptr;
+    }
+  }
 }
 
-TEST_CASE("hashset_build_union_open_overlong_desc") {
+TEST_CASE("hashset_build_setop_open_overlong_desc") {
   SFHASH_Hashset l;
   SFHASH_Hashset r;
 
@@ -617,89 +630,59 @@ TEST_CASE("hashset_build_union_open_overlong_desc") {
 
   SFHASH_Error* err = nullptr;
 
-  CHECK(!sfhash_hashset_build_union_open(
-    &l,
-    &r,
-    "123",
-    longdesc.c_str(),
-    &err
-  ));
+  const auto tests = {
+    std::make_pair(sfhash_hashset_build_union_open, "union"),
+    std::make_pair(sfhash_hashset_build_intersect_open, "intersection"),
+    std::make_pair(sfhash_hashset_build_subtract_open, "difference")
+  };
 
-  REQUIRE(err);
+  for (const auto& [func, name]: tests) {
+    DYNAMIC_SECTION(name) {
+      CHECK(!func(
+        &l,
+        &r,
+        "123",
+        longdesc.c_str(),
+        &err
+      ));
+
+      REQUIRE(err);
+
+      sfhash_free_error(err);
+      err = nullptr;
+    }
+  }
 }
 
-TEST_CASE("hashset_build_intersect_open_overlong_name") {
+TEST_CASE("hashset_build_setop_open_field_mismatch") {
   SFHASH_Hashset l;
-  SFHASH_Hashset r;
+  l.holder.rhdr = RecordHeader{ 17, 1, { {SFHASH_MD5, "MD5", 16} } };
 
-  const std::string longname(65536, 'x');
+  SFHASH_Hashset r;
+  r.holder.rhdr = RecordHeader{ 17, 1, { {SFHASH_SHA_1, "SHA-1", 20} } };
 
   SFHASH_Error* err = nullptr;
 
-  CHECK(!sfhash_hashset_build_intersect_open(
-    &l,
-    &r,
-    longname.c_str(),
-    "123",
-    &err
-  ));
+  const auto tests = {
+    std::make_pair(sfhash_hashset_build_union_open, "union"),
+    std::make_pair(sfhash_hashset_build_intersect_open, "intersection"),
+    std::make_pair(sfhash_hashset_build_subtract_open, "difference")
+  };
 
-  REQUIRE(err);
-}
+  for (const auto& [func, name]: tests) {
+    DYNAMIC_SECTION(name) {
+      CHECK(!func(
+        &l,
+        &r,
+        "123",
+        "abc",
+        &err
+      ));
 
-TEST_CASE("hashset_build_intersect_open_overlong_desc") {
-  SFHASH_Hashset l;
-  SFHASH_Hashset r;
+      REQUIRE(err);
 
-  const std::string longdesc(65536, 'x');
-
-  SFHASH_Error* err = nullptr;
-
-  CHECK(!sfhash_hashset_build_intersect_open(
-    &l,
-    &r,
-    "123",
-    longdesc.c_str(),
-    &err
-  ));
-
-  REQUIRE(err);
-}
-
-TEST_CASE("hashset_build_subtract_open_overlong_name") {
-  SFHASH_Hashset l;
-  SFHASH_Hashset r;
-
-  const std::string longname(65536, 'x');
-
-  SFHASH_Error* err = nullptr;
-
-  CHECK(!sfhash_hashset_build_subtract_open(
-    &l,
-    &r,
-    longname.c_str(),
-    "123",
-    &err
-  ));
-
-  REQUIRE(err);
-}
-
-TEST_CASE("hashset_build_subtract_open_overlong_desc") {
-  SFHASH_Hashset l;
-  SFHASH_Hashset r;
-
-  const std::string longdesc(65536, 'x');
-
-  SFHASH_Error* err = nullptr;
-
-  CHECK(!sfhash_hashset_build_subtract_open(
-    &l,
-    &r,
-    "123",
-    longdesc.c_str(),
-    &err
-  ));
-
-  REQUIRE(err);
+      sfhash_free_error(err);
+      err = nullptr;
+    }
+  }
 }

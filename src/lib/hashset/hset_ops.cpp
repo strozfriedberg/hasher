@@ -1,4 +1,5 @@
 #include "error.h"
+#include "hset_encoder.h"
 #include "util.h"
 #include "hasher/hashset.h"
 #include "hashset/hset.h"
@@ -103,6 +104,9 @@ SFHASH_HashsetBuildCtx* setop_open(
   SFHASH_Error** err)
 {
   try {
+    check_strlen(result_hashset_name, "result_hashset_name");
+    check_strlen(result_hashset_desc, "result_hashset_desc");
+
     const auto [u, htypes] = op(
       l->holder.rhdr,
       l->holder.rdat,
