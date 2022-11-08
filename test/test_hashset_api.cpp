@@ -485,67 +485,67 @@ TEST_CASE("hashset_record_lookup") {
 
 // { 1, "test", "2022-10-05T12:05:35Z", "a test" }
 
-TEST_CASE("hashset_build_open_overlong_name") {
+TEST_CASE("hashset_builder_open_overlong_name") {
   const std::string longname(65536, 'x');
   const SFHASH_HashAlgorithm record_order[] = { SFHASH_MD5 };
 
   SFHASH_Error* err = nullptr;
 
   const auto hctx = make_unique_del(
-    sfhash_hashset_build_open(
+    sfhash_hashset_builder_open(
       longname.c_str(),
       "123",
       record_order,
       std::size(record_order),
       &err
     ),
-    sfhash_hashset_build_destroy
+    sfhash_hashset_builder_destroy
   );
 
   CHECK(!hctx);
   REQUIRE(err);
 }
 
-TEST_CASE("hashset_build_open_overlong_desc") {
+TEST_CASE("hashset_builder_open_overlong_desc") {
   const std::string longdesc(65536, 'x');
   const SFHASH_HashAlgorithm record_order[] = { SFHASH_MD5 };
 
   SFHASH_Error* err = nullptr;
 
   const auto hctx = make_unique_del(
-    sfhash_hashset_build_open(
+    sfhash_hashset_builder_open(
       "123",
       longdesc.c_str(),
       record_order,
       std::size(record_order),
       &err
     ),
-    sfhash_hashset_build_destroy
+    sfhash_hashset_builder_destroy
   );
 
   CHECK(!hctx);
   REQUIRE(err);
 }
 
-TEST_CASE("hashset_build_open_no_record_types") {
+TEST_CASE("hashset_builder_open_no_record_types") {
   SFHASH_Error* err = nullptr;
 
   const auto hctx = make_unique_del(
-    sfhash_hashset_build_open(
+    sfhash_hashset_builder_open(
       "123",
       "abc",
       nullptr,
       0,
       &err
     ),
-    sfhash_hashset_build_destroy
+    sfhash_hashset_builder_destroy
   );
 
   CHECK(!hctx);
   REQUIRE(err);
 }
 
-TEST_CASE("hashset_build_open_duplicate_types") {
+TEST_CASE("hashset_builder_open_duplicate_types") {
   // MD5, egg, sausage, and MD5 hasn't got much MD5 in it
   const SFHASH_HashAlgorithm record_order[] = {
     SFHASH_MD5, SFHASH_SHA_1, SFHASH_MD5, SFHASH_MD5
@@ -554,24 +554,21 @@ TEST_CASE("hashset_build_open_duplicate_types") {
   SFHASH_Error* err = nullptr;
 
   const auto hctx = make_unique_del(
-    sfhash_hashset_build_open(
+    sfhash_hashset_builder_open(
       "123",
       "abc",
       record_order,
       std::size(record_order),
       &err
     ),
-    sfhash_hashset_build_destroy
+    sfhash_hashset_builder_destroy
   );
 
   CHECK(!hctx);
   REQUIRE(err);
 }
 
-// TODO: build -> builder
-// destroy -> free
-
-TEST_CASE("hashset_build_open_ok") {
+TEST_CASE("hashset_builder_open_ok") {
   const SFHASH_HashAlgorithm record_order[] = {
     SFHASH_MD5, SFHASH_SHA_1
   };
@@ -579,14 +576,14 @@ TEST_CASE("hashset_build_open_ok") {
   SFHASH_Error* err = nullptr;
 
   const auto hctx = make_unique_del(
-    sfhash_hashset_build_open(
+    sfhash_hashset_builder_open(
       "123",
       "abc",
       record_order,
       std::size(record_order),
       &err
     ),
-    sfhash_hashset_build_destroy
+    sfhash_hashset_builder_destroy
   );
 
   CHECK(!err);
@@ -608,7 +605,7 @@ TEST_CASE("hashset_build_open_ok") {
   CHECK(hctx->hash_infos == exp_hash_infos);
 }
 
-TEST_CASE("hashset_build_setop_open_overlong_name") {
+TEST_CASE("hashset_builder_setop_open_overlong_name") {
   SFHASH_Hashset l;
   SFHASH_Hashset r;
 
@@ -617,9 +614,9 @@ TEST_CASE("hashset_build_setop_open_overlong_name") {
   SFHASH_Error* err = nullptr;
 
   const auto tests = {
-    std::make_pair(sfhash_hashset_build_union_open, "union"),
-    std::make_pair(sfhash_hashset_build_intersect_open, "intersection"),
-    std::make_pair(sfhash_hashset_build_subtract_open, "difference")
+    std::make_pair(sfhash_hashset_builder_union_open, "union"),
+    std::make_pair(sfhash_hashset_builder_intersect_open, "intersection"),
+    std::make_pair(sfhash_hashset_builder_subtract_open, "difference")
   };
 
   for (const auto& [func, name]: tests) {
@@ -632,7 +629,7 @@ TEST_CASE("hashset_build_setop_open_overlong_name") {
           "123",
           &err
         ),
-        sfhash_hashset_build_destroy
+        sfhash_hashset_builder_destroy
       );
 
       CHECK(!hctx);
@@ -644,7 +641,7 @@ TEST_CASE("hashset_build_setop_open_overlong_name") {
   }
 }
 
-TEST_CASE("hashset_build_setop_open_overlong_desc") {
+TEST_CASE("hashset_builder_setop_open_overlong_desc") {
   SFHASH_Hashset l;
   SFHASH_Hashset r;
 
@@ -653,9 +650,9 @@ TEST_CASE("hashset_build_setop_open_overlong_desc") {
   SFHASH_Error* err = nullptr;
 
   const auto tests = {
-    std::make_pair(sfhash_hashset_build_union_open, "union"),
-    std::make_pair(sfhash_hashset_build_intersect_open, "intersection"),
-    std::make_pair(sfhash_hashset_build_subtract_open, "difference")
+    std::make_pair(sfhash_hashset_builder_union_open, "union"),
+    std::make_pair(sfhash_hashset_builder_intersect_open, "intersection"),
+    std::make_pair(sfhash_hashset_builder_subtract_open, "difference")
   };
 
   for (const auto& [func, name]: tests) {
@@ -668,7 +665,7 @@ TEST_CASE("hashset_build_setop_open_overlong_desc") {
           longdesc.c_str(),
           &err
         ),
-        sfhash_hashset_build_destroy
+        sfhash_hashset_builder_destroy
       );
 
       CHECK(!hctx);
@@ -680,7 +677,7 @@ TEST_CASE("hashset_build_setop_open_overlong_desc") {
   }
 }
 
-TEST_CASE("hashset_build_setop_open_field_mismatch") {
+TEST_CASE("hashset_builder_setop_open_field_mismatch") {
   SFHASH_Hashset l;
   l.holder.rhdr = RecordHeader{ 17, 1, { {SFHASH_MD5, "MD5", 16} } };
 
@@ -690,9 +687,9 @@ TEST_CASE("hashset_build_setop_open_field_mismatch") {
   SFHASH_Error* err = nullptr;
 
   const auto tests = {
-    std::make_pair(sfhash_hashset_build_union_open, "union"),
-    std::make_pair(sfhash_hashset_build_intersect_open, "intersection"),
-    std::make_pair(sfhash_hashset_build_subtract_open, "difference")
+    std::make_pair(sfhash_hashset_builder_union_open, "union"),
+    std::make_pair(sfhash_hashset_builder_intersect_open, "intersection"),
+    std::make_pair(sfhash_hashset_builder_subtract_open, "difference")
   };
 
   for (const auto& [func, name]: tests) {
@@ -705,7 +702,7 @@ TEST_CASE("hashset_build_setop_open_field_mismatch") {
           "abc",
           &err
         ),
-        sfhash_hashset_build_destroy
+        sfhash_hashset_builder_destroy
       );
 
       CHECK(!hctx);

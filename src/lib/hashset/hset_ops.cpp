@@ -115,14 +115,14 @@ SFHASH_HashsetBuildCtx* setop_open(
     );
 
     auto bctx = make_unique_del(
-      sfhash_hashset_build_open(
+      sfhash_hashset_builder_open(
         result_hashset_name,
         result_hashset_desc,
         htypes.data(),
         htypes.size(),
         err
       ),
-      sfhash_hashset_build_destroy
+      sfhash_hashset_builder_destroy
     );
 
     if (*err) {
@@ -130,7 +130,7 @@ SFHASH_HashsetBuildCtx* setop_open(
     }
 
     for (const auto& r: u) {
-      sfhash_hashset_build_add_record(bctx.get(), r.data());
+      sfhash_hashset_builder_add_record(bctx.get(), r.data());
     }
 
     return bctx.release();
@@ -210,7 +210,7 @@ std::pair<
   );
 }
 
-SFHASH_HashsetBuildCtx* sfhash_hashset_build_union_open(
+SFHASH_HashsetBuildCtx* sfhash_hashset_builder_union_open(
   const SFHASH_Hashset* l,
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
@@ -222,7 +222,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_build_union_open(
   );
 }
 
-SFHASH_HashsetBuildCtx* sfhash_hashset_build_intersect_open(
+SFHASH_HashsetBuildCtx* sfhash_hashset_builder_intersect_open(
   const SFHASH_Hashset* l,
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
@@ -234,7 +234,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_build_intersect_open(
   );
 }
 
-SFHASH_HashsetBuildCtx* sfhash_hashset_build_subtract_open(
+SFHASH_HashsetBuildCtx* sfhash_hashset_builder_subtract_open(
   const SFHASH_Hashset* l,
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
