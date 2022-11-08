@@ -50,6 +50,7 @@ TEST_CASE("load_hashset_nullptr") {
     sfhash_destroy_hashset
   );
 
+  CHECK(!hset);
   REQUIRE(err);
   REQUIRE(err->message);
 }
@@ -64,6 +65,7 @@ TEST_CASE("load_hashset_bad") {
     sfhash_destroy_hashset
   );
 
+  CHECK(!hset);
   REQUIRE(err);
   REQUIRE(err->message);
 }
