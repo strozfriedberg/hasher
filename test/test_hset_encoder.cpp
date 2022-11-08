@@ -154,13 +154,13 @@ TEST_CASE("write_fhdr_data") {
 }
 
 TEST_CASE("length_hhnn") {
-  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20, nullptr};
+  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20};
   CHECK(length_hhnn_data(hi) == 23);
   CHECK(length_hhnn(hi) == 67);
 }
 
 TEST_CASE("write_hhnn_data") {
-  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20 , nullptr};
+  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20};
   const size_t hash_count = 4886718345;
 
   const uint8_t exp[] = {
@@ -271,8 +271,8 @@ TEST_CASE("write_ridx_data") {
 
 TEST_CASE("length_rhdr") {
   const std::vector<HashInfo> hash_infos{
-    {SFHASH_MD5, "MD5", 16, nullptr},
-    {SFHASH_SHA_1, "SHA-1", 20, nullptr}
+    {SFHASH_MD5, "MD5", 16},
+    {SFHASH_SHA_1, "SHA-1", 20}
   };
   CHECK(length_rhdr_data(hash_infos) == 48);
   CHECK(length_rhdr(hash_infos) == 92);
@@ -280,8 +280,8 @@ TEST_CASE("length_rhdr") {
 
 TEST_CASE("write_rhdr_data") {
   const std::vector<HashInfo> hash_infos{
-    {SFHASH_MD5, "MD5", 16, nullptr},
-    {SFHASH_SHA_1, "SHA-1", 20, nullptr}
+    {SFHASH_MD5, "MD5", 16},
+    {SFHASH_SHA_1, "SHA-1", 20}
   };
 
   const uint64_t record_count = 5649426;
@@ -322,8 +322,8 @@ TEST_CASE("write_rhdr_data") {
 
 TEST_CASE("length_rdat") {
   const std::vector<HashInfo> hash_infos{
-    {SFHASH_MD5, "MD5", 16, nullptr},
-    {SFHASH_SHA_1, "SHA-1", 20, nullptr}
+    {SFHASH_MD5, "MD5", 16},
+    {SFHASH_SHA_1, "SHA-1", 20}
   };
   CHECK(length_rdat_data(hash_infos, 87) == 3306);
   CHECK(length_rdat(hash_infos, 87) == 3350);
@@ -331,8 +331,8 @@ TEST_CASE("length_rdat") {
 
 TEST_CASE("write_rdat_data") {
   const std::vector<HashInfo> hash_infos{
-    {SFHASH_MD5, "MD5", 16, nullptr},
-    {SFHASH_SHA_1, "SHA-1", 20, nullptr}
+    {SFHASH_MD5, "MD5", 16},
+    {SFHASH_SHA_1, "SHA-1", 20}
   };
 
   const std::vector<std::vector<std::vector<uint8_t>>> records{

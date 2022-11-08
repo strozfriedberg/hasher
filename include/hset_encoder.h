@@ -15,12 +15,11 @@ struct HashInfo {
   SFHASH_HashAlgorithm type;
   std::string name;
   uint32_t length;
-  void (*conv)(uint8_t* dst, const char* src, size_t dlen);
 
-  bool operator<(const HashInfo& o) const {
-    return std::tie(type, name, length) < std::tie(o.type, o.name, o.length);
-  };
+  auto operator<=>(const HashInfo& o) const = default;
 };
+
+std::ostream& operator<<(std::ostream& out, const HashInfo& hi);
 
 struct SFHASH_HashsetBuildCtx {
   std::string hashset_name;

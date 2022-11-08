@@ -28,19 +28,29 @@
 #include "hashset/util.h"
 #include "hasher/hashset.h"
 
-const std::map<SFHASH_HashAlgorithm, HashInfo> HASH_INFO{
-  { SFHASH_MD5,       HashInfo{SFHASH_MD5, "md5", 16, from_hex } },
-  { SFHASH_SHA_1,     HashInfo{SFHASH_SHA_1, "sha1", 20, from_hex } },
-  { SFHASH_SHA_2_224, HashInfo{SFHASH_SHA_2_224, "sha2_224", 28, from_hex } },
-  { SFHASH_SHA_2_256, HashInfo{SFHASH_SHA_2_256, "sha2_256", 32, from_hex } },
-  { SFHASH_SHA_2_384, HashInfo{SFHASH_SHA_2_384, "sha2_384", 48, from_hex } },
-  { SFHASH_SHA_2_512, HashInfo{SFHASH_SHA_2_512, "sha2_512", 64, from_hex } },
-  { SFHASH_SHA_3_224, HashInfo{SFHASH_SHA_3_224, "sha3_224", 28, from_hex } },
-  { SFHASH_SHA_3_256, HashInfo{SFHASH_SHA_3_256, "sha3_256", 32, from_hex } },
-  { SFHASH_SHA_3_384, HashInfo{SFHASH_SHA_3_384, "sha3_384", 48, from_hex } },
-  { SFHASH_SHA_3_512, HashInfo{SFHASH_SHA_3_512, "sha3_512", 64, from_hex } },
-  { SFHASH_BLAKE3,    HashInfo{SFHASH_BLAKE3, "blake3", 32, from_hex } },
-  { SFHASH_SIZE,      HashInfo{SFHASH_SIZE, "sizes", 8, size_to_u64 } }
+std::ostream& operator<<(std::ostream& out, const HashInfo& hi) {
+  return out << '{' << hi.type << ", " << hi.name << ", " << hi.length << '}';
+}
+
+const std::map<
+  SFHASH_HashAlgorithm,
+  std::pair<
+    HashInfo,
+    void (*)(uint8_t* dst, const char* src, size_t dlen)
+  >
+> HASH_INFO{
+  { SFHASH_MD5,       { HashInfo{SFHASH_MD5, "md5", 16 }, from_hex } },
+  { SFHASH_SHA_1,     { HashInfo{SFHASH_SHA_1, "sha1", 20 }, from_hex } },
+  { SFHASH_SHA_2_224, { HashInfo{SFHASH_SHA_2_224, "sha2_224", 28 }, from_hex } },
+  { SFHASH_SHA_2_256, { HashInfo{SFHASH_SHA_2_256, "sha2_256", 32 }, from_hex } },
+  { SFHASH_SHA_2_384, { HashInfo{SFHASH_SHA_2_384, "sha2_384", 48 }, from_hex } },
+  { SFHASH_SHA_2_512, { HashInfo{SFHASH_SHA_2_512, "sha2_512", 64 }, from_hex } },
+  { SFHASH_SHA_3_224, { HashInfo{SFHASH_SHA_3_224, "sha3_224", 28 }, from_hex } },
+  { SFHASH_SHA_3_256, { HashInfo{SFHASH_SHA_3_256, "sha3_256", 32 }, from_hex } },
+  { SFHASH_SHA_3_384, { HashInfo{SFHASH_SHA_3_384, "sha3_384", 48 }, from_hex } },
+  { SFHASH_SHA_3_512, { HashInfo{SFHASH_SHA_3_512, "sha3_512", 64 }, from_hex } },
+  { SFHASH_BLAKE3,    { HashInfo{SFHASH_BLAKE3, "blake3", 32 }, from_hex } },
+  { SFHASH_SIZE,      { HashInfo{SFHASH_SIZE, "sizes", 8 }, size_to_u64 } }
 };
 
 void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
@@ -574,7 +584,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_build_open(
     for (size_t i = 0; i < record_order_length; ++i) {
       try {
         THROW_IF(
-          !hash_infos.emplace(HASH_INFO.at(record_order[i])).second,
+          !hash_infos.emplace(HASH_INFO.at(record_order[i]).first).second,
           "duplicate hash type " << std::to_string(record_order[i])
         );
       }
@@ -747,6 +757,12 @@ size_t write_hashset(
 
 // TODO: check err
 
+  // collect the converter functions
+  std::vector<void (*)(uint8_t* dst, const char* src, size_t dlen)> conv;
+  for (const auto& hi: bctx->hash_infos) {
+    conv.push_back(HASH_INFO.at(hi.type).second);
+  }
+
   std::string line;
   while (in) {
     std::getline(in, line);
@@ -764,11 +780,12 @@ size_t write_hashset(
         rec.emplace_back();
       }
       else {
-        rec.emplace_back(bctx->hash_infos[i].length, 0);
-        bctx->hash_infos[i].conv(
+        const auto hi_len = bctx->hash_infos[i].length;
+        rec.emplace_back(hi_len, 0);
+        conv[i](
           rec.back().data(),
           cols[i].c_str(),
-          bctx->hash_infos[i].length
+          hi_len
         );
       }
     }
