@@ -7,6 +7,4 @@ curl -O https://virusshare.com/hashfiles/VirusShare_[00000-00389].md5
 
 sed -e '/^#/d' VirusShare_* | sort -u | ./mkhashset.py MD5 'VirusShare 0-389' 'VirusShare 0-389, downloaded 2020-01-21' >virusshare-389.hset
 
-3. Upload the hashset to ~jenkins/vendors/testdata/untracked.
-
-4. Upload to the Windows build workers.
+3. Upload the hashset to the E2E testdata bucket in S3.
