@@ -26,7 +26,7 @@ instream = io.TextIOWrapper(
 # first row is the header, skip it
 instream.readline()
 
-# dump the SHA-1 and size
+# dump the SHA-1, MD5, and size
 reader = csv.reader(instream, delimiter=',', quotechar='"')
 for row in reader:
-    print(row[0], row[4], file=sys.stdout)
+    print(row[0], row[1], row[4], file=sys.stdout)
