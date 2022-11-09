@@ -20,7 +20,7 @@ TEST_CASE("hset_round_trip") {
   const std::string s(f.begin(), f.end());
 
   std::istringstream in(s);
-  std::stringstream out;
+  std::vector<uint8_t> out;
 
   const SFHASH_HashAlgorithm hash_types = SFHASH_SHA_1;
 
@@ -33,12 +33,10 @@ TEST_CASE("hset_round_trip") {
     out
   );
 
-  const std::string buf = out.str();
-
   SFHASH_Error* err = nullptr;
 
   auto hset = make_unique_del(
-    sfhash_load_hashset(buf.c_str(), buf.c_str() + buf.size(), &err),
+    sfhash_load_hashset(out.data(), out.data() + out.size(), &err),
     sfhash_destroy_hashset
   );
 

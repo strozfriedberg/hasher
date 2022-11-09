@@ -35,14 +35,19 @@ int main(int argc, char** argv) {
     htypes.push_back(sfhash_hash_type(argv[i]));
   }
 
+  std::vector<uint8_t> out;
+
+// TODO: handle errors (e.g., bad input)
   const size_t wlen = write_hashset(
     argv[1],
     argv[2],
     htypes.data(),
     htypes.size(),
     std::cin,
-    std::cout
+    out
   );
+
+  std::cout.write(reinterpret_cast<const char*>(out.data()), out.size());
 
   std::cerr << "wrote " << wlen << " bytes\n";
   return 0;

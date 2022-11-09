@@ -38,15 +38,6 @@ size_t write_hashset(
   std::vector<uint8_t>& out
 );
 
-size_t write_hashset(
-  const char* hashset_name,
-  const char* hashset_desc,
-  const SFHASH_HashAlgorithm* htypes,
-  size_t htypes_len,
-  std::istream& in,
-  std::ostream& out
-);
-
 void size_to_u64(uint8_t* dst, const char* src, size_t dlen);
 
 SFHASH_HashValues hash_chunk_data(

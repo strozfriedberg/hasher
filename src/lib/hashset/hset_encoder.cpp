@@ -807,27 +807,3 @@ size_t write_hashset(
   out.resize(wlen);
   return wlen;
 }
-
-size_t write_hashset(
-  const char* hashset_name,
-  const char* hashset_desc,
-  const SFHASH_HashAlgorithm* htypes,
-  size_t htypes_len,
-  std::istream& in,
-  std::ostream& out
-)
-{
-  std::vector<uint8_t> ovec;
-
-  const auto wlen = write_hashset(
-    hashset_name,
-    hashset_desc,
-    htypes,
-    htypes_len,
-    in,
-    ovec
-  );
-
-  out.write(reinterpret_cast<const char*>(ovec.data()), ovec.size());
-  return wlen;
-}
