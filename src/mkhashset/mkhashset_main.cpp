@@ -31,8 +31,13 @@ int main(int argc, char** argv) {
 
   std::vector<SFHASH_HashAlgorithm> htypes;
   for (int i = 3; i < argc; ++i) {
-// TODO: handle errors
-    htypes.push_back(sfhash_hash_type(argv[i]));
+    const SFHASH_HashAlgorithm t = sfhash_hash_type(argv[i]);
+    THROW_IF(
+      t == SFHASH_INVALID,
+      "unrecognized hash type '" << argv[i] << "'"
+    );
+
+    htypes.push_back(t);
   }
 
   std::vector<uint8_t> out;
