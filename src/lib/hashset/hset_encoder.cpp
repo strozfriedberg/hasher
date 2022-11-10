@@ -653,6 +653,16 @@ size_t sfhash_hashset_builder_required_size(const SFHASH_HashsetBuildCtx* bctx) 
   );
 }
 
+void check_toc(auto toc_itr, uint64_t off, uint32_t chunk_type) {
+  THROW_IF(
+    toc_itr->second != chunk_type || off != toc_itr->first,
+    "writing " << printable_chunk_type(chunk_type) <<
+    " at " << off <<
+    ", expected " << printable_chunk_type(toc_itr->second) <<
+    " at " << toc_itr->first
+  );
+}
+
 size_t sfhash_hashset_builder_write(
   SFHASH_HashsetBuildCtx* bctx,
   void* outp,
@@ -660,23 +670,73 @@ size_t sfhash_hashset_builder_write(
 {
   char* out = static_cast<char*>(outp);
 
-
-  TableOfContents toc;
-
   const uint32_t version = 2;
-
-  const char* beg = out;
-
-  // Magic
-  out += write_magic(out);
 
   const auto& [hashset_name, hashset_desc, timestamp, hash_infos, records] = *bctx;
 
   std::sort(bctx->records.begin(), bctx->records.end());
   bctx->records.erase(std::unique(bctx->records.begin(), bctx->records.end()), bctx->records.end());
 
+  // determine where each chunk will go
+  TableOfContents toc;
+
+  uint64_t off = 0;
+
+  off += length_magic();
+
+  toc.entries.emplace_back(off, Chunk::Type::FHDR);
+  off += length_fhdr(hashset_name, hashset_desc, timestamp);
+
+  for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
+    uint64_t hash_count = 0;
+    for (auto ri = 0u; ri < records.size(); ++ri) {
+      if (!records[ri][i].empty()) {
+        ++hash_count;
+      }
+    }
+
+    // HHnn
+    toc.entries.emplace_back(off, make_hhnn_type(hash_infos[i].type));
+    off += length_hhnn(hash_infos[i]);
+
+    // HINT
+    if (hash_infos[i].type != SFHASH_SIZE) {
+      toc.entries.emplace_back(off, Chunk::Type::HINT);
+      off += length_hint();
+    }
+
+    // HDAT
+    off += length_alignment_padding(off, 4096);
+    toc.entries.emplace_back(off, Chunk::Type::HDAT);
+    off += length_hdat(hash_count, hash_infos[i].length);
+
+    // RIDX
+    toc.entries.emplace_back(off, Chunk::Type::RIDX);
+    off += length_ridx(hash_count);
+  }
+
+  // RHDR
+  toc.entries.emplace_back(off, Chunk::Type::RHDR);
+  off += length_rhdr(hash_infos);
+
+  // RDAT
+  toc.entries.emplace_back(off, Chunk::Type::RDAT);
+  off += length_rdat(hash_infos, records.size());
+
+  // FTOC
+  toc.entries.emplace_back(off, Chunk::Type::FTOC);
+  off += length_ftoc(toc.entries.size());
+
+
+  const char* beg = out;
+
+  // Magic
+  out += write_magic(out);
+
+  auto toc_itr = toc.entries.begin();
+
   // FHDR
-  toc.entries.emplace_back(out - beg, Chunk::Type::FHDR);
+  check_toc(toc_itr++, out - beg, Chunk::Type::FHDR);
   out += write_fhdr(version, hashset_name, hashset_desc, timestamp, out);
 
   for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
@@ -697,35 +757,35 @@ size_t sfhash_hashset_builder_write(
     }
 
     // HHnn
-    toc.entries.emplace_back(out - beg, make_hhnn_type(hash_infos[i].type));
+    check_toc(toc_itr++, out - beg, make_hhnn_type(hash_infos[i].type));
     out += write_hhnn(hash_infos[i], hashes.size(), out);
 
     // HINT
     if (hash_infos[i].type != SFHASH_SIZE) {
-      toc.entries.emplace_back(out - beg, Chunk::Type::HINT);
+      check_toc(toc_itr++, out - beg, Chunk::Type::HINT);
       out += write_hint(make_block_bounds<8>(hashes), out);
     }
 
     // HDAT
     out += write_alignment_padding(out - beg, 4096, out);
-    toc.entries.emplace_back(out - beg, Chunk::Type::HDAT);
+    check_toc(toc_itr++, out - beg, Chunk::Type::HDAT);
     out += write_hdat(hashes, out);
 
     // RIDX
-    toc.entries.emplace_back(out - beg, Chunk::Type::RIDX);
+    check_toc(toc_itr++, out - beg, Chunk::Type::RIDX);
     out += write_ridx(ridx, out);
   }
 
   // RHDR
-  toc.entries.emplace_back(out - beg, Chunk::Type::RHDR);
+  check_toc(toc_itr++, out - beg, Chunk::Type::RHDR);
   out += write_rhdr(hash_infos, records.size(), out);
 
   // RDAT
-  toc.entries.emplace_back(out - beg, Chunk::Type::RDAT);
+  check_toc(toc_itr++, out - beg, Chunk::Type::RDAT);
   out += write_rdat(hash_infos, records, out);
 
   // FTOC
-  toc.entries.emplace_back(out - beg, Chunk::Type::FTOC);
+  check_toc(toc_itr++, out - beg, Chunk::Type::FTOC);
   out += write_ftoc(toc, out);
 
   return out - beg;
