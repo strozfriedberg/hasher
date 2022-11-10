@@ -528,12 +528,18 @@ size_t length_hset(
   const std::vector<HashInfo>& hash_infos,
   size_t record_count)
 {
+  size_t chunk_count = 4 + 3 * hash_infos.size();
+
   size_t len = length_magic() +
                length_fhdr(hashset_name, hashset_desc, timestamp);
 
   for (const auto& hi: hash_infos) {
-    len += length_hhnn(hi) +
-           length_hint();
+    len += length_hhnn(hi);
+
+    if (hi.type != SFHASH_SIZE) {
+      len += length_hint();
+      ++chunk_count;
+    }
 
     len += length_alignment_padding(len, 4096);
 
@@ -543,7 +549,7 @@ size_t length_hset(
 
   len += length_rhdr(hash_infos) +
          length_rdat(hash_infos, record_count) +
-         length_ftoc(4 + 4 * hash_infos.size());
+         length_ftoc(chunk_count);
 
   return len;
 }
