@@ -759,42 +759,48 @@ size_t write_hashset(
     sfhash_hashset_builder_destroy
   );
 
-// TODO: check err
+  THROW_IF(err, err->message);
 
   // collect the converter functions
   std::vector<void (*)(uint8_t* dst, const char* src, size_t dlen)> conv;
-  for (const auto& hi: bctx->hash_infos) {
-    conv.push_back(HASH_INFO.at(hi.type).second);
+  for (size_t i = 0; i < htypes_len; ++i) {
+    conv.push_back(HASH_INFO.at(htypes[i]).second);
   }
 
   std::string line;
-  while (in) {
-    std::getline(in, line);
+  for (size_t lineno = 1; in; ++lineno) {
+    try {
+      std::getline(in, line);
 
-    if (line.empty()) {
-      continue;
-    }
-
-    const auto& cols = split(line, ' ');
-
-    std::vector<std::vector<uint8_t>> rec;
-
-    for (size_t i = 0; i < bctx->hash_infos.size(); ++i) {
-      if (cols[i].empty()) {
-        rec.emplace_back();
+      if (line.empty()) {
+        continue;
       }
-      else {
-        const auto hi_len = bctx->hash_infos[i].length;
-        rec.emplace_back(hi_len, 0);
-        conv[i](
-          rec.back().data(),
-          cols[i].c_str(),
-          hi_len
-        );
-      }
-    }
 
-    bctx->records.push_back(std::move(rec));
+      const auto& cols = split(line, ' ');
+
+      std::vector<std::vector<uint8_t>> rec;
+
+      for (size_t i = 0; i < htypes_len; ++i) {
+        if (cols[i].empty()) {
+          rec.emplace_back();
+        }
+        else {
+          const auto hi_len = bctx->hash_infos[i].length;
+          conv[i](
+            rec.emplace_back(hi_len, 0).data(),
+            cols[i].c_str(),
+            hi_len
+          );
+        }
+      }
+
+      bctx->records.push_back(std::move(rec));
+    }
+    catch (const std::exception& e) {
+      throw std::runtime_error(
+        "error parsing line " + std::to_string(lineno) + ": " + e.what()
+      );
+    }
   }
 
   const auto hset_size = sfhash_hashset_builder_required_size(bctx.get());
