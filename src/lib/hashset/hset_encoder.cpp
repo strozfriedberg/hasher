@@ -570,7 +570,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   size_t record_order_length,
   SFHASH_Error** err)
 {
-  std::set<HashInfo> hash_infos;
+  std::vector<HashInfo> hash_infos;
 
   try {
     check_strlen(hashset_name, "hashset_name");
@@ -581,12 +581,16 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
       "record_order_length == 0, but there must be at least one record type"
     );
 
+    std::set<SFHASH_HashAlgorithm> tset;
+
     for (size_t i = 0; i < record_order_length; ++i) {
       try {
         THROW_IF(
-          !hash_infos.emplace(HASH_INFO.at(record_order[i]).first).second,
+          !tset.emplace(record_order[i]).second,
           "duplicate hash type " << std::to_string(record_order[i])
         );
+
+        hash_infos.emplace_back(HASH_INFO.at(record_order[i]).first);
       }
       catch (const std::out_of_range&) {
         throw std::runtime_error(
