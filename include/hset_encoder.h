@@ -7,9 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include "hset_decoder.h"
+#include "rwutil.h"
 #include "hasher/hasher.h"
 #include "hasher/hashset.h"
-#include "rwutil.h"
 
 struct HashInfo {
   SFHASH_HashAlgorithm type;
@@ -212,12 +213,12 @@ size_t length_ftoc_data(size_t chunk_count);
 size_t length_ftoc(size_t chunk_count);
 
 size_t write_ftoc_data(
-  const std::vector<std::pair<uint64_t, std::string>>& toc,
+  const TableOfContents& toc,
   char* out
 );
 
 size_t write_ftoc(
-  const std::vector<std::pair<uint64_t, std::string>>& toc,
+  const TableOfContents& toc,
   char* out
 );
 

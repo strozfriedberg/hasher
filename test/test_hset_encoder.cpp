@@ -397,15 +397,17 @@ TEST_CASE("length_ftoc") {
 }
 
 TEST_CASE("write_ftoc_data") {
-  const std::vector<std::pair<uint64_t, std::string>> toc{
-    { 8, "FHDR" },
-    { 356, { 'H', 'H', 0x00, 0x01 } },
-    { 1089, "HINT" },
-    { 4096, "HDAT" },
-    { 100000, "RIDX" },
-    { 110000, "RHDR" },
-    { 120000, "RDAT" },
-    { 130000, "FTOC" }
+  const TableOfContents toc{
+    {
+      { 8, Chunk::Type::FHDR },
+      { 356, Chunk::Type::HHDR | 0x0001 },
+      { 1089, Chunk::Type::HINT },
+      { 4096, Chunk::Type::HDAT },
+      { 100000, Chunk::Type::RIDX },
+      { 110000, Chunk::Type::RHDR },
+      { 120000, Chunk::Type::RDAT },
+      { 130000, Chunk::Type::FTOC }
+    }
   };
 
   const uint8_t exp[] = {

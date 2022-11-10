@@ -23,6 +23,7 @@
 
 #include "error.h"
 #include "hex.h"
+#include "hset_decoder.h"
 #include "rwutil.h"
 #include "util.h"
 #include "hashset/util.h"
@@ -165,6 +166,10 @@ size_t write_fhdr(
     hashset_desc,
     timestamp
   );
+}
+
+uint32_t make_hhnn_type(uint32_t hash_type) {
+  return Chunk::Type::HHDR | (std::bit_width(hash_type) - 1);
 }
 
 std::string make_hhnn_str(uint32_t hash_type) {
@@ -492,22 +497,21 @@ size_t length_ftoc(size_t chunk_count) {
 }
 
 size_t write_ftoc_data(
-  const std::vector<std::pair<uint64_t, std::string>>& toc,
+  const TableOfContents& toc,
   char* out)
 {
   const char* beg = out;
 
-  for (const auto& [offset, chtype]: toc) {
+  for (const auto& [offset, chtype]: toc.entries) {
     out += write_le<uint64_t>(offset, out);
-// TODO: assert that string is length 4? or make the member a char[4]?
-    out += write_bytes(chtype.c_str(), 4, out);
+    out += write_be<uint32_t>(chtype, out);
   }
 
   return out - beg;
 }
 
 size_t write_ftoc(
-  const std::vector<std::pair<uint64_t, std::string>>& toc,
+  const TableOfContents& toc,
   char* out)
 {
   return write_chunk<write_ftoc_data>(
@@ -650,9 +654,11 @@ size_t sfhash_hashset_builder_write(
 {
   char* out = static_cast<char*>(outp);
 
+
+  TableOfContents toc;
+
   const uint32_t version = 2;
 
-  std::vector<std::pair<uint64_t, std::string>> toc;
   const char* beg = out;
 
   // Magic
@@ -664,7 +670,7 @@ size_t sfhash_hashset_builder_write(
   bctx->records.erase(std::unique(bctx->records.begin(), bctx->records.end()), bctx->records.end());
 
   // FHDR
-  toc.emplace_back(out - beg, "FHDR");
+  toc.entries.emplace_back(out - beg, Chunk::Type::FHDR);
   out += write_fhdr(version, hashset_name, hashset_desc, timestamp, out);
 
   for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
@@ -685,35 +691,35 @@ size_t sfhash_hashset_builder_write(
     }
 
     // HHnn
-    toc.emplace_back(out - beg, make_hhnn_str(hash_infos[i].type));
+    toc.entries.emplace_back(out - beg, make_hhnn_type(hash_infos[i].type));
     out += write_hhnn(hash_infos[i], hashes.size(), out);
 
     // HINT
     if (hash_infos[i].type != SFHASH_SIZE) {
-      toc.emplace_back(out - beg, "HINT");
+      toc.entries.emplace_back(out - beg, Chunk::Type::HINT);
       out += write_hint(make_block_bounds<8>(hashes), out);
     }
 
     // HDAT
     out += write_alignment_padding(out - beg, 4096, out);
-    toc.emplace_back(out - beg, "HDAT");
+    toc.entries.emplace_back(out - beg, Chunk::Type::HDAT);
     out += write_hdat(hashes, out);
 
     // RIDX
-    toc.emplace_back(out - beg, "RIDX");
+    toc.entries.emplace_back(out - beg, Chunk::Type::RIDX);
     out += write_ridx(ridx, out);
   }
 
   // RHDR
-  toc.emplace_back(out - beg, "RHDR");
+  toc.entries.emplace_back(out - beg, Chunk::Type::RHDR);
   out += write_rhdr(hash_infos, records.size(), out);
 
   // RDAT
-  toc.emplace_back(out - beg, "RDAT");
+  toc.entries.emplace_back(out - beg, Chunk::Type::RDAT);
   out += write_rdat(hash_infos, records, out);
 
   // FTOC
-  toc.emplace_back(out - beg, "FTOC");
+  toc.entries.emplace_back(out - beg, Chunk::Type::FTOC);
   out += write_ftoc(toc, out);
 
   return out - beg;
