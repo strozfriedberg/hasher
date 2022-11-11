@@ -668,16 +668,19 @@ size_t sfhash_hashset_builder_write(
   void* outp,
   SFHASH_Error** err)
 {
-  char* out = static_cast<char*>(outp);
-
   const uint32_t version = 2;
 
   const auto& [hashset_name, hashset_desc, timestamp, hash_infos, records, _] = *bctx;
 
+// TODO: records need to be written direclty to output buffer
+
   std::sort(bctx->records.begin(), bctx->records.end());
   bctx->records.erase(std::unique(bctx->records.begin(), bctx->records.end()), bctx->records.end());
 
-  // determine where each chunk will go
+  //
+  // Determine where each chunk will go
+  //
+
   TableOfContents toc;
 
   uint64_t off = 0;
@@ -727,7 +730,11 @@ size_t sfhash_hashset_builder_write(
   toc.entries.emplace_back(off, Chunk::Type::FTOC);
   off += length_ftoc(toc.entries.size());
 
+  //
+  // Write
+  //
 
+  char* out = static_cast<char*>(outp);
   const char* beg = out;
 
   // Magic
