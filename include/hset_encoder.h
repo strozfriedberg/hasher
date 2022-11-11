@@ -24,6 +24,7 @@ std::ostream& operator<<(std::ostream& out, const HashInfo& hi);
 
 struct SFHASH_HashsetBuildCtx {
   FileHeader fhdr;
+  RecordHeader rhdr;
   std::vector<HashInfo> hash_infos;
   std::vector<std::vector<std::vector<uint8_t>>> records;
   void* out;

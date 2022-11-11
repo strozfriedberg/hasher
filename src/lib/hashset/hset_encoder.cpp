@@ -621,6 +621,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
       hashset_desc,
       make_timestamp()
     },
+    {},
     { hash_infos.begin(), hash_infos.end() },
     {}
   };
@@ -671,7 +672,7 @@ size_t sfhash_hashset_builder_write(
   void* outp,
   SFHASH_Error** err)
 {
-  const auto& [fhdr, hash_infos, records, _] = *bctx;
+  const auto& [fhdr, rhdr, hash_infos, records, _] = *bctx;
 
 // TODO: records need to be written direclty to output buffer
 
