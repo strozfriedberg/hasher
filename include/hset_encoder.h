@@ -12,20 +12,9 @@
 #include "hasher/hashset.h"
 #include "hashset/hset_structs.h"
 
-struct HashInfo {
-  SFHASH_HashAlgorithm type;
-  std::string name;
-  uint32_t length;
-
-  auto operator<=>(const HashInfo& o) const = default;
-};
-
-std::ostream& operator<<(std::ostream& out, const HashInfo& hi);
-
 struct SFHASH_HashsetBuildCtx {
   FileHeader fhdr;
   RecordHeader rhdr;
-  std::vector<HashInfo> hash_infos;
   std::vector<std::vector<std::vector<uint8_t>>> records;
   void* out;
 };
@@ -105,21 +94,21 @@ size_t write_fhdr(
 );
 
 size_t length_hhnn_data(
-  const HashInfo& hi
+  const RecordFieldDescriptor& hi
 );
 
 size_t length_hhnn(
-  const HashInfo& hi
+  const RecordFieldDescriptor& hi
 );
 
 size_t write_hhnn_data(
-  const HashInfo& hi,
+  const RecordFieldDescriptor& hi,
   size_t hash_count,
   char* out
 );
 
 size_t write_hhnn(
-  const HashInfo& hi,
+  const RecordFieldDescriptor& hi,
   size_t hash_count,
   char* out
 );
@@ -167,43 +156,43 @@ size_t write_ridx(
 );
 
 size_t length_rhdr_data(
-  const std::vector<HashInfo>& hash_infos
+  const std::vector<RecordFieldDescriptor>& fields 
 );
 
 size_t length_rhdr(
-  const std::vector<HashInfo>& hash_infos
+  const std::vector<RecordFieldDescriptor>& fields 
 );
 
 size_t write_rhdr_data(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   uint64_t record_count,
   char* out
 );
 
 size_t write_rhdr(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   uint64_t record_count,
   char* out
 );
 
 size_t length_rdat_data(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   size_t record_count
 );
 
 size_t length_rdat(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   size_t record_count
 );
 
 size_t write_rdat_data(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   const std::vector<std::vector<std::vector<uint8_t>>>& records,
   char* out
 );
 
 size_t write_rdat(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   const std::vector<std::vector<std::vector<uint8_t>>>& records,
   char* out
 );

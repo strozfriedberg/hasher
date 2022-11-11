@@ -29,29 +29,25 @@
 #include "hashset/util.h"
 #include "hasher/hashset.h"
 
-std::ostream& operator<<(std::ostream& out, const HashInfo& hi) {
-  return out << '{' << hi.type << ", " << hi.name << ", " << hi.length << '}';
-}
-
 const std::map<
   SFHASH_HashAlgorithm,
   std::pair<
-    HashInfo,
+    RecordFieldDescriptor,
     void (*)(uint8_t* dst, const char* src, size_t dlen)
   >
-> HASH_INFO{
-  { SFHASH_MD5,       { HashInfo{SFHASH_MD5, "md5", 16 }, from_hex } },
-  { SFHASH_SHA_1,     { HashInfo{SFHASH_SHA_1, "sha1", 20 }, from_hex } },
-  { SFHASH_SHA_2_224, { HashInfo{SFHASH_SHA_2_224, "sha2_224", 28 }, from_hex } },
-  { SFHASH_SHA_2_256, { HashInfo{SFHASH_SHA_2_256, "sha2_256", 32 }, from_hex } },
-  { SFHASH_SHA_2_384, { HashInfo{SFHASH_SHA_2_384, "sha2_384", 48 }, from_hex } },
-  { SFHASH_SHA_2_512, { HashInfo{SFHASH_SHA_2_512, "sha2_512", 64 }, from_hex } },
-  { SFHASH_SHA_3_224, { HashInfo{SFHASH_SHA_3_224, "sha3_224", 28 }, from_hex } },
-  { SFHASH_SHA_3_256, { HashInfo{SFHASH_SHA_3_256, "sha3_256", 32 }, from_hex } },
-  { SFHASH_SHA_3_384, { HashInfo{SFHASH_SHA_3_384, "sha3_384", 48 }, from_hex } },
-  { SFHASH_SHA_3_512, { HashInfo{SFHASH_SHA_3_512, "sha3_512", 64 }, from_hex } },
-  { SFHASH_BLAKE3,    { HashInfo{SFHASH_BLAKE3, "blake3", 32 }, from_hex } },
-  { SFHASH_SIZE,      { HashInfo{SFHASH_SIZE, "sizes", 8 }, size_to_u64 } }
+> FIELDS{
+  { SFHASH_MD5,       { RecordFieldDescriptor{SFHASH_MD5, "md5", 16 }, from_hex } },
+  { SFHASH_SHA_1,     { RecordFieldDescriptor{SFHASH_SHA_1, "sha1", 20 }, from_hex } },
+  { SFHASH_SHA_2_224, { RecordFieldDescriptor{SFHASH_SHA_2_224, "sha2_224", 28 }, from_hex } },
+  { SFHASH_SHA_2_256, { RecordFieldDescriptor{SFHASH_SHA_2_256, "sha2_256", 32 }, from_hex } },
+  { SFHASH_SHA_2_384, { RecordFieldDescriptor{SFHASH_SHA_2_384, "sha2_384", 48 }, from_hex } },
+  { SFHASH_SHA_2_512, { RecordFieldDescriptor{SFHASH_SHA_2_512, "sha2_512", 64 }, from_hex } },
+  { SFHASH_SHA_3_224, { RecordFieldDescriptor{SFHASH_SHA_3_224, "sha3_224", 28 }, from_hex } },
+  { SFHASH_SHA_3_256, { RecordFieldDescriptor{SFHASH_SHA_3_256, "sha3_256", 32 }, from_hex } },
+  { SFHASH_SHA_3_384, { RecordFieldDescriptor{SFHASH_SHA_3_384, "sha3_384", 48 }, from_hex } },
+  { SFHASH_SHA_3_512, { RecordFieldDescriptor{SFHASH_SHA_3_512, "sha3_512", 64 }, from_hex } },
+  { SFHASH_BLAKE3,    { RecordFieldDescriptor{SFHASH_BLAKE3, "blake3", 32 }, from_hex } },
+  { SFHASH_SIZE,      { RecordFieldDescriptor{SFHASH_SIZE, "sizes", 8 }, size_to_u64 } }
 };
 
 void size_to_u64(uint8_t* dst, const char* src, size_t /* dlen */) {
@@ -184,7 +180,7 @@ std::string make_hhnn_str(uint32_t hash_type) {
 }
 
 size_t length_hhnn_data(
-  const HashInfo& hi)
+  const RecordFieldDescriptor& hi)
 {
   return 2 + // hi.name length
          hi.name.size() +
@@ -193,13 +189,13 @@ size_t length_hhnn_data(
 }
 
 size_t length_hhnn(
-  const HashInfo& hi)
+  const RecordFieldDescriptor& hi)
 {
   return length_chunk<length_hhnn_data>(hi);
 }
 
 size_t write_hhnn_data(
-  const HashInfo& hi,
+  const RecordFieldDescriptor& hi,
   size_t hash_count,
   char* out)
 {
@@ -213,7 +209,7 @@ size_t write_hhnn_data(
 }
 
 size_t write_hhnn(
-  const HashInfo& hi,
+  const RecordFieldDescriptor& hi,
   size_t hash_count,
   char* out)
 {
@@ -364,14 +360,14 @@ size_t write_ridx(
 }
 
 size_t length_rhdr_data(
-  const std::vector<HashInfo>& hash_infos)
+  const std::vector<RecordFieldDescriptor>& fields)
 {
   return 8 + // record length
          8 + // record count
          std::accumulate(
-           hash_infos.begin(), hash_infos.end(),
+           fields.begin(), fields.end(),
            0,
-           [](size_t a, const HashInfo& hi) {
+           [](size_t a, const RecordFieldDescriptor& hi) {
              return a +
                     2 + // hi.type
                     2 + // hi.name length
@@ -382,13 +378,13 @@ size_t length_rhdr_data(
 }
 
 size_t length_rhdr(
-  const std::vector<HashInfo>& hash_infos)
+  const std::vector<RecordFieldDescriptor>& fields)
 {
-  return length_chunk<length_rhdr_data>(hash_infos);
+  return length_chunk<length_rhdr_data>(fields);
 }
 
 size_t write_rhdr_data(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   uint64_t record_count,
   char* out)
 {
@@ -397,9 +393,9 @@ size_t write_rhdr_data(
   // record length
   out += write_le<uint64_t>(
     std::accumulate(
-      hash_infos.begin(), hash_infos.end(),
+      fields.begin(), fields.end(),
       0,
-      [](uint64_t a, const HashInfo& hi) {
+      [](uint64_t a, const RecordFieldDescriptor& hi) {
         return a + 1 + hi.length;
       }
     ),
@@ -408,7 +404,7 @@ size_t write_rhdr_data(
 
   out += write_le<uint64_t>(record_count, out);
 
-  for (const auto& hi: hash_infos) {
+  for (const auto& hi: fields) {
     out += write_le<uint16_t>(std::bit_width(static_cast<uint32_t>(hi.type)) - 1, out);
     out += write_pstring(hi.name, out);
     out += write_le<uint64_t>(hi.length, out);
@@ -418,40 +414,40 @@ size_t write_rhdr_data(
 }
 
 size_t write_rhdr(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   uint64_t record_count,
   char* out)
 {
   return write_chunk<write_rhdr_data>(
     out,
     "RHDR",
-    hash_infos,
+    fields,
     record_count
   );
 }
 
 size_t length_rdat_data(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   size_t record_count)
 {
   return record_count * std::accumulate(
-           hash_infos.begin(), hash_infos.end(),
+           fields.begin(), fields.end(),
            0,
-           [](size_t a, const HashInfo& hi) {
+           [](size_t a, const RecordFieldDescriptor& hi) {
              return a + 1 + hi.length;
            }
          );
 }
 
 size_t length_rdat(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   size_t record_count)
 {
-  return length_chunk<length_rdat_data>(hash_infos, record_count);
+  return length_chunk<length_rdat_data>(fields, record_count);
 }
 
 size_t write_rdat_data(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   const std::vector<std::vector<std::vector<uint8_t>>>& records,
   char* out)
 {
@@ -460,7 +456,7 @@ size_t write_rdat_data(
   for (const auto& record: records) {
     for (size_t i = 0; i < record.size(); ++i) {
       if (record[i].empty()) {
-        out += write_byte(1 + hash_infos[i].length, 0, out);
+        out += write_byte(1 + fields[i].length, 0, out);
       }
       else {
         out += write_byte(1, 1, out);
@@ -473,14 +469,14 @@ size_t write_rdat_data(
 }
 
 size_t write_rdat(
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   const std::vector<std::vector<std::vector<uint8_t>>>& records,
   char* out)
 {
   return write_chunk<write_rdat_data>(
     out,
     "RDAT",
-    hash_infos,
+    fields, 
     records
   );
 }
@@ -525,15 +521,15 @@ size_t length_hset(
   const std::string& hashset_name,
   const std::string& hashset_desc,
   const std::string& timestamp,
-  const std::vector<HashInfo>& hash_infos,
+  const std::vector<RecordFieldDescriptor>& fields,
   size_t record_count)
 {
-  size_t chunk_count = 4 + 3 * hash_infos.size();
+  size_t chunk_count = 4 + 3 * fields.size();
 
   size_t len = length_magic() +
                length_fhdr(hashset_name, hashset_desc, timestamp);
 
-  for (const auto& hi: hash_infos) {
+  for (const auto& hi: fields) {
     len += length_hhnn(hi);
 
     if (hi.type != SFHASH_SIZE) {
@@ -547,8 +543,8 @@ size_t length_hset(
            length_ridx(record_count);
   }
 
-  len += length_rhdr(hash_infos) +
-         length_rdat(hash_infos, record_count) +
+  len += length_rhdr(fields) +
+         length_rdat(fields, record_count) +
          length_ftoc(chunk_count);
 
   return len;
@@ -581,7 +577,6 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   SFHASH_Error** err)
 {
   RecordHeader rhdr;
-  std::vector<HashInfo> hash_infos;
 
   try {
     check_strlen(hashset_name, "hashset_name");
@@ -594,6 +589,8 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
 
     std::set<SFHASH_HashAlgorithm> tset;
 
+    rhdr.record_length = 0;
+
     for (size_t i = 0; i < record_order_length; ++i) {
       try {
         THROW_IF(
@@ -601,10 +598,9 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
           "duplicate hash type " << std::to_string(record_order[i])
         );
 
-        const auto& hi =  hash_infos.emplace_back(HASH_INFO.at(record_order[i]).first);
-
+        const auto& hi = FIELDS.at(record_order[i]).first;
+        rhdr.fields.emplace_back(hi);
         rhdr.record_length += 1 + hi.length;
-        rhdr.fields.emplace_back(hi.type, hi.name, hi.length);
       }
       catch (const std::out_of_range&) {
         throw std::runtime_error(
@@ -626,7 +622,6 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
       make_timestamp()
     },
     std::move(rhdr),
-    { hash_infos.begin(), hash_infos.end() },
     {},
     nullptr
   };
@@ -639,7 +634,7 @@ void sfhash_hashset_builder_add_record(
   std::vector<std::vector<uint8_t>> rec;
 
   const uint8_t* ri = static_cast<const uint8_t*>(record);
-  for (const auto& hi: bctx->hash_infos) {
+  for (const auto& hi: bctx->rhdr.fields) {
     if (*ri) {
       rec.emplace_back(ri + 1, ri + 1 + hi.length);
     }
@@ -657,7 +652,7 @@ size_t sfhash_hashset_builder_required_size(const SFHASH_HashsetBuildCtx* bctx) 
     bctx->fhdr.name,
     bctx->fhdr.desc,
     bctx->fhdr.time,
-    bctx->hash_infos,
+    bctx->rhdr.fields,
     bctx->records.size()
   );
 }
@@ -677,7 +672,8 @@ size_t sfhash_hashset_builder_write(
   void* outp,
   SFHASH_Error** err)
 {
-  const auto& [fhdr, rhdr, hash_infos, records, _] = *bctx;
+  const auto& [fhdr, rhdr, records, _] = *bctx;
+  const auto& fields = rhdr.fields;
 
 // TODO: records need to be written direclty to output buffer
 
@@ -697,7 +693,7 @@ size_t sfhash_hashset_builder_write(
   toc.entries.emplace_back(off, Chunk::Type::FHDR);
   off += length_fhdr(fhdr.name, fhdr.desc, fhdr.time);
 
-  for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
+  for (auto i = 0u; i < fields.size(); ++i) {
     uint64_t hash_count = 0;
     for (auto ri = 0u; ri < records.size(); ++ri) {
       if (!records[ri][i].empty()) {
@@ -706,11 +702,11 @@ size_t sfhash_hashset_builder_write(
     }
 
     // HHnn
-    toc.entries.emplace_back(off, make_hhnn_type(hash_infos[i].type));
-    off += length_hhnn(hash_infos[i]);
+    toc.entries.emplace_back(off, make_hhnn_type(fields[i].type));
+    off += length_hhnn(fields[i]);
 
     // HINT
-    if (hash_infos[i].type != SFHASH_SIZE) {
+    if (fields[i].type != SFHASH_SIZE) {
       toc.entries.emplace_back(off, Chunk::Type::HINT);
       off += length_hint();
     }
@@ -718,7 +714,7 @@ size_t sfhash_hashset_builder_write(
     // HDAT
     off += length_alignment_padding(off, 4096);
     toc.entries.emplace_back(off, Chunk::Type::HDAT);
-    off += length_hdat(hash_count, hash_infos[i].length);
+    off += length_hdat(hash_count, fields[i].length);
 
     // RIDX
     toc.entries.emplace_back(off, Chunk::Type::RIDX);
@@ -727,11 +723,11 @@ size_t sfhash_hashset_builder_write(
 
   // RHDR
   toc.entries.emplace_back(off, Chunk::Type::RHDR);
-  off += length_rhdr(hash_infos);
+  off += length_rhdr(fields);
 
   // RDAT
   toc.entries.emplace_back(off, Chunk::Type::RDAT);
-  off += length_rdat(hash_infos, records.size());
+  off += length_rdat(fields, records.size());
 
   // FTOC
   toc.entries.emplace_back(off, Chunk::Type::FTOC);
@@ -753,7 +749,7 @@ size_t sfhash_hashset_builder_write(
   check_toc(toc_itr++, out - beg, Chunk::Type::FHDR);
   out += write_fhdr(fhdr.version, fhdr.name, fhdr.desc, fhdr.time, out);
 
-  for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
+  for (auto i = 0u; i < fields.size(); ++i) {
     std::vector<std::pair<std::vector<uint8_t>, size_t>> recs;
     for (auto ri = 0u; ri < records.size(); ++ri) {
       if (!records[ri][i].empty()) {
@@ -771,11 +767,11 @@ size_t sfhash_hashset_builder_write(
     }
 
     // HHnn
-    check_toc(toc_itr++, out - beg, make_hhnn_type(hash_infos[i].type));
-    out += write_hhnn(hash_infos[i], hashes.size(), out);
+    check_toc(toc_itr++, out - beg, make_hhnn_type(fields[i].type));
+    out += write_hhnn(fields[i], hashes.size(), out);
 
     // HINT
-    if (hash_infos[i].type != SFHASH_SIZE) {
+    if (fields[i].type != SFHASH_SIZE) {
       check_toc(toc_itr++, out - beg, Chunk::Type::HINT);
       out += write_hint(make_block_bounds<8>(hashes), out);
     }
@@ -792,11 +788,11 @@ size_t sfhash_hashset_builder_write(
 
   // RHDR
   check_toc(toc_itr++, out - beg, Chunk::Type::RHDR);
-  out += write_rhdr(hash_infos, records.size(), out);
+  out += write_rhdr(fields, records.size(), out);
 
   // RDAT
   check_toc(toc_itr++, out - beg, Chunk::Type::RDAT);
-  out += write_rdat(hash_infos, records, out);
+  out += write_rdat(fields, records, out);
 
   // FTOC
   check_toc(toc_itr++, out - beg, Chunk::Type::FTOC);
@@ -850,7 +846,7 @@ size_t write_hashset(
   // collect the converter functions
   std::vector<void (*)(uint8_t* dst, const char* src, size_t dlen)> conv;
   for (size_t i = 0; i < htypes_len; ++i) {
-    conv.push_back(HASH_INFO.at(htypes[i]).second);
+    conv.push_back(FIELDS.at(htypes[i]).second);
   }
 
   std::string line;
@@ -871,7 +867,7 @@ size_t write_hashset(
           rec.emplace_back();
         }
         else {
-          const auto hi_len = bctx->hash_infos[i].length;
+          const auto hi_len = bctx->rhdr.fields[i].length;
           conv[i](
             rec.emplace_back(hi_len, 0).data(),
             cols[i].c_str(),

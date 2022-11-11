@@ -154,13 +154,13 @@ TEST_CASE("write_fhdr_data") {
 }
 
 TEST_CASE("length_hhnn") {
-  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20};
+  const RecordFieldDescriptor hi{SFHASH_SHA_1, "SHA-1", 20};
   CHECK(length_hhnn_data(hi) == 23);
   CHECK(length_hhnn(hi) == 67);
 }
 
 TEST_CASE("write_hhnn_data") {
-  const HashInfo hi{SFHASH_SHA_1, "SHA-1", 20};
+  const RecordFieldDescriptor hi{SFHASH_SHA_1, "SHA-1", 20};
   const size_t hash_count = 4886718345;
 
   const uint8_t exp[] = {
@@ -270,16 +270,16 @@ TEST_CASE("write_ridx_data") {
 }
 
 TEST_CASE("length_rhdr") {
-  const std::vector<HashInfo> hash_infos{
+  const std::vector<RecordFieldDescriptor> fields{
     {SFHASH_MD5, "MD5", 16},
     {SFHASH_SHA_1, "SHA-1", 20}
   };
-  CHECK(length_rhdr_data(hash_infos) == 48);
-  CHECK(length_rhdr(hash_infos) == 92);
+  CHECK(length_rhdr_data(fields) == 48);
+  CHECK(length_rhdr(fields) == 92);
 }
 
 TEST_CASE("write_rhdr_data") {
-  const std::vector<HashInfo> hash_infos{
+  const std::vector<RecordFieldDescriptor> fields{
     {SFHASH_MD5, "MD5", 16},
     {SFHASH_SHA_1, "SHA-1", 20}
   };
@@ -316,21 +316,21 @@ TEST_CASE("write_rhdr_data") {
   };
 
   chunk_data_tester<write_rhdr_data>(
-    std::span{exp}, hash_infos, record_count
+    std::span{exp}, fields, record_count
   );
 }
 
 TEST_CASE("length_rdat") {
-  const std::vector<HashInfo> hash_infos{
+  const std::vector<RecordFieldDescriptor> fields{
     {SFHASH_MD5, "MD5", 16},
     {SFHASH_SHA_1, "SHA-1", 20}
   };
-  CHECK(length_rdat_data(hash_infos, 87) == 3306);
-  CHECK(length_rdat(hash_infos, 87) == 3350);
+  CHECK(length_rdat_data(fields, 87) == 3306);
+  CHECK(length_rdat(fields, 87) == 3350);
 }
 
 TEST_CASE("write_rdat_data") {
-  const std::vector<HashInfo> hash_infos{
+  const std::vector<RecordFieldDescriptor> fields{
     {SFHASH_MD5, "MD5", 16},
     {SFHASH_SHA_1, "SHA-1", 20}
   };
@@ -387,7 +387,7 @@ TEST_CASE("write_rdat_data") {
   };
 
   chunk_data_tester<write_rdat_data>(
-    std::span{exp}, hash_infos, records
+    std::span{exp}, fields, records
   );
 }
 

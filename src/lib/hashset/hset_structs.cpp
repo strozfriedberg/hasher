@@ -47,9 +47,9 @@ std::ostream& operator<<(std::ostream& out, const RecordIndex& ridx) {
 
 std::ostream& operator<<(std::ostream& out, const RecordFieldDescriptor& rfd) {
   return out << "RFD\n"
-             << ' ' << rfd.hash_type << '\n'
-             << ' ' << rfd.hash_name << '\n'
-             << ' ' << rfd.hash_length;
+             << ' ' << rfd.type << '\n'
+             << ' ' << rfd.name << '\n'
+             << ' ' << rfd.length;
 }
 
 std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr) {

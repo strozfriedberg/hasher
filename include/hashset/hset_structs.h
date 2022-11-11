@@ -73,9 +73,9 @@ struct RecordIndex {
 std::ostream& operator<<(std::ostream& out, const RecordIndex& ridx);
 
 struct RecordFieldDescriptor {
-  uint32_t hash_type;
-  std::string hash_name;
-  uint64_t hash_length;
+  uint32_t type;
+  std::string name;
+  uint64_t length;
 
   bool operator==(const RecordFieldDescriptor&) const = default;
 };

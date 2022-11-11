@@ -12,8 +12,8 @@
 void collect_hash_types(const auto& fields, auto& types) {
   for (const auto& rfd: fields) {
     types.emplace(
-      static_cast<SFHASH_HashAlgorithm>(rfd.hash_type),
-      rfd.hash_length
+      static_cast<SFHASH_HashAlgorithm>(rfd.type),
+      rfd.length
     );
   }
 }

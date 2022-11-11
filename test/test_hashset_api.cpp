@@ -594,7 +594,7 @@ TEST_CASE("hashset_builder_open_ok") {
 
   REQUIRE(hctx);
 
-  const std::vector<HashInfo> exp_hash_infos = {
+  const std::vector<RecordFieldDescriptor> exp_fields = {
     { SFHASH_MD5, "md5", 16 },
     { SFHASH_SHA_1, "sha1", 20 }
   };
@@ -602,7 +602,8 @@ TEST_CASE("hashset_builder_open_ok") {
   CHECK(hctx->fhdr.name == "123");
   CHECK(hctx->fhdr.desc == "abc");
   CHECK(hctx->fhdr.time == ""); // no timestamp yet
-  CHECK(hctx->hash_infos == exp_hash_infos);
+  CHECK(hctx->rhdr.record_length == 38);
+  CHECK(hctx->rhdr.fields == exp_fields);
 }
 
 TEST_CASE("hashset_builder_setop_open_overlong_name") {

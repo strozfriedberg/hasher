@@ -62,7 +62,7 @@ int hashset_record_field_index_for_type(
     rhdr.fields.begin(),
     rhdr.fields.end(),
     [htype](const auto& rfd) {
-      return htype == rfd.hash_type;
+      return htype == rfd.type;
     }
   );
 
@@ -71,7 +71,7 @@ int hashset_record_field_index_for_type(
     std::accumulate(
       rhdr.fields.begin(), i, 0,
       [](int off, const auto& rfd) {
-        return off + 1 + rfd.hash_length;
+        return off + 1 + rfd.length;
       }
     );
 }
