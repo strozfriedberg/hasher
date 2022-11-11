@@ -621,9 +621,12 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
       hashset_desc,
       make_timestamp()
     },
-    {},
+    {
+
+    },
     { hash_infos.begin(), hash_infos.end() },
-    {}
+    {},
+    nullptr
   };
 }
 
