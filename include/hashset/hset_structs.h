@@ -119,3 +119,5 @@ struct Chunk {
 
   bool operator==(const Chunk&) const = default;
 };
+
+std::string printable_chunk_type(uint32_t type);

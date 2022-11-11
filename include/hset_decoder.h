@@ -69,8 +69,6 @@ RecordHeader parse_rhdr(const Chunk& ch);
 
 RecordData parse_rdat(const Chunk& ch);
 
-std::string printable_chunk_type(uint32_t type);
-
 class TOCIterator {
 public:
   using iterator_category = std::input_iterator_tag;

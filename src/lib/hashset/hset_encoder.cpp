@@ -23,7 +23,6 @@
 
 #include "error.h"
 #include "hex.h"
-#include "hset_decoder.h"
 #include "rwutil.h"
 #include "util.h"
 #include "hashset/util.h"

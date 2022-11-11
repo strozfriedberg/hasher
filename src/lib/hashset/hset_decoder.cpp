@@ -16,18 +16,6 @@
 
 #include <iostream>
 
-std::string printable_chunk_type(uint32_t type) {
-  const uint32_t t = to_be(type);
-  const char* tt = reinterpret_cast<const char*>(&t);
-
-  if (tt[0] == 'H' && tt[1] == 'H') {
-    return "HH " + to_hex(tt + 2, tt + 4);
-  }
-  else {
-    return std::string(tt, tt + 4);
-  }
-}
-
 std::ostream& operator<<(std::ostream& out, const Chunk& ch) {
   return out << printable_chunk_type(ch.type)
              << " ["
