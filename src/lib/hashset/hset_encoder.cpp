@@ -580,6 +580,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   size_t record_order_length,
   SFHASH_Error** err)
 {
+  RecordHeader rhdr;
   std::vector<HashInfo> hash_infos;
 
   try {
@@ -600,7 +601,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
           "duplicate hash type " << std::to_string(record_order[i])
         );
 
-        hash_infos.emplace_back(HASH_INFO.at(record_order[i]).first);
+        const auto& hi =  hash_infos.emplace_back(HASH_INFO.at(record_order[i]).first);
+
+        rhdr.record_length += 1 + hi.length;
+        rhdr.fields.emplace_back(hi.type, hi.name, hi.length);
       }
       catch (const std::out_of_range&) {
         throw std::runtime_error(
@@ -621,9 +625,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
       hashset_desc,
       make_timestamp()
     },
-    {
-
-    },
+    std::move(rhdr),
     { hash_infos.begin(), hash_infos.end() },
     {},
     nullptr
