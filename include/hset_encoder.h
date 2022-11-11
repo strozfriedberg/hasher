@@ -7,10 +7,10 @@
 #include <utility>
 #include <vector>
 
-#include "hset_decoder.h"
 #include "rwutil.h"
 #include "hasher/hasher.h"
 #include "hasher/hashset.h"
+#include "hashset/hset_structs.h"
 
 struct HashInfo {
   SFHASH_HashAlgorithm type;
