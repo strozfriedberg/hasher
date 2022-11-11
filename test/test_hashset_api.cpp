@@ -599,9 +599,9 @@ TEST_CASE("hashset_builder_open_ok") {
     { SFHASH_SHA_1, "sha1", 20 }
   };
 
-  CHECK(hctx->hashset_name == "123");
-  CHECK(hctx->hashset_desc == "abc");
-  CHECK(hctx->timestamp == ""); // no timestamp yet
+  CHECK(hctx->fhdr.name == "123");
+  CHECK(hctx->fhdr.desc == "abc");
+  CHECK(hctx->fhdr.time == ""); // no timestamp yet
   CHECK(hctx->hash_infos == exp_hash_infos);
 }
 

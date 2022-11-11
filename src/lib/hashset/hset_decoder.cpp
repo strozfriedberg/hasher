@@ -27,9 +27,9 @@ std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc) {
 std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
   return out << "FHDR\n"
              << ' ' << fhdr.version << '\n'
-             << ' ' << fhdr.hashset_name << '\n'
-             << ' ' << fhdr.hashset_time << '\n'
-             << ' ' << fhdr.hashset_desc;
+             << ' ' << fhdr.name << '\n'
+             << ' ' << fhdr.desc << '\n'
+             << ' ' << fhdr.time;
 }
 
 std::ostream& operator<<(std::ostream& out, const HashsetHeader& hhdr) {

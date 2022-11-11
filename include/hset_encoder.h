@@ -23,9 +23,7 @@ struct HashInfo {
 std::ostream& operator<<(std::ostream& out, const HashInfo& hi);
 
 struct SFHASH_HashsetBuildCtx {
-  std::string hashset_name;
-  std::string hashset_desc;
-  std::string timestamp;
+  FileHeader fhdr;
   std::vector<HashInfo> hash_infos;
   std::vector<std::vector<std::vector<uint8_t>>> records;
   void* out;

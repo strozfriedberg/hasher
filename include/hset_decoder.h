@@ -23,9 +23,9 @@ std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc);
 
 struct FileHeader {
   uint64_t version;
-  std::string hashset_name;
-  std::string hashset_time;
-  std::string hashset_desc;
+  std::string name;
+  std::string desc;
+  std::string time;
 
   bool operator==(const FileHeader&) const = default;
 };

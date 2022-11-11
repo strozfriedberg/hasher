@@ -615,9 +615,12 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   }
 
   return new SFHASH_HashsetBuildCtx{
-    hashset_name,
-    hashset_desc,
-    make_timestamp(),
+    FileHeader{
+      2,
+      hashset_name,
+      hashset_desc,
+      make_timestamp()
+    },
     { hash_infos.begin(), hash_infos.end() },
     {}
   };
@@ -645,9 +648,9 @@ void sfhash_hashset_builder_add_record(
 
 size_t sfhash_hashset_builder_required_size(const SFHASH_HashsetBuildCtx* bctx) {
   return length_hset(
-    bctx->hashset_name,
-    bctx->hashset_desc,
-    bctx->timestamp,
+    bctx->fhdr.name,
+    bctx->fhdr.desc,
+    bctx->fhdr.time,
     bctx->hash_infos,
     bctx->records.size()
   );
@@ -668,9 +671,7 @@ size_t sfhash_hashset_builder_write(
   void* outp,
   SFHASH_Error** err)
 {
-  const uint32_t version = 2;
-
-  const auto& [hashset_name, hashset_desc, timestamp, hash_infos, records, _] = *bctx;
+  const auto& [fhdr, hash_infos, records, _] = *bctx;
 
 // TODO: records need to be written direclty to output buffer
 
@@ -688,7 +689,7 @@ size_t sfhash_hashset_builder_write(
   off += length_magic();
 
   toc.entries.emplace_back(off, Chunk::Type::FHDR);
-  off += length_fhdr(hashset_name, hashset_desc, timestamp);
+  off += length_fhdr(fhdr.name, fhdr.desc, fhdr.time);
 
   for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
     uint64_t hash_count = 0;
@@ -744,7 +745,7 @@ size_t sfhash_hashset_builder_write(
 
   // FHDR
   check_toc(toc_itr++, out - beg, Chunk::Type::FHDR);
-  out += write_fhdr(version, hashset_name, hashset_desc, timestamp, out);
+  out += write_fhdr(fhdr.version, fhdr.name, fhdr.desc, fhdr.time, out);
 
   for (auto i = 0u; i < bctx->hash_infos.size(); ++i) {
     std::vector<std::pair<std::vector<uint8_t>, size_t>> recs;
