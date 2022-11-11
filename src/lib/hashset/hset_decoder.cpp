@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <ostream>
+#include <string_view>
 
 #include <iostream>
 
@@ -133,9 +134,9 @@ FileHeader parse_fhdr(const Chunk& ch) {
   const uint8_t* cur = ch.dbeg;
   return {
     read_le<uint64_t>(ch.dbeg, cur, ch.dend),
-    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
-    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
-    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend)
+    read_pstring<std::string>(ch.dbeg, cur, ch.dend),
+    read_pstring<std::string>(ch.dbeg, cur, ch.dend),
+    read_pstring<std::string>(ch.dbeg, cur, ch.dend)
   };
 }
 
@@ -143,7 +144,7 @@ HashsetHeader parse_hhdr(const Chunk& ch) {
   const uint8_t* cur = ch.dbeg;
   return {
     1u << (ch.type & 0x0000FFFF),
-    read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+    read_pstring<std::string>(ch.dbeg, cur, ch.dend),
     read_le<uint64_t>(ch.dbeg, cur, ch.dend),
     read_le<uint64_t>(ch.dbeg, cur, ch.dend)
   };
@@ -162,7 +163,7 @@ RecordHeader parse_rhdr(const Chunk& ch) {
     rhdr.fields.emplace_back(
       RecordFieldDescriptor{
         1u << read_le<uint16_t>(ch.dbeg, cur, ch.dend),
-        read_pstring<std::string_view>(ch.dbeg, cur, ch.dend),
+        read_pstring<std::string>(ch.dbeg, cur, ch.dend),
         read_le<uint64_t>(ch.dbeg, cur, ch.dend)
       }
     );

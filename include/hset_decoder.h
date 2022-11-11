@@ -6,7 +6,6 @@
 #include <iterator>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -24,9 +23,9 @@ std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc);
 
 struct FileHeader {
   uint64_t version;
-  std::string_view hashset_name;
-  std::string_view hashset_time;
-  std::string_view hashset_desc;
+  std::string hashset_name;
+  std::string hashset_time;
+  std::string hashset_desc;
 
   bool operator==(const FileHeader&) const = default;
 };
@@ -35,7 +34,7 @@ std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr);
 
 struct HashsetHeader {
   uint32_t hash_type;
-  std::string_view hash_name;
+  std::string hash_name;
   uint64_t hash_length;
   uint64_t hash_count;
 
@@ -82,7 +81,7 @@ std::ostream& operator<<(std::ostream& out, const RecordIndex& ridx);
 
 struct RecordFieldDescriptor {
   uint32_t hash_type;
-  std::string_view hash_name;
+  std::string hash_name;
   uint64_t hash_length;
 
   bool operator==(const RecordFieldDescriptor&) const = default;
