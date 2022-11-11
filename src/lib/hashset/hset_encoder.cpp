@@ -615,7 +615,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   }
 
   return new SFHASH_HashsetBuildCtx{
-    FileHeader{
+    {
       2,
       hashset_name,
       hashset_desc,
