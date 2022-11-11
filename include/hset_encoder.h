@@ -28,6 +28,7 @@ struct SFHASH_HashsetBuildCtx {
   std::string timestamp;
   std::vector<HashInfo> hash_infos;
   std::vector<std::vector<std::vector<uint8_t>>> records;
+  void* out;
 };
 
 size_t write_hashset(

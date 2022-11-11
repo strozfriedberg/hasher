@@ -672,7 +672,7 @@ size_t sfhash_hashset_builder_write(
 
   const uint32_t version = 2;
 
-  const auto& [hashset_name, hashset_desc, timestamp, hash_infos, records] = *bctx;
+  const auto& [hashset_name, hashset_desc, timestamp, hash_infos, records, _] = *bctx;
 
   std::sort(bctx->records.begin(), bctx->records.end());
   bctx->records.erase(std::unique(bctx->records.begin(), bctx->records.end()), bctx->records.end());
