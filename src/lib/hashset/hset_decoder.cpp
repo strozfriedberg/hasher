@@ -328,7 +328,7 @@ void check_magic(const uint8_t*& i, const uint8_t* end) {
 State::Type handle_fhdr(const Chunk& ch, Holder& h) {
   // INIT -> FHDR
   h.fhdr = parse_fhdr(ch);
-  return State::SBRK;
+  return State::FHDR;
 }
 
 State::Type handle_hhdr(const Chunk& ch, Holder& h) {
@@ -345,19 +345,16 @@ State::Type handle_hhdr(const Chunk& ch, Holder& h) {
 }
 
 State::Type handle_rhdr(const Chunk& ch, Holder& h) {
-  // section break -> RHDR
   h.rhdr = parse_rhdr(ch);
   return State::RHDR;
 }
 
 State::Type handle_ftoc(const Chunk&, Holder&) {
-  // section break -> DONE
   // Nothing to do here, as we've already read the FTOC to drive parsing
-  return State::DONE;
+  return State::FTOC;
 }
 
 State::Type handle_hint(const Chunk& ch, Holder& h) {
-  // HHDR -> HINT
   auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
 
   hnt = parse_hint(ch);
@@ -385,7 +382,6 @@ State::Type handle_hdat(const Chunk& ch, Holder& h) {
 }
 
 State::Type handle_ridx(const Chunk& ch, Holder& h) {
-  // HDAT -> RIDX;
   auto& hset = h.hsets.back();
   const auto& hhdr = std::get<HashsetHeader>(hset);
   auto& ridx = std::get<RecordIndex>(hset);
@@ -397,17 +393,16 @@ State::Type handle_ridx(const Chunk& ch, Holder& h) {
 }
 
 State::Type handle_rdat(const Chunk& ch, Holder& h) {
-  // RHDR -> RDAT;
   check_data_length(ch, h.rhdr.record_count * h.rhdr.record_length);
   h.rdat = parse_rdat(ch);
   return State::SBRK;
 }
 
-TableOfContents read_ftoc_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end) {
-  // read FTOC start offset from the last FTOC entry
-  cur = end - 32 - 4 - 8; // end - SHA256 - chunk type - offset
-  cur = beg + read_le<uint64_t>(beg, cur, end);
+State::Type handle_fend(const Chunk&, Holder&) {
+  return State::DONE;
+}
 
+TableOfContents read_ftoc_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end) {
   // get the FTOC chunk
   const Chunk ch = decode_chunk(beg, cur, end);
 

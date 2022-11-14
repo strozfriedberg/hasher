@@ -475,7 +475,7 @@ size_t write_rdat(
   return write_chunk<write_rdat_data>(
     out,
     "RDAT",
-    fields, 
+    fields,
     records
   );
 }
@@ -516,6 +516,38 @@ size_t write_ftoc(
   );
 }
 
+size_t length_fend_data() {
+  return 0;
+}
+
+size_t length_fend() {
+  return length_chunk<length_fend_data>();
+}
+
+size_t write_fend_data(char*) {
+  return 0;
+}
+
+size_t write_fend(char* out)
+{
+  return write_chunk<write_fend_data>(
+    out,
+    "FEND"
+  );
+}
+
+size_t count_chunks(const std::vector<RecordFieldDescriptor>& fields) {
+  size_t chunk_count = 5 + 3 * fields.size();
+
+  for (const auto& hi: fields) {
+    if (hi.type != SFHASH_SIZE) {
+      ++chunk_count;
+    }
+  }
+
+  return chunk_count;
+}
+
 size_t length_hset(
   const std::string& hashset_name,
   const std::string& hashset_desc,
@@ -523,17 +555,19 @@ size_t length_hset(
   const std::vector<RecordFieldDescriptor>& fields,
   size_t record_count)
 {
-  size_t chunk_count = 4 + 3 * fields.size();
+  size_t chunk_count = count_chunks(fields);
 
   size_t len = length_magic() +
-               length_fhdr(hashset_name, hashset_desc, timestamp);
+               length_ftoc(chunk_count) +
+               length_fhdr(hashset_name, hashset_desc, timestamp) +
+               length_rhdr(fields) +
+               length_rdat(fields, record_count);
 
   for (const auto& hi: fields) {
     len += length_hhnn(hi);
 
     if (hi.type != SFHASH_SIZE) {
       len += length_hint();
-      ++chunk_count;
     }
 
     len += length_alignment_padding(len, 4096);
@@ -542,9 +576,7 @@ size_t length_hset(
            length_ridx(record_count);
   }
 
-  len += length_rhdr(fields) +
-         length_rdat(fields, record_count) +
-         length_ftoc(chunk_count);
+  len += length_fend();
 
   return len;
 }
@@ -689,8 +721,21 @@ size_t sfhash_hashset_builder_write(
 
   off += length_magic();
 
+  // FTOC
+  toc.entries.emplace_back(off, Chunk::Type::FTOC);
+  off += length_ftoc(count_chunks(fields));
+
+  // FHDR
   toc.entries.emplace_back(off, Chunk::Type::FHDR);
   off += length_fhdr(fhdr.name, fhdr.desc, fhdr.time);
+
+  // RHDR
+  toc.entries.emplace_back(off, Chunk::Type::RHDR);
+  off += length_rhdr(fields);
+
+  // RDAT
+  toc.entries.emplace_back(off, Chunk::Type::RDAT);
+  off += length_rdat(fields, records.size());
 
   for (auto i = 0u; i < fields.size(); ++i) {
     uint64_t hash_count = 0;
@@ -720,17 +765,9 @@ size_t sfhash_hashset_builder_write(
     off += length_ridx(hash_count);
   }
 
-  // RHDR
-  toc.entries.emplace_back(off, Chunk::Type::RHDR);
-  off += length_rhdr(fields);
-
-  // RDAT
-  toc.entries.emplace_back(off, Chunk::Type::RDAT);
-  off += length_rdat(fields, records.size());
-
-  // FTOC
-  toc.entries.emplace_back(off, Chunk::Type::FTOC);
-  off += length_ftoc(toc.entries.size());
+  // FEND
+  toc.entries.emplace_back(off, Chunk::Type::FEND);
+  off += length_fend();
 
   //
   // Write
@@ -744,9 +781,21 @@ size_t sfhash_hashset_builder_write(
 
   auto toc_itr = toc.entries.begin();
 
+  // FTOC
+  check_toc(toc_itr++, out - beg, Chunk::Type::FTOC);
+  out += write_ftoc(toc, out);
+
   // FHDR
   check_toc(toc_itr++, out - beg, Chunk::Type::FHDR);
   out += write_fhdr(fhdr.version, fhdr.name, fhdr.desc, fhdr.time, out);
+
+  // RHDR
+  check_toc(toc_itr++, out - beg, Chunk::Type::RHDR);
+  out += write_rhdr(fields, records.size(), out);
+
+  // RDAT
+  check_toc(toc_itr++, out - beg, Chunk::Type::RDAT);
+  out += write_rdat(fields, records, out);
 
   for (auto i = 0u; i < fields.size(); ++i) {
     std::vector<std::pair<std::vector<uint8_t>, size_t>> recs;
@@ -785,17 +834,9 @@ size_t sfhash_hashset_builder_write(
     out += write_ridx(ridx, out);
   }
 
-  // RHDR
-  check_toc(toc_itr++, out - beg, Chunk::Type::RHDR);
-  out += write_rhdr(fields, records.size(), out);
-
-  // RDAT
-  check_toc(toc_itr++, out - beg, Chunk::Type::RDAT);
-  out += write_rdat(fields, records, out);
-
-  // FTOC
-  check_toc(toc_itr++, out - beg, Chunk::Type::FTOC);
-  out += write_ftoc(toc, out);
+  // FEND
+  check_toc(toc_itr++, out - beg, Chunk::Type::FEND);
+  out += write_fend(out);
 
   return out - beg;
 }

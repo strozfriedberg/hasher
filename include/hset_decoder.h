@@ -44,11 +44,14 @@ void check_data_length(const Chunk& ch, uint64_t exp_len);
 struct State {
   enum Type {
     INIT,
+    FTOC,
+    FHDR,
+    RHDR,
+    RDAT,
     SBRK, // section break
     HHDR,
     HINT,
     HDAT,
-    RHDR,
     DONE
   };
 };
@@ -144,6 +147,8 @@ State::Type handle_hdat(const Chunk& ch, Holder& h);
 
 State::Type handle_rdat(const Chunk& ch, Holder& h);
 
+State::Type handle_fend(const Chunk& ch, Holder& h);
+
 class UnexpectedChunkType: public std::exception {
 };
 
@@ -158,8 +163,35 @@ Holder decode_chunks(ChunkIterator ch, ChunkIterator ch_end) {
 
       switch (state) {
       case State::INIT:
+        if (ch->type == Chunk::FTOC) {
+          state = handle_ftoc(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::FTOC:
         if (ch->type == Chunk::FHDR) {
           state = handle_fhdr(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::FHDR:
+        if (ch->type == Chunk::RHDR) {
+          state = handle_rhdr(*ch++, h);
+        }
+        else {
+          throw UnexpectedChunkType();
+        }
+        break;
+
+      case State::RHDR:
+        if (ch->type == Chunk::RDAT) {
+          state = handle_rdat(*ch++, h);
         }
         else {
           throw UnexpectedChunkType();
@@ -170,11 +202,8 @@ Holder decode_chunks(ChunkIterator ch, ChunkIterator ch_end) {
         if ((ch->type & 0xFFFF0000) == Chunk::HHDR) {
           state = handle_hhdr(*ch++, h);
         }
-        else if (ch->type == Chunk::RHDR) {
-          state = handle_rhdr(*ch++, h);
-        }
-        else if (ch->type == Chunk::FTOC) {
-          state = handle_ftoc(*ch++, h);
+        else if (ch->type == Chunk::FEND) {
+          state = handle_fend(*ch++, h);
         }
         else {
           throw UnexpectedChunkType();
@@ -208,15 +237,6 @@ Holder decode_chunks(ChunkIterator ch, ChunkIterator ch_end) {
         }
         else {
           state = State::SBRK;
-        }
-        break;
-
-      case State::RHDR:
-        if (ch->type == Chunk::RDAT) {
-          state = handle_rdat(*ch++, h);
-        }
-        else {
-          throw UnexpectedChunkType();
         }
         break;
       }

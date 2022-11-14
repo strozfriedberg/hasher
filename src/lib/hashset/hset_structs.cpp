@@ -3,12 +3,16 @@
 #include "hex.h"
 #include "rwutil.h"
 
+#include <iomanip>
 #include <ostream>
 
 std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc) {
   out << "FTOC\n";
   for (const auto [off, type]: ftoc.entries) {
-    out << off << ' ' << type << '\n';
+    out << off << ' '
+        << std::hex << std::setw(8) << std::setfill('0')
+        << type
+        << std::dec << std::setw(0) << std::setfill(' ') << '\n';
   }
   return out;
 }

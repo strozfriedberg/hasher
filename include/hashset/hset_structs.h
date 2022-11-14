@@ -103,14 +103,15 @@ std::ostream& operator<<(std::ostream& out, const RecordData& rdat);
 
 struct Chunk {
   enum Type {
-    FHDR = 0x46484452,
     FTOC = 0x46544F43,
-    HDAT = 0x48444154,
+    FHDR = 0x46484452,
+    RHDR = 0x52484452,
+    RDAT = 0x52444154,
     HHDR = 0x48480000,
+    HDAT = 0x48444154,
     HINT = 0x48494E54,
     RIDX = 0x52494458,
-    RHDR = 0x52484452,
-    RDAT = 0x52444154
+    FEND = 0x46454E44
   };
 
   uint32_t type;
