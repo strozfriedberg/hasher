@@ -131,8 +131,10 @@ TEST_CASE("hset_union_round_trip") {
 
   std::vector<char> bufc(sfhash_hashset_builder_required_size(hctx.get()));
 
+  sfhash_hashset_builder_set_output_buffer(hctx.get(), bufc.data());
+
 //  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
-  sfhash_hashset_builder_write(hctx.get(), bufc.data(), &err);
+  sfhash_hashset_builder_write(hctx.get(), &err);
 
   CHECK(!err);
   if (err) {
@@ -231,8 +233,10 @@ TEST_CASE("hset_intersection_round_trip") {
 
   std::vector<char> bufc(sfhash_hashset_builder_required_size(hctx.get()));
 
+  sfhash_hashset_builder_set_output_buffer(hctx.get(), bufc.data());
+
 //  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
-  sfhash_hashset_builder_write(hctx.get(), bufc.data(), &err);
+  sfhash_hashset_builder_write(hctx.get(), &err);
 
   CHECK(!err);
   if (err) {
@@ -325,8 +329,10 @@ TEST_CASE("hset_difference_round_trip") {
 
   std::vector<char> bufc(sfhash_hashset_builder_required_size(hctx.get()));
 
+  sfhash_hashset_builder_set_output_buffer(hctx.get(), bufc.data());
+
 //  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
-  sfhash_hashset_builder_write(hctx.get(), bufc.data(), &err);
+  sfhash_hashset_builder_write(hctx.get(), &err);
 
   CHECK(!err);
   if (err) {

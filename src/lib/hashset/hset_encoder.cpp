@@ -660,6 +660,23 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   };
 }
 
+size_t sfhash_hashset_builder_required_size(const SFHASH_HashsetBuildCtx* bctx) {
+  return length_hset(
+    bctx->fhdr.name,
+    bctx->fhdr.desc,
+    bctx->fhdr.time,
+    bctx->rhdr.fields,
+    bctx->records.size()
+  );
+}
+
+void sfhash_hashset_builder_set_output_buffer(
+  SFHASH_HashsetBuildCtx* bctx,
+  void* out)
+{
+  bctx->out = out;
+}
+
 void sfhash_hashset_builder_add_record(
   SFHASH_HashsetBuildCtx* bctx,
   const void* record)
@@ -680,16 +697,6 @@ void sfhash_hashset_builder_add_record(
   bctx->records.push_back(std::move(rec));
 }
 
-size_t sfhash_hashset_builder_required_size(const SFHASH_HashsetBuildCtx* bctx) {
-  return length_hset(
-    bctx->fhdr.name,
-    bctx->fhdr.desc,
-    bctx->fhdr.time,
-    bctx->rhdr.fields,
-    bctx->records.size()
-  );
-}
-
 void check_toc(auto toc_itr, uint64_t off, uint32_t chunk_type) {
   THROW_IF(
     toc_itr->second != chunk_type || off != toc_itr->first,
@@ -702,7 +709,6 @@ void check_toc(auto toc_itr, uint64_t off, uint32_t chunk_type) {
 
 size_t sfhash_hashset_builder_write(
   SFHASH_HashsetBuildCtx* bctx,
-  void* outp,
   SFHASH_Error** err)
 {
   const auto& [fhdr, rhdr, rdat, records, _] = *bctx;
@@ -775,7 +781,7 @@ size_t sfhash_hashset_builder_write(
   // Write
   //
 
-  char* out = static_cast<char*>(outp);
+  char* out = static_cast<char*>(bctx->out);
   const char* beg = out;
 
   // Magic
@@ -937,13 +943,11 @@ size_t write_hashset(
   const auto hset_size = sfhash_hashset_builder_required_size(bctx.get());
   out.resize(hset_size);
 
+  sfhash_hashset_builder_set_output_buffer(bctx.get(), out.data());
+
 //  std::cerr << "buf.size() == " << buf.size() << std::endl;
 
-  const auto wlen = sfhash_hashset_builder_write(
-    bctx.get(),
-    out.data(),
-    &err
-  );
+  const auto wlen = sfhash_hashset_builder_write(bctx.get(), &err);
 
   out.resize(wlen);
   return wlen;

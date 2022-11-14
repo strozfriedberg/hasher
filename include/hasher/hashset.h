@@ -97,18 +97,22 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   SFHASH_Error** err
 );
 
+size_t sfhash_hashset_builder_required_size(
+  const SFHASH_HashsetBuildCtx* bctx
+);
+
+void sfhash_hashset_builder_set_output_buffer(
+  SFHASH_HashsetBuildCtx* bctx,
+  void* out
+);
+
 void sfhash_hashset_builder_add_record(
   SFHASH_HashsetBuildCtx* bctx,
   const void* record
 );
 
-size_t sfhash_hashset_builder_required_size(
-  const SFHASH_HashsetBuildCtx* bctx
-);
-
 size_t sfhash_hashset_builder_write(
   SFHASH_HashsetBuildCtx* bctx,
-  void* out,
   SFHASH_Error** err
 );
 
