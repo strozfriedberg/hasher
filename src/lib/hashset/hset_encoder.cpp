@@ -646,14 +646,40 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
     return nullptr;
   }
 
+  FileHeader fhdr{
+    2,
+    hashset_name,
+    hashset_desc,
+    make_timestamp()
+  };
+
+  // determination of leading chunk locations
+
+  TableOfContents toc;
+
+  uint64_t off = 0;
+
+  off += length_magic();
+
+  // FTOC
+  toc.entries.emplace_back(off, Chunk::Type::FTOC);
+  off += length_ftoc(count_chunks(rhdr.fields));
+
+  // FHDR
+  toc.entries.emplace_back(off, Chunk::Type::FHDR);
+  off += length_fhdr(fhdr.name, fhdr.desc, fhdr.time);
+
+  // RHDR
+  toc.entries.emplace_back(off, Chunk::Type::RHDR);
+  off += length_rhdr(rhdr.fields);
+
+  // RDAT
+  toc.entries.emplace_back(off, Chunk::Type::RDAT);
+  off += length_rdat(rhdr.fields, record_count);
+
   return new SFHASH_HashsetBuildCtx{
-    {},
-    {
-      2,
-      hashset_name,
-      hashset_desc,
-      make_timestamp()
-    },
+    std::move(toc),
+    std::move(fhdr),
     std::move(rhdr),
     {},
     {},
@@ -715,6 +741,8 @@ size_t sfhash_hashset_builder_write(
   const auto& [ftoc, fhdr, rhdr, rdat, records, _] = *bctx;
   const auto& fields = rhdr.fields;
 
+  auto& toc = bctx->ftoc;
+
 // TODO: records need to be written direclty to output buffer
 
   std::sort(bctx->records.begin(), bctx->records.end());
@@ -724,27 +752,11 @@ size_t sfhash_hashset_builder_write(
   // Determine where each chunk will go
   //
 
-  TableOfContents toc;
-
-  uint64_t off = 0;
-
-  off += length_magic();
-
-  // FTOC
-  toc.entries.emplace_back(off, Chunk::Type::FTOC);
-  off += length_ftoc(count_chunks(fields));
-
-  // FHDR
-  toc.entries.emplace_back(off, Chunk::Type::FHDR);
-  off += length_fhdr(fhdr.name, fhdr.desc, fhdr.time);
-
-  // RHDR
-  toc.entries.emplace_back(off, Chunk::Type::RHDR);
-  off += length_rhdr(fields);
-
-  // RDAT
-  toc.entries.emplace_back(off, Chunk::Type::RDAT);
-  off += length_rdat(fields, records.size());
+  uint64_t off = length_magic() +
+                 length_ftoc(count_chunks(fields)) +
+                 length_fhdr(fhdr.name, fhdr.desc, fhdr.time) +
+                 length_rhdr(fields) +
+                 length_rdat(fields, records.size());
 
   for (auto i = 0u; i < fields.size(); ++i) {
     uint64_t hash_count = 0;
