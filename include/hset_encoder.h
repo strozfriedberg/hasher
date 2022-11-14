@@ -13,6 +13,7 @@
 #include "hashset/hset_structs.h"
 
 struct SFHASH_HashsetBuildCtx {
+  TableOfContents ftoc;
   FileHeader fhdr;
   RecordHeader rhdr;
   RecordData rdat;

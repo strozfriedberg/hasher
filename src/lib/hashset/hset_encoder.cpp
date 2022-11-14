@@ -647,6 +647,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   }
 
   return new SFHASH_HashsetBuildCtx{
+    {},
     {
       2,
       hashset_name,
@@ -711,7 +712,7 @@ size_t sfhash_hashset_builder_write(
   SFHASH_HashsetBuildCtx* bctx,
   SFHASH_Error** err)
 {
-  const auto& [fhdr, rhdr, rdat, records, _] = *bctx;
+  const auto& [ftoc, fhdr, rhdr, rdat, records, _] = *bctx;
   const auto& fields = rhdr.fields;
 
 // TODO: records need to be written direclty to output buffer
