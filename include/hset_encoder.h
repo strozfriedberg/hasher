@@ -15,6 +15,7 @@
 struct SFHASH_HashsetBuildCtx {
   FileHeader fhdr;
   RecordHeader rhdr;
+  RecordData rdat;
   std::vector<std::vector<std::vector<uint8_t>>> records;
   void* out;
 };
