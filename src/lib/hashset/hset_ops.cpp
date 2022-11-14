@@ -101,6 +101,7 @@ SFHASH_HashsetBuildCtx* setop_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
+  size_t record_count,
   SFHASH_Error** err)
 {
   try {
@@ -120,6 +121,7 @@ SFHASH_HashsetBuildCtx* setop_open(
         result_hashset_desc,
         htypes.data(),
         htypes.size(),
+        record_count,
         err
       ),
       sfhash_hashset_builder_destroy
@@ -218,7 +220,12 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_union_open(
   SFHASH_Error** err)
 {
   return setop_open<union_op>(
-    l, r, result_hashset_name, result_hashset_desc, err
+    l,
+    r,
+    result_hashset_name,
+    result_hashset_desc,
+    l->holder.rhdr.record_count + r->holder.rhdr.record_count,
+    err
   );
 }
 
@@ -230,7 +237,12 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_intersect_open(
   SFHASH_Error** err)
 {
   return setop_open<intersect_op>(
-    l, r, result_hashset_name, result_hashset_desc, err
+    l,
+    r,
+    result_hashset_name,
+    result_hashset_desc,
+    std::min(l->holder.rhdr.record_count, r->holder.rhdr.record_count),
+    err
   );
 }
 
@@ -242,6 +254,11 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_subtract_open(
   SFHASH_Error** err)
 {
   return setop_open<difference_op>(
-    l, r, result_hashset_name, result_hashset_desc, err
+    l,
+    r,
+    result_hashset_name,
+    result_hashset_desc,
+    l->holder.rhdr.record_count,
+    err
   );
 }

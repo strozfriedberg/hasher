@@ -605,6 +605,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   const char* hashset_desc,
   const SFHASH_HashAlgorithm* record_order,
   size_t record_order_length,
+  size_t record_count,
   SFHASH_Error** err)
 {
   RecordHeader rhdr;
@@ -870,6 +871,13 @@ size_t write_hashset(
   std::vector<uint8_t>& out
 )
 {
+  // read stream into a lines vector
+  std::vector<std::string> lines;
+
+  while (in) {
+    std::getline(in, lines.emplace_back());
+  }
+
   SFHASH_Error* err = nullptr;
   auto bctx = make_unique_del(
     sfhash_hashset_builder_open(
@@ -877,6 +885,7 @@ size_t write_hashset(
       hashset_desc,
       htypes,
       htypes_len,
+      lines.size(),
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -890,10 +899,9 @@ size_t write_hashset(
     conv.push_back(FIELDS.at(htypes[i]).second);
   }
 
-  std::string line;
-  for (size_t lineno = 1; in; ++lineno) {
+  for (size_t l = 0; l < lines.size(); ++l) {
     try {
-      std::getline(in, line);
+      const std::string& line = lines[l];
 
       if (line.empty()) {
         continue;
@@ -921,7 +929,7 @@ size_t write_hashset(
     }
     catch (const std::exception& e) {
       throw std::runtime_error(
-        "error parsing line " + std::to_string(lineno) + ": " + e.what()
+        "error parsing line " + std::to_string(l+1) + ": " + e.what()
       );
     }
   }

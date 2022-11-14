@@ -497,6 +497,7 @@ TEST_CASE("hashset_builder_open_overlong_name") {
       "123",
       record_order,
       std::size(record_order),
+      0,
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -518,6 +519,7 @@ TEST_CASE("hashset_builder_open_overlong_desc") {
       longdesc.c_str(),
       record_order,
       std::size(record_order),
+      0,
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -535,6 +537,7 @@ TEST_CASE("hashset_builder_open_no_record_types") {
       "123",
       "abc",
       nullptr,
+      0,
       0,
       &err
     ),
@@ -559,6 +562,7 @@ TEST_CASE("hashset_builder_open_duplicate_types") {
       "abc",
       record_order,
       std::size(record_order),
+      0,
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -581,6 +585,7 @@ TEST_CASE("hashset_builder_open_ok") {
       "abc",
       record_order,
       std::size(record_order),
+      0,
       &err
     ),
     sfhash_hashset_builder_destroy
