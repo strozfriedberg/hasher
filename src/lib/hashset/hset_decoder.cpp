@@ -284,8 +284,8 @@ void check_data_length(const Chunk& ch, uint64_t exp_len) {
   const uint64_t act_len = static_cast<const uint8_t*>(ch.dend) - static_cast<const uint8_t*>(ch.dbeg);
   THROW_IF(
     act_len != exp_len,
-    "expected " << exp_len << "bytes in "
-                << std::string_view(reinterpret_cast<const char*>(&ch.type), 4)
+    "expected " << exp_len << " bytes in "
+                << printable_chunk_type(ch.type)
                 << ", found " << act_len
   );
 }
