@@ -158,11 +158,11 @@ size_t write_ridx(
 );
 
 size_t length_rhdr_data(
-  const std::vector<RecordFieldDescriptor>& fields 
+  const std::vector<RecordFieldDescriptor>& fields
 );
 
 size_t length_rhdr(
-  const std::vector<RecordFieldDescriptor>& fields 
+  const std::vector<RecordFieldDescriptor>& fields
 );
 
 size_t write_rhdr_data(
