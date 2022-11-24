@@ -11,17 +11,6 @@
 #include "hashset/hset_structs.h"
 #include "hashset/lookupstrategy.h"
 
-
-
-
-
-
-
-
-
-
-};
-
 struct Holder {
   FileHeader fhdr;
   std::vector<
