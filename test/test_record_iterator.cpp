@@ -321,7 +321,10 @@ TEST_CASE("RecordIterator_random_access_iterator") {
       check_random_access_iterator_10(b, n);
 
       check_random_access_iterator_11(b, n);
-      check_random_access_iterator_12(a, b, n);
+
+      if ((a + n) - beg >= 0 && ((a + n) - beg) < end - beg) {
+        check_random_access_iterator_12(a, b, n);
+      }
 
       if (n >= 0) {
         check_random_access_iterator_13(a, b);
