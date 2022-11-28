@@ -25,6 +25,7 @@
 #include "hex.h"
 #include "rwutil.h"
 #include "util.h"
+#include "hashset/record_iterator.h"
 #include "hashset/util.h"
 #include "hasher/hashset.h"
 
@@ -222,7 +223,8 @@ size_t write_hhnn(
 
 template <size_t BlockBits>
 std::vector<std::pair<int64_t, int64_t>> make_block_bounds(
-  const std::vector<std::vector<uint8_t>>& hashes)
+  RecordIterator beg,
+  RecordIterator end)
 {
   std::vector<std::pair<int64_t, int64_t>> block_bounds(
     1 << BlockBits,
@@ -232,11 +234,13 @@ std::vector<std::pair<int64_t, int64_t>> make_block_bounds(
     }
   );
 
-  for (size_t i = 0; i < hashes.size(); ++i) {
-    const size_t e = expected_index(reinterpret_cast<const uint8_t*>(hashes[i].data()), hashes.size());
-    const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
+  const auto count = end - beg;
 
-    const size_t bi = static_cast<uint8_t>(hashes[i][0]) >> (8 - BlockBits);
+  for (auto i = beg; i != end; ++i) {
+    const size_t e = expected_index(reinterpret_cast<const uint8_t*>(i->rec.data()), count);
+    const int64_t delta = static_cast<int64_t>(i - beg) - static_cast<int64_t>(e);
+
+    const size_t bi = static_cast<uint8_t>(i->rec[0]) >> (8 - BlockBits);
     block_bounds[bi].first = std::min(block_bounds[bi].first, delta);
     block_bounds[bi].second = std::max(block_bounds[bi].second, delta);
   }
@@ -301,26 +305,20 @@ size_t length_hdat(size_t hash_count, size_t hash_size) {
 }
 
 size_t write_hdat_data(
-  const std::vector<std::vector<uint8_t>>& hashes,
+  const HashsetData& hdat,
   char* out)
 {
-  const char* beg = out;
-
-  for (const auto& h: hashes) {
-    out += write_bytes(h.data(), h.size(), out);
-  }
-
-  return out - beg;
+  return static_cast<char*>(hdat.end) - static_cast<char*>(hdat.beg);
 }
 
 size_t write_hdat(
-  const std::vector<std::vector<uint8_t>>& hashes,
+  const HashsetData& hdat,
   char* out)
 {
   return write_chunk<write_hdat_data>(
     out,
     "HDAT",
-    hashes
+    hdat
   );
 }
 
@@ -333,22 +331,14 @@ size_t length_ridx(size_t record_count) {
 }
 
 size_t write_ridx_data(
-  const std::vector<uint64_t>& ridx,
+  const RecordIndex& ridx,
   char* out)
 {
-  const char* beg = out;
-
-  out += write_bytes(
-    reinterpret_cast<const char*>(ridx.data()),
-    ridx.size() * sizeof(std::remove_reference<decltype(ridx)>::type::value_type),
-    out
-  );
-
-  return out - beg;
+  return static_cast<char*>(ridx.end) - static_cast<char*>(ridx.beg);
 }
 
 size_t write_ridx(
-  const std::vector<uint64_t>& ridx,
+  const RecordIndex& ridx,
   char* out)
 {
   return write_chunk<write_ridx_data>(
@@ -445,38 +435,41 @@ size_t length_rdat(
   return length_chunk<length_rdat_data>(fields, record_count);
 }
 
-size_t write_rdat_data(
+size_t write_rdat_record(
   const std::vector<RecordFieldDescriptor>& fields,
-  const std::vector<std::vector<std::vector<uint8_t>>>& records,
+  const std::vector<std::vector<uint8_t>>& record,
   char* out)
 {
   const char* beg = out;
 
-  for (const auto& record: records) {
-    for (size_t i = 0; i < record.size(); ++i) {
-      if (record[i].empty()) {
-        out += write_byte(1 + fields[i].length, 0, out);
-      }
-      else {
-        out += write_byte(1, 1, out);
-        out += write_bytes(record[i].data(), record[i].size(), out);
-      }
+  for (size_t i = 0; i < record.size(); ++i) {
+    if (record[i].empty()) {
+      out += write_byte(1 + fields[i].length, 0, out);
+    }
+    else {
+      out += write_byte(1, 1, out);
+      out += write_bytes(record[i].data(), record[i].size(), out);
     }
   }
 
   return out - beg;
 }
 
+size_t write_rdat_data(
+  const RecordData& rdat,
+  char* out)
+{
+  return static_cast<char*>(rdat.end) - static_cast<char*>(rdat.beg);
+}
+
 size_t write_rdat(
-  const std::vector<RecordFieldDescriptor>& fields,
-  const std::vector<std::vector<std::vector<uint8_t>>>& records,
+  const RecordData& rdat,
   char* out)
 {
   return write_chunk<write_rdat_data>(
     out,
     "RDAT",
-    fields,
-    records
+    rdat
   );
 }
 
@@ -608,7 +601,11 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   size_t record_count,
   SFHASH_Error** err)
 {
-  RecordHeader rhdr;
+  RecordHeader rhdr{
+    0,
+    record_count,
+    {}
+  };
 
   try {
     check_strlen(hashset_name, "hashset_name");
@@ -620,8 +617,6 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
     );
 
     std::set<SFHASH_HashAlgorithm> tset;
-
-    rhdr.record_length = 0;
 
     for (size_t i = 0; i < record_order_length; ++i) {
       try {
@@ -675,14 +670,13 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
 
   // RDAT
   toc.entries.emplace_back(off, Chunk::Type::RDAT);
-  off += length_rdat(rhdr.fields, record_count);
 
   return new SFHASH_HashsetBuildCtx{
     std::move(toc),
     std::move(fhdr),
     std::move(rhdr),
     {},
-    {},
+    nullptr,
     nullptr
   };
 }
@@ -693,15 +687,17 @@ size_t sfhash_hashset_builder_required_size(const SFHASH_HashsetBuildCtx* bctx) 
     bctx->fhdr.desc,
     bctx->fhdr.time,
     bctx->rhdr.fields,
-    bctx->records.size()
+    bctx->rhdr.record_count
   );
 }
 
 void sfhash_hashset_builder_set_output_buffer(
   SFHASH_HashsetBuildCtx* bctx,
-  void* out)
+  void* buf)
 {
-  bctx->out = out;
+// TODO: should be done only once
+  bctx->out = static_cast<char*>(buf);
+  bctx->rdat.beg = bctx->rdat.end = bctx->out + bctx->ftoc.entries.back().first + 12;
 }
 
 void sfhash_hashset_builder_add_record(
@@ -721,7 +717,11 @@ void sfhash_hashset_builder_add_record(
     ri += 1 + hi.length;
   }
 
-  bctx->records.push_back(std::move(rec));
+  bctx->rdat.end += write_rdat_record(
+    bctx->rhdr.fields,
+    rec,
+    static_cast<char*>(bctx->rdat.end)
+  );
 }
 
 void check_toc(auto toc_itr, uint64_t off, uint32_t chunk_type) {
@@ -738,40 +738,45 @@ size_t sfhash_hashset_builder_write(
   SFHASH_HashsetBuildCtx* bctx,
   SFHASH_Error** err)
 {
-  const auto& [ftoc, fhdr, rhdr, rdat, records, _] = *bctx;
+  const auto& fhdr = bctx->fhdr;
+  auto& rhdr = bctx->rhdr;
+  auto& rdat = bctx->rdat;
+
   const auto& fields = rhdr.fields;
 
   auto& toc = bctx->ftoc;
 
-// TODO: records need to be written direclty to output buffer
+  // Sort the records
+  RecordIterator rbeg(static_cast<uint8_t*>(rdat.beg), rhdr.record_length);
+  RecordIterator rend(static_cast<uint8_t*>(rdat.end), rhdr.record_length);
 
-  std::sort(bctx->records.begin(), bctx->records.end());
-  bctx->records.erase(std::unique(bctx->records.begin(), bctx->records.end()), bctx->records.end());
+  std::sort(rbeg, rend);
+  rend = std::unique(rbeg, rend);
 
-  //
-  // Determine where each chunk will go
-  //
+  rdat.end = rend->rec.data();
+  rhdr.record_count = rend - rbeg;
 
-  uint64_t off = length_magic() +
-                 length_ftoc(count_chunks(fields)) +
-                 length_fhdr(fhdr.name, fhdr.desc, fhdr.time) +
-                 length_rhdr(fields) +
-                 length_rdat(fields, records.size());
+  uint64_t off = toc.entries.back().first + length_rdat(fields, rhdr.record_count);
 
-  for (auto i = 0u; i < fields.size(); ++i) {
-    uint64_t hash_count = 0;
-    for (auto ri = 0u; ri < records.size(); ++ri) {
-      if (!records[ri][i].empty()) {
-        ++hash_count;
-      }
-    }
+  std::vector<
+    std::tuple<
+      uint64_t,
+      RecordIterator,
+      RecordIterator,
+      uint64_t*,
+      uint64_t*
+    >
+  > hb;
+
+  for (const auto& field: fields) {
+    // Determine locations for each hash block
 
     // HHnn
-    toc.entries.emplace_back(off, make_hhnn_type(fields[i].type));
-    off += length_hhnn(fields[i]);
+    toc.entries.emplace_back(off, make_hhnn_type(field.type));
+    off += length_hhnn(field);
 
     // HINT
-    if (fields[i].type != SFHASH_SIZE) {
+    if (field.type != SFHASH_SIZE) {
       toc.entries.emplace_back(off, Chunk::Type::HINT);
       off += length_hint();
     }

@@ -615,6 +615,11 @@ TEST_CASE("hashset_builder_setop_open_overlong_name") {
   SFHASH_Hashset l;
   SFHASH_Hashset r;
 
+  // ensure these are set becuase we read them (though in the error case
+  // don't actually use the values)
+  l.holder.rhdr.record_count = 0;
+  r.holder.rhdr.record_count = 0;
+
   const std::string longname(65536, 'x');
 
   SFHASH_Error* err = nullptr;
@@ -650,6 +655,11 @@ TEST_CASE("hashset_builder_setop_open_overlong_name") {
 TEST_CASE("hashset_builder_setop_open_overlong_desc") {
   SFHASH_Hashset l;
   SFHASH_Hashset r;
+
+  // ensure these are set becuase we read them (though in the error case
+  // don't actually use the values)
+  l.holder.rhdr.record_count = 0;
+  r.holder.rhdr.record_count = 0;
 
   const std::string longdesc(65536, 'x');
 

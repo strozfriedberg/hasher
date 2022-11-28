@@ -17,8 +17,8 @@ struct SFHASH_HashsetBuildCtx {
   FileHeader fhdr;
   RecordHeader rhdr;
   RecordData rdat;
-  std::vector<std::vector<std::vector<uint8_t>>> records;
-  void* out;
+  char* out;
+  char* cur;
 };
 
 size_t write_hashset(
@@ -134,12 +134,12 @@ size_t length_hdat_data(size_t hash_count, size_t hash_size);
 size_t length_hdat(size_t hash_count, size_t hash_size);
 
 size_t write_hdat_data(
-  const std::vector<std::vector<uint8_t>>& hashes,
+  const HashsetData& hdat,
   char* out
 );
 
 size_t write_hdat(
-  const std::vector<std::vector<uint8_t>>& hashes,
+  const HashsetData& hdat,
   char* out
 );
 
@@ -148,12 +148,12 @@ size_t length_ridx_data(size_t record_count);
 size_t length_ridx(size_t record_count);
 
 size_t write_ridx_data(
-  const std::vector<uint64_t>& ridx,
+  const RecordIndex& ridx,
   char* out
 );
 
 size_t write_ridx(
-  const std::vector<uint64_t>& ridx,
+  const RecordIndex& ridx,
   char* out
 );
 
@@ -188,8 +188,7 @@ size_t length_rdat(
 );
 
 size_t write_rdat_data(
-  const std::vector<RecordFieldDescriptor>& fields,
-  const std::vector<std::vector<std::vector<uint8_t>>>& records,
+  const RecordData& rdat,
   char* out
 );
 
