@@ -276,10 +276,12 @@ TEST_CASE("RecordIterator_random_access_iterator") {
   };
 
   const size_t rlen = 2;
-
   const ssize_t rcount = std::size(data) / rlen;
 
-  for (size_t ai = 0; ai < std::size(data); ++ai) {
+  const RecordIterator beg(std::begin(data), rlen);
+  const RecordIterator end(std::end(data), rlen);
+
+  for (size_t ai = 0; ai < rcount; ai += rlen) {
     RecordIterator a(data + ai, rlen);
 
     check_weakly_incrementable(a);
@@ -294,7 +296,7 @@ TEST_CASE("RecordIterator_random_access_iterator") {
 
     check_random_access_iterator_6(a);
 
-    for (size_t bi = 0; bi < std::size(data); ++bi) {
+    for (size_t bi = 0; bi < rcount; bi += rlen) {
       RecordIterator b(data + bi, rlen);
       check_forward_iterator_1(a, b);
     }
