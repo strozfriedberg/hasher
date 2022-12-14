@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <iosfwd>
 #include <string>
 #include <tuple>
@@ -17,8 +19,25 @@ struct SFHASH_HashsetBuildCtx {
   FileHeader fhdr;
   RecordHeader rhdr;
   RecordData rdat;
-  char* out;
-  char* cur;
+  std::vector<
+    std::tuple<
+      HashsetHeader,
+      HashsetHint,
+      HashsetData,
+      RecordIndex
+    >
+  > hsets;
+
+  bool with_records;
+  bool with_hashsets;
+
+  std::filesystem::path outfile;
+  std::ofstream out;
+
+  std::vector<std::filesystem::path> tmp_hashes_files;
+  std::vector<std::ofstream> tmp_hashes_out;
+
+  size_t field_pos;
 };
 
 size_t write_hashset(
