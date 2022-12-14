@@ -206,6 +206,12 @@ size_t length_rdat(
   size_t record_count
 );
 
+size_t write_rdat_record(
+  const std::vector<RecordFieldDescriptor>& fields,
+  const std::vector<std::vector<uint8_t>>& record,
+  char* out
+);
+
 size_t write_rdat_data(
   const RecordData& rdat,
   char* out
