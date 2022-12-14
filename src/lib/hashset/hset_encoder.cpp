@@ -541,6 +541,18 @@ size_t count_chunks(const std::vector<RecordFieldDescriptor>& fields) {
   return chunk_count;
 }
 
+size_t count_chunks_hashsets_only(const std::vector<RecordFieldDescriptor>& fields) {
+  size_t chunk_count = 4 + 2 * fields.size();
+
+  for (const auto& hi: fields) {
+    if (hi.type != SFHASH_SIZE) {
+      ++chunk_count;
+    }
+  }
+
+  return chunk_count;
+}
+
 size_t length_hset(
   const std::string& hashset_name,
   const std::string& hashset_desc,
