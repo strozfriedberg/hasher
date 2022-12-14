@@ -75,28 +75,32 @@ TEST_CASE("hset_round_trip") {
 }
 
 auto read_hset(
-  const std::string& path,
-  const std::vector<SFHASH_HashAlgorithm>& hash_types)
+  const std::string& inpath,
+  const std::vector<SFHASH_HashAlgorithm>& hash_types,
+  const std::string& outpath)
 {
-  std::vector<uint8_t> out;
-
   {
-    std::ifstream in(path);
+    std::ifstream in(inpath);
 
-    write_hashset(
+    write_hset(
+      in,
+      hash_types,
+      make_text_converters(hash_types),
       "Test! Of! Hashset!",
       "Do not adjust your hashset. This is only a test.",
-      hash_types.data(),
-      hash_types.size(),
-      in,
-      out
+      outpath,
+      "test",
+      true,
+      true
     );
   }
+
+  auto f = read_file(outpath);
 
   SFHASH_Error* err = nullptr;
 
   auto hset = make_unique_del(
-    sfhash_load_hashset(out.data(), out.data() + out.size(), &err),
+    sfhash_load_hashset(f.data(), f.data() + f.size(), &err),
     sfhash_destroy_hashset
   );
 
@@ -107,14 +111,20 @@ auto read_hset(
 
   REQUIRE(hset);
 
-  return std::make_pair(std::move(out), std::move(hset));
+  return std::make_pair(std::move(f), std::move(hset));
 }
 
 TEST_CASE("hset_union_round_trip") {
-
-  auto [bufa, ha] = read_hset("test/md5_sha1_a", { SFHASH_MD5, SFHASH_SHA_1 });
-  auto [bufb, hb] = read_hset("test/md5_sha1_b", { SFHASH_MD5, SFHASH_SHA_1 });
-//  auto [bufc, hc] = read_hset("test/md5_sha1", { SFHASH_MD5, SFHASH_SHA_1 });
+  auto [bufa, ha] = read_hset(
+    "test/md5_sha1_a",
+    { SFHASH_MD5, SFHASH_SHA_1 },
+    "test/md5_sha1_a.hset"
+  );
+  auto [bufb, hb] = read_hset(
+    "test/md5_sha1_b",
+    { SFHASH_MD5, SFHASH_SHA_1 },
+    "test/md5_sha1_b.hset"
+  );
 
   // a union b = c
 
@@ -126,6 +136,10 @@ TEST_CASE("hset_union_round_trip") {
       hb.get(),
       "c",
       "a union b",
+      true,
+      true,
+      "test/md5_sha1_aub.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -138,11 +152,6 @@ TEST_CASE("hset_union_round_trip") {
 
   REQUIRE(hctx);
 
-  std::vector<char> bufc(sfhash_hashset_builder_required_size(hctx.get()));
-
-  sfhash_hashset_builder_set_output_buffer(hctx.get(), bufc.data());
-
-//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
   sfhash_hashset_builder_write(hctx.get(), &err);
 
   CHECK(!err);
@@ -151,6 +160,8 @@ TEST_CASE("hset_union_round_trip") {
   }
 
   hctx.reset();
+
+  const auto bufc = read_file("test/md5_sha1_aub.hset");
 
   auto hc = make_unique_del(
     sfhash_load_hashset(bufc.data(), bufc.data() + bufc.size(), &err),
@@ -213,10 +224,16 @@ TEST_CASE("hset_union_round_trip") {
 }
 
 TEST_CASE("hset_intersection_round_trip") {
-
-  auto [bufa, ha] = read_hset("test/md5_sha1_a", { SFHASH_MD5, SFHASH_SHA_1 });
-  auto [bufb, hb] = read_hset("test/md5_sha1_b", { SFHASH_MD5, SFHASH_SHA_1 });
-//  auto [bufc, hc] = read_hset("test/md5_sha1", { SFHASH_MD5, SFHASH_SHA_1 });
+  auto [bufa, ha] = read_hset(
+    "test/md5_sha1_a",
+    { SFHASH_MD5, SFHASH_SHA_1 },
+    "test/md5_sha1_a.hset"
+  );
+  auto [bufb, hb] = read_hset(
+    "test/md5_sha1_b",
+    { SFHASH_MD5, SFHASH_SHA_1 },
+    "test/md5_sha1_b.hset"
+  );
 
   // a intersect b = c
 
@@ -228,6 +245,10 @@ TEST_CASE("hset_intersection_round_trip") {
       hb.get(),
       "c",
       "a intersect b",
+      true,
+      true,
+      "test/md5_sha1_anb.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -240,11 +261,6 @@ TEST_CASE("hset_intersection_round_trip") {
 
   REQUIRE(hctx);
 
-  std::vector<char> bufc(sfhash_hashset_builder_required_size(hctx.get()));
-
-  sfhash_hashset_builder_set_output_buffer(hctx.get(), bufc.data());
-
-//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
   sfhash_hashset_builder_write(hctx.get(), &err);
 
   CHECK(!err);
@@ -253,6 +269,8 @@ TEST_CASE("hset_intersection_round_trip") {
   }
 
   hctx.reset();
+
+  const auto bufc = read_file("test/md5_sha1_anb.hset");
 
   auto hc = make_unique_del(
     sfhash_load_hashset(bufc.data(), bufc.data() + bufc.size(), &err),
@@ -309,12 +327,18 @@ TEST_CASE("hset_intersection_round_trip") {
 }
 
 TEST_CASE("hset_difference_round_trip") {
+  auto [bufa, ha] = read_hset(
+    "test/md5_sha1_a",
+    { SFHASH_MD5, SFHASH_SHA_1 },
+    "test/md5_sha1_a.hset"
+  );
+  auto [bufb, hb] = read_hset(
+    "test/md5_sha1_b",
+    { SFHASH_MD5, SFHASH_SHA_1 },
+    "test/md5_sha1_b.hset"
+  );
 
-  auto [bufa, ha] = read_hset("test/md5_sha1_a", { SFHASH_MD5, SFHASH_SHA_1 });
-  auto [bufb, hb] = read_hset("test/md5_sha1_b", { SFHASH_MD5, SFHASH_SHA_1 });
-//  auto [bufc, hc] = read_hset("test/md5_sha1", { SFHASH_MD5, SFHASH_SHA_1 });
-
-  // a intersect b = c
+  // a - b = c
 
   SFHASH_Error* err = nullptr;
 
@@ -324,6 +348,10 @@ TEST_CASE("hset_difference_round_trip") {
       hb.get(),
       "c",
       "a minus b",
+      true,
+      true,
+      "test/md5_sha1_a-b.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -336,11 +364,6 @@ TEST_CASE("hset_difference_round_trip") {
 
   REQUIRE(hctx);
 
-  std::vector<char> bufc(sfhash_hashset_builder_required_size(hctx.get()));
-
-  sfhash_hashset_builder_set_output_buffer(hctx.get(), bufc.data());
-
-//  CHECK(sfhash_save_hashset_close(hctx.get(), bufc.data(), &err) == 80435);
   sfhash_hashset_builder_write(hctx.get(), &err);
 
   CHECK(!err);
@@ -349,6 +372,8 @@ TEST_CASE("hset_difference_round_trip") {
   }
 
   hctx.reset();
+
+  const auto bufc = read_file("test/md5_sha1_a-b.hset");
 
   auto hc = make_unique_del(
     sfhash_load_hashset(bufc.data(), bufc.data() + bufc.size(), &err),
