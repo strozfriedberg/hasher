@@ -655,6 +655,93 @@ void check_strlen(const char* s, const char* sname) {
   );
 }
 
+void write_chunks(
+  char* beg,
+  const TableOfContents& ftoc,
+  const FileHeader& fhdr,
+  const RecordHeader& rhdr,
+  const RecordData& rdat,
+  const std::vector<
+    std::tuple<
+      uint64_t,
+      RecordIterator,
+      RecordIterator,
+      uint64_t*,
+      uint64_t*
+    >
+  >& hb,
+  const std::map<uint64_t, size_t>& off2hbidx
+)
+{
+  char* out = beg;
+
+  // Magic
+  out += write_magic(out);
+
+  for (const auto& [choff, chtype]: ftoc.entries) {
+    out = beg + choff;
+
+    switch (chtype) {
+    case Chunk::Type::FTOC:
+      write_ftoc(ftoc, out);
+      break;
+
+    case Chunk::Type::FHDR:
+      write_fhdr(fhdr.version, fhdr.name, fhdr.desc, fhdr.time, out);
+      break;
+
+    case Chunk::Type::RHDR:
+      write_rhdr(rhdr.fields, rhdr.record_count, out);
+      break;
+
+    case Chunk::Type::RDAT:
+      write_rdat(rdat, out);
+      break;
+
+    case Chunk::Type::HINT:
+      {
+        const size_t i = off2hbidx.at(choff);
+        write_hint(make_block_bounds<8>(std::get<1>(hb[i]), std::get<2>(hb[i])), out);
+      }
+      break;
+
+    case Chunk::Type::HDAT:
+      {
+        const size_t i = off2hbidx.at(choff);
+        HashsetData hdat{
+          std::get<1>(hb[i])->rec.data(),
+          std::get<2>(hb[i])->rec.data()
+        };
+        write_hdat(hdat, out);
+      }
+      break;
+
+    case Chunk::Type::FEND:
+      write_fend(out);
+      break;
+
+    case Chunk::Type::RIDX:
+      {
+        const size_t i = off2hbidx.at(choff);
+        const RecordIndex ridx{
+          std::get<3>(hb[i]),
+          std::get<4>(hb[i])
+        };
+        write_ridx(ridx, out);
+      }
+      break;
+
+    default:
+      // HHnn
+      {
+        const size_t i = off2hbidx.at(choff);
+        write_hhnn(rhdr.fields[i], std::get<2>(hb[i]) - std::get<1>(hb[i]), out);
+      }
+      break;
+    }
+  }
+}
+
 SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   const char* hashset_name,
   const char* hashset_desc,
