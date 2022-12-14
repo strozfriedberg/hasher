@@ -15,6 +15,7 @@
 #include <string>
 
 TEST_CASE("hset_round_trip") {
+  const std::string hsetfile = "test/sha1.hset";
 
   const auto f = read_file("test/sha1");
   const std::string s(f.begin(), f.end());
@@ -22,21 +23,29 @@ TEST_CASE("hset_round_trip") {
   std::istringstream in(s);
   std::vector<uint8_t> out;
 
-  const SFHASH_HashAlgorithm hash_types = SFHASH_SHA_1;
+  const std::vector<SFHASH_HashAlgorithm> htypes{ SFHASH_SHA_1 };
+  const auto conv = make_text_converters(htypes);
 
-  write_hashset(
-    "Test! Of! Hashset!",
-    "Do not adjust your hashset. This is only a test.",
-    &hash_types,
-    1,
+  write_hset(
     in,
-    out
+    htypes,
+    conv,
+    "Test! Of! Hashset!",
+    "I'd like to buy a vowel.",
+    hsetfile,
+    "test",
+    true,
+    true
   );
+
+  const auto hsf = read_file(hsetfile);
+  const auto beg = hsf.data();
+  const auto end = beg + hsf.size();
 
   SFHASH_Error* err = nullptr;
 
   auto hset = make_unique_del(
-    sfhash_load_hashset(out.data(), out.data() + out.size(), &err),
+    sfhash_load_hashset(beg, end, &err),
     sfhash_destroy_hashset
   );
 

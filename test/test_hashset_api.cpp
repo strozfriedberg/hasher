@@ -22,7 +22,7 @@
 #include <vector>
 
 TEST_CASE("load_hashset_good") {
-  const auto f = read_file("test/sha1.hset");
+  const auto f = read_file("test/good.hset");
   const auto beg = f.data();
   const auto end = beg + f.size();
 
