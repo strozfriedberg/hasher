@@ -742,6 +742,58 @@ void write_chunks(
   }
 }
 
+void scatter_records_to_hashset(
+  const RecordHeader& rhdr,
+  RecordData& rdat,
+  std::vector<
+    std::tuple<
+      uint64_t,
+      RecordIterator,
+      RecordIterator,
+      uint64_t*,
+      uint64_t*
+    >
+  >& hb)
+{
+  RecordIterator rbeg(static_cast<uint8_t*>(rdat.beg), rhdr.record_length);
+  RecordIterator rend(static_cast<uint8_t*>(rdat.end), rhdr.record_length);
+  size_t recno = 0;
+  // Scatter each record out to the hash sections
+  for (auto i = rbeg; i != rend; ++i) {
+    size_t roff = 1;
+    for (auto& [hlen, hbeg, hi, ibeg, ii]: hb) {
+      if (*i->rec.data() == 0x01) {
+        // write the hash to its HDAT section
+        std::memcpy(hi->rec.data(), i->rec.data() + roff, hlen);
+        ++hi;
+
+        // write the record index to its RIDX section
+        *ii++ = i - rbeg;
+      }
+
+      roff += hlen + 1;
+    }
+
+    ++recno;
+/*
+    if (recno % 10000 == 0) {
+      std::cerr << "scattered " << recno << " records\n";
+    }
+*/
+  }
+
+  std::cerr << "scattered " << recno << " records\n";
+
+  for (auto& [hlen, hbeg, hend, ibeg, iend]: hb) {
+    // Sort hashes and ridx together
+    HashRecordIterator hrbeg(0, hbeg->rec.data(), hlen, ibeg);
+    HashRecordIterator hrend(iend - ibeg, hbeg->rec.data(), hlen, ibeg);
+    std::sort(hrbeg, hrend);
+  }
+
+  std::cerr << "sorted HDAT blocks\n";
+}
+
 SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   const char* hashset_name,
   const char* hashset_desc,
