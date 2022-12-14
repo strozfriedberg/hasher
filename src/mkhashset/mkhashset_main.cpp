@@ -14,23 +14,29 @@ for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | mkhashset 'NSRL
 
 */
 
+#include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
 #include "hset_encoder.h"
+#include "util.h"
 #include "hasher/hashset.h"
 
 int main(int argc, char** argv) {
-  if (argc < 4) {
-    std::cerr << "Usage: mkhashset NAME DESC TYPE...\n";
+  if (argc < 7) {
+    std::cerr << "Usage: mkhashset NAME DESC TYPE... RECORDS HASHSETS INFILE OUTIFLE\n";
     return -1;
   }
+
+// TODO: add outer catch
 
   // turn off synchronization of C++ streams with C streams
   std::ios_base::sync_with_stdio(false);
 
   std::vector<SFHASH_HashAlgorithm> htypes;
-  for (int i = 3; i < argc; ++i) {
+  for (int i = 3; i < argc - 4; ++i) {
     const SFHASH_HashAlgorithm t = sfhash_hash_type(argv[i]);
     THROW_IF(
       t == SFHASH_INVALID,
@@ -40,20 +46,19 @@ int main(int argc, char** argv) {
     htypes.push_back(t);
   }
 
-  std::vector<uint8_t> out;
+  const auto& conv = make_text_converters(htypes);
 
-// TODO: handle errors (e.g., bad input)
-  const size_t wlen = write_hashset(
-    argv[1],
-    argv[2],
-    htypes.data(),
-    htypes.size(),
-    std::cin,
-    out
-  );
+  std::cerr << "creating hset file\n";
 
-  std::cout.write(reinterpret_cast<const char*>(out.data()), out.size());
+  bool with_records = !std::strcmp(argv[argc-4], "true");
+  bool with_hashsets = !std::strcmp(argv[argc-3], "true");
 
-  std::cerr << "wrote " << wlen << " bytes\n";
+  const std::filesystem::path outfile = argv[argc-1];
+  const std::filesystem::path infile = argv[argc-2];
+  const std::filesystem::path tmpdir = ".";
+  std::ifstream in(infile);
+
+  write_hset(in, htypes, conv, argv[1], argv[2], outfile, tmpdir, with_records, with_hashsets);
+
   return 0;
 }
