@@ -497,7 +497,10 @@ TEST_CASE("hashset_builder_open_overlong_name") {
       "123",
       record_order,
       std::size(record_order),
-      0,
+      true,
+      true,
+      "test/bogus.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -519,7 +522,10 @@ TEST_CASE("hashset_builder_open_overlong_desc") {
       longdesc.c_str(),
       record_order,
       std::size(record_order),
-      0,
+      true,
+      true,
+      "test/bogus.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -538,7 +544,10 @@ TEST_CASE("hashset_builder_open_no_record_types") {
       "abc",
       nullptr,
       0,
-      0,
+      true,
+      true,
+      "test/bogus.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -562,7 +571,10 @@ TEST_CASE("hashset_builder_open_duplicate_types") {
       "abc",
       record_order,
       std::size(record_order),
-      0,
+      true,
+      true,
+      "test/bogus.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -585,7 +597,10 @@ TEST_CASE("hashset_builder_open_ok") {
       "abc",
       record_order,
       std::size(record_order),
-      0,
+      true,
+      true,
+      "test/bogus.hset",
+      "test",
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -638,6 +653,10 @@ TEST_CASE("hashset_builder_setop_open_overlong_name") {
           &r,
           longname.c_str(),
           "123",
+          true,
+          true,
+          "test/bogus.hset",
+          "test",
           &err
         ),
         sfhash_hashset_builder_destroy
@@ -679,6 +698,10 @@ TEST_CASE("hashset_builder_setop_open_overlong_desc") {
           &r,
           "123",
           longdesc.c_str(),
+          true,
+          true,
+          "test/bogus.hset",
+          "test",
           &err
         ),
         sfhash_hashset_builder_destroy
@@ -716,6 +739,10 @@ TEST_CASE("hashset_builder_setop_open_field_mismatch") {
           &r,
           "123",
           "abc",
+          true,
+          true,
+          "test/bogus.hset",
+          "test",
           &err
         ),
         sfhash_hashset_builder_destroy
