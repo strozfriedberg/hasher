@@ -604,6 +604,38 @@ size_t length_hset_records_only(
   return len;
 }
 
+size_t length_hset_hashsets_only(
+  const std::string& hashset_name,
+  const std::string& hashset_desc,
+  const std::string& timestamp,
+  const std::vector<RecordFieldDescriptor>& fields,
+  uint64_t record_count,
+  const decltype(SFHASH_HashsetBuildCtx::hsets)& hsets)
+{
+  size_t chunk_count = count_chunks_hashsets_only(fields);
+
+  size_t len = length_magic() +
+               length_ftoc(chunk_count) +
+               length_fhdr(hashset_name, hashset_desc, timestamp) +
+               length_rhdr(fields);
+
+  for (size_t i = 0; i < fields.size(); ++i) {
+    len += length_hhnn(fields[i]);
+
+    if (fields[i].type != SFHASH_SIZE) {
+      len += length_hint();
+    }
+
+    len += length_alignment_padding(len, 4096);
+//    len += length_hdat(std::get<0>(hsets[i]).hash_count, std::get<0>(hsets[i]).hash_length);
+    len += length_hdat(record_count, std::get<0>(hsets[i]).hash_length);
+  }
+
+  len += length_fend();
+
+  return len;
+}
+
 std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   // set the timestamp
   const auto tm = std::gmtime(&tt);
