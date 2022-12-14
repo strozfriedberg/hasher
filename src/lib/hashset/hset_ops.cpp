@@ -101,7 +101,10 @@ SFHASH_HashsetBuildCtx* setop_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
-  size_t record_count,
+  bool write_records,
+  bool write_hashsets,
+  const char* temp_dir,
+  const char* output_file,
   SFHASH_Error** err)
 {
   try {
@@ -121,7 +124,10 @@ SFHASH_HashsetBuildCtx* setop_open(
         result_hashset_desc,
         htypes.data(),
         htypes.size(),
-        record_count,
+        write_records,
+        write_hashsets,
+        temp_dir,
+        output_file,
         err
       ),
       sfhash_hashset_builder_destroy
@@ -217,6 +223,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_union_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
+  bool write_records,
+  bool write_hashsets,
+  const char* temp_dir,
+  const char* output_file,
   SFHASH_Error** err)
 {
   return setop_open<union_op>(
@@ -224,7 +234,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_union_open(
     r,
     result_hashset_name,
     result_hashset_desc,
-    l->holder.rhdr.record_count + r->holder.rhdr.record_count,
+    write_records,
+    write_hashsets,
+    temp_dir,
+    output_file,
     err
   );
 }
@@ -234,6 +247,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_intersect_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
+  bool write_records,
+  bool write_hashsets,
+  const char* temp_dir,
+  const char* output_file,
   SFHASH_Error** err)
 {
   return setop_open<intersect_op>(
@@ -241,7 +258,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_intersect_open(
     r,
     result_hashset_name,
     result_hashset_desc,
-    std::min(l->holder.rhdr.record_count, r->holder.rhdr.record_count),
+    write_records,
+    write_hashsets,
+    temp_dir,
+    output_file,
     err
   );
 }
@@ -251,6 +271,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_subtract_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
+  bool write_records,
+  bool write_hashsets,
+  const char* temp_dir,
+  const char* output_file,
   SFHASH_Error** err)
 {
   return setop_open<difference_op>(
@@ -258,7 +282,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_subtract_open(
     r,
     result_hashset_name,
     result_hashset_desc,
-    l->holder.rhdr.record_count,
+    write_records,
+    write_hashsets,
+    temp_dir,
+    output_file,
     err
   );
 }

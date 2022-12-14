@@ -93,22 +93,22 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   const char* hashset_desc,
   const SFHASH_HashAlgorithm* record_order,
   size_t record_order_length,
-  size_t record_count,
+  bool write_records,
+  bool write_hashsets,
+  const char* output_file,
+  const char* temp_dir,
   SFHASH_Error** err
-);
-
-size_t sfhash_hashset_builder_required_size(
-  const SFHASH_HashsetBuildCtx* bctx
-);
-
-void sfhash_hashset_builder_set_output_buffer(
-  SFHASH_HashsetBuildCtx* bctx,
-  void* out
 );
 
 void sfhash_hashset_builder_add_record(
   SFHASH_HashsetBuildCtx* bctx,
   const void* record
+);
+
+void sfhash_hashset_builder_add_hash(
+  SFHASH_HashsetBuildCtx* bctx,
+  const void* hash,
+  size_t length
 );
 
 size_t sfhash_hashset_builder_write(
@@ -123,6 +123,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_union_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
+  bool write_records,
+  bool write_hashsets,
+  const char* output_file,
+  const char* temp_dir,
   SFHASH_Error** err
 );
 
@@ -131,6 +135,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_intersect_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
+  bool write_records,
+  bool write_hashsets,
+  const char* output_file,
+  const char* temp_dir,
   SFHASH_Error** err
 );
 
@@ -139,6 +147,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_subtract_open(
   const SFHASH_Hashset* r,
   const char* result_hashset_name,
   const char* result_hashset_desc,
+  bool write_records,
+  bool write_hashsets,
+  const char* output_file,
+  const char* temp_dir,
   SFHASH_Error** err
 );
 
