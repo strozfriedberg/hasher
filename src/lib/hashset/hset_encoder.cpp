@@ -794,6 +794,20 @@ void scatter_records_to_hashset(
   std::cerr << "sorted HDAT blocks\n";
 }
 
+// TODO: switch to a std::view for producing these lazily
+std::vector<std::string_view> split(std::string_view s, char delim) {
+  std::vector<std::string_view> splits;
+
+  auto i = s.begin();
+  do {
+    auto j = std::find(i, s.end(), delim);
+    splits.emplace_back(i, j);
+    i = j != s.end() ? j + 1 : j;
+  } while (i != s.end());
+
+  return splits;
+}
+
 SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   const char* hashset_name,
   const char* hashset_desc,
