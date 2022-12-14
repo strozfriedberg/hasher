@@ -11,15 +11,7 @@
 #include <iostream>
 
 #include "hex.h"
-
-template <class Reference>
-struct ArrowProxy {
-  Reference r;
-
-  Reference* operator->() {
-    return &r;
-  }
-};
+#include "hashset/arrow_proxy.h"
 
 struct RecordProxy {
   std::span<uint8_t> rec;
