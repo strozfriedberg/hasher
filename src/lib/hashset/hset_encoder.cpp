@@ -660,7 +660,10 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   const char* hashset_desc,
   const SFHASH_HashAlgorithm* record_order,
   size_t record_order_length,
-  size_t record_count,
+  bool write_records,
+  bool write_hashsets,
+  const char* output_file,
+  const char* tmp_dir,
   SFHASH_Error** err)
 {
   RecordHeader rhdr{
