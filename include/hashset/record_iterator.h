@@ -208,7 +208,7 @@ struct HashRecordProxy {
 
   auto operator<=>(const HashRecordProxy& o) const noexcept {
     const auto r = std::memcmp(rec.data(), o.rec.data(), rec.size());
-    return r == 0 ? *(o.idx) - *idx : r;
+    return r == 0 ? static_cast<int64_t>(*(o.idx)) - static_cast<int64_t>(*idx) : r;
   }
 
   bool operator==(const HashRecordProxy& o) const noexcept {
