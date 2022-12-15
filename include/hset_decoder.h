@@ -173,6 +173,9 @@ Holder decode_chunks(ChunkIterator ch, ChunkIterator ch_end) {
         if (ch->type == Chunk::RHDR) {
           state = handle_rhdr(*ch++, h);
         }
+        else if ((ch->type & 0xFFFF0000) == Chunk::HHDR) {
+          state = handle_hhdr(*ch++, h);
+        }
         else {
           throw UnexpectedChunkType();
         }
