@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <istream>
@@ -28,6 +30,11 @@
 #include "hashset/record_iterator.h"
 #include "hashset/util.h"
 #include "hasher/hashset.h"
+
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+
+namespace bip = boost::interprocess;
 
 const std::map<
   SFHASH_HashAlgorithm,
@@ -1011,232 +1018,251 @@ size_t sfhash_hashset_builder_write(
   SFHASH_HashsetBuildCtx* bctx,
   SFHASH_Error** err)
 {
+  const auto& outfile = bctx->outfile;
+
+  auto& ftoc = bctx->ftoc;
   const auto& fhdr = bctx->fhdr;
   auto& rhdr = bctx->rhdr;
   auto& rdat = bctx->rdat;
 
-  const auto& fields = rhdr.fields;
+  uint64_t off = 0;
 
-  auto& toc = bctx->ftoc;
+  if (bctx->with_records) {
+// TODO: error handling
+    bctx->out.close();
 
-  // Sort the records
-  RecordIterator rbeg(static_cast<uint8_t*>(rdat.beg), rhdr.record_length);
-  RecordIterator rend(static_cast<uint8_t*>(rdat.end), rhdr.record_length);
+    const auto hset_size = bctx->with_hashsets ?
+      length_hset(
+        bctx->fhdr.name,
+        bctx->fhdr.desc,
+        bctx->fhdr.time,
+        bctx->rhdr.fields,
+        bctx->rhdr.record_count
+      )
+      :
+      length_hset_records_only(
+        bctx->fhdr.name,
+        bctx->fhdr.desc,
+        bctx->fhdr.time,
+        bctx->rhdr.fields,
+        bctx->rhdr.record_count
+      );
 
-  std::sort(rbeg, rend);
-  rend = std::unique(rbeg, rend);
+    std::filesystem::resize_file(outfile, hset_size);
 
-  rdat.end = rend->rec.data();
-  rhdr.record_count = rend - rbeg;
+    bip::file_mapping fm(outfile.c_str(), bip::read_write);
+    bip::mapped_region mr(fm, bip::read_write);
 
-  uint64_t off = toc.entries.back().first + length_rdat(fields, rhdr.record_count);
+    char* out = static_cast<char*>(mr.get_address());
 
-  std::vector<
-    std::tuple<
-      uint64_t,
-      RecordIterator,
-      RecordIterator,
-      uint64_t*,
-      uint64_t*
-    >
-  > hb;
+    rdat.beg = out + ftoc.entries.back().first + 12;
+    rdat.end = rdat.beg + rhdr.record_count * rhdr.record_length;
 
-  for (const auto& field: fields) {
-    // Determine locations for each hash block
+    // sort the records
+    RecordIterator rbeg(static_cast<uint8_t*>(rdat.beg), rhdr.record_length);
+    RecordIterator rend(static_cast<uint8_t*>(rdat.end), rhdr.record_length);
 
-    // HHnn
-    toc.entries.emplace_back(off, make_hhnn_type(field.type));
-    off += length_hhnn(field);
+    std::sort(rbeg, rend);
+    rend = std::unique(rbeg, rend);
 
-    // HINT
-    if (field.type != SFHASH_SIZE) {
-      toc.entries.emplace_back(off, Chunk::Type::HINT);
-      off += length_hint();
-    }
+    rdat.end = rend->rec.data();
+    rhdr.record_count = rend - rbeg;
 
-    // HDAT
-    off += length_alignment_padding(off, 4096);
-    toc.entries.emplace_back(off, Chunk::Type::HDAT);
-    off += length_hdat(hash_count, fields[i].length);
+    off = ftoc.entries.back().first + length_rdat(rhdr.fields, rhdr.record_count);
 
-    // RIDX
-    toc.entries.emplace_back(off, Chunk::Type::RIDX);
-    off += length_ridx(hash_count);
-  }
+    std::vector<
+      std::tuple<
+        uint64_t,
+        RecordIterator,
+        RecordIterator,
+        uint64_t*,
+        uint64_t*
+      >
+    > hb;
 
-  // FEND
-  toc.entries.emplace_back(off, Chunk::Type::FEND);
-  off += length_fend();
+    std::map<uint64_t, size_t> off2hbidx;
 
-  //
-  // Write
-  //
+    if (bctx->with_hashsets) {
+      for (const auto& field: rhdr.fields) {
+        // Determine locations for each hash block
+        const size_t hbidx = hb.size();
 
-  char* out = static_cast<char*>(bctx->out);
-  const char* beg = out;
+        // HHnn
+        ftoc.entries.emplace_back(off, make_hhnn_type(field.type));
+        off2hbidx[off] = hbidx;
+        off += length_hhnn(field);
 
-  // Magic
-  out += write_magic(out);
+        // HINT
+        if (field.type != SFHASH_SIZE) {
+          ftoc.entries.emplace_back(off, Chunk::Type::HINT);
+          off2hbidx[off] = hbidx;
+          off += length_hint();
+        }
 
-  auto toc_itr = toc.entries.begin();
+        // HDAT
+        off += length_alignment_padding(off, 4096);
+        ftoc.entries.emplace_back(off, Chunk::Type::HDAT);
+        off2hbidx[off] = hbidx;
 
-  // FTOC
-  check_toc(toc_itr++, out - beg, Chunk::Type::FTOC);
-  out += write_ftoc(toc, out);
+        hb.emplace_back(
+          field.length,
+          RecordIterator(reinterpret_cast<uint8_t*>(out) + off + 12, field.length),
+          RecordIterator(reinterpret_cast<uint8_t*>(out) + off + 12, field.length),
+          nullptr,
+          nullptr
+        );
 
-  // FHDR
-  check_toc(toc_itr++, out - beg, Chunk::Type::FHDR);
-  out += write_fhdr(fhdr.version, fhdr.name, fhdr.desc, fhdr.time, out);
+        off += length_hdat(rhdr.record_count, field.length);
 
-  // RHDR
-  check_toc(toc_itr++, out - beg, Chunk::Type::RHDR);
-  out += write_rhdr(fields, records.size(), out);
+        // RIDX
+        ftoc.entries.emplace_back(off, Chunk::Type::RIDX);
+        off2hbidx[off] = hbidx;
 
-  // RDAT
-  check_toc(toc_itr++, out - beg, Chunk::Type::RDAT);
-  out += write_rdat(fields, records, out);
+        std::get<4>(hb.back()) = std::get<3>(hb.back()) = reinterpret_cast<uint64_t*>(out + off + 12);
 
-  for (auto i = 0u; i < fields.size(); ++i) {
-    std::vector<std::pair<std::vector<uint8_t>, size_t>> recs;
-    for (auto ri = 0u; ri < records.size(); ++ri) {
-      if (!records[ri][i].empty()) {
-        recs.emplace_back(records[ri][i], ri);
+        off += length_ridx(rhdr.record_count);
       }
     }
-    std::sort(recs.begin(), recs.end());
 
-    std::vector<std::vector<uint8_t>> hashes;
-    std::vector<uint64_t> ridx;
+    // FEND
+    ftoc.entries.emplace_back(off, Chunk::Type::FEND);
+    off += length_fend();
 
-    for (const auto& [h, ri]: recs) {
-      hashes.push_back(h);
-      ridx.push_back(ri);
+    if (bctx->with_hashsets) {
+      scatter_records_to_hashset(rhdr, rdat, hb);
     }
 
-    // HHnn
-    check_toc(toc_itr++, out - beg, make_hhnn_type(fields[i].type));
-    out += write_hhnn(fields[i], hashes.size(), out);
+    // Write
+    write_chunks(out, ftoc, fhdr, rhdr, rdat, hb, off2hbidx);
+  }
+  else if (bctx->with_hashsets) {
+    // close the temp files
+    bctx->tmp_hashes_out.clear();
 
-    // HINT
-    if (fields[i].type != SFHASH_SIZE) {
-      check_toc(toc_itr++, out - beg, Chunk::Type::HINT);
-      out += write_hint(make_block_bounds<8>(hashes), out);
+    for (size_t i = 0; i < bctx->hsets.size(); ++i) {
+      const auto& f = bctx->tmp_hashes_files[i];
+      auto fsize = std::filesystem::file_size(f);
+
+      auto& hhdr = std::get<0>(bctx->hsets[i]);
+
+      {
+        bip::file_mapping fm(f.c_str(), bip::read_write);
+        bip::mapped_region mr(fm, bip::read_write);
+
+        char* out = static_cast<char*>(mr.get_address());
+
+        RecordIterator hbeg(reinterpret_cast<uint8_t*>(out), hhdr.hash_length);
+        RecordIterator hend(reinterpret_cast<uint8_t*>(out + fsize), hhdr.hash_length);
+
+        std::sort(hbeg, hend);
+        hend = std::unique(hbeg, hend);
+
+        fsize = hend->rec.data() - reinterpret_cast<uint8_t*>(out);
+      }
+
+      std::filesystem::resize_file(f, fsize);
     }
 
-    // HDAT
-    out += write_alignment_padding(out - beg, 4096, out);
-    check_toc(toc_itr++, out - beg, Chunk::Type::HDAT);
-    out += write_hdat(hashes, out);
+    const auto hset_size = length_hset_hashsets_only(
+      bctx->fhdr.name,
+      bctx->fhdr.desc,
+      bctx->fhdr.time,
+      bctx->rhdr.fields,
+      bctx->rhdr.record_count,
+      bctx->hsets
+    );
 
-    // RIDX
-    check_toc(toc_itr++, out - beg, Chunk::Type::RIDX);
-    out += write_ridx(ridx, out);
+    std::filesystem::resize_file(outfile, hset_size);
+
+    bip::file_mapping fm(outfile.c_str(), bip::read_write);
+    bip::mapped_region mr(fm, bip::read_write);
+
+    char* out = static_cast<char*>(mr.get_address());
+
+    std::vector<
+      std::tuple<
+        uint64_t,
+        RecordIterator,
+        RecordIterator,
+        uint64_t*,
+        uint64_t*
+      >
+    > hb;
+
+    std::map<uint64_t, size_t> off2hbidx;
+
+    off = ftoc.entries.back().first + length_fhdr(fhdr.name, fhdr.desc, fhdr.time);
+
+    for (size_t i = 0; i < rhdr.fields.size(); ++i) {
+      const auto& field = rhdr.fields[i];
+
+      // HHnn
+      ftoc.entries.emplace_back(off, make_hhnn_type(field.type));
+      off2hbidx[off] = i;
+      off += length_hhnn(field);
+
+      // HINT
+      if (field.type != SFHASH_SIZE) {
+        ftoc.entries.emplace_back(off, Chunk::Type::HINT);
+        off2hbidx[off] = i;
+        off += length_hint();
+      }
+
+      // HDAT
+      off += length_alignment_padding(off, 4096);
+      ftoc.entries.emplace_back(off, Chunk::Type::HDAT);
+      off2hbidx[off] = i;
+
+      auto& hhdr = std::get<0>(bctx->hsets[i]);
+      auto& hdat = std::get<2>(bctx->hsets[i]);
+
+      const auto& f = bctx->tmp_hashes_files[i];
+
+      const auto fsize = std::filesystem::file_size(f);
+      std::ifstream tof(f, std::ios::binary);
+      tof.read(out + off + 12, fsize);
+      tof.close();
+      std::filesystem::remove(f);
+
+      hdat.beg = out + off;
+      hdat.end = out + off + fsize;
+
+      RecordIterator hbeg(static_cast<uint8_t*>(hdat.beg), hhdr.hash_length);
+      RecordIterator hend(static_cast<uint8_t*>(hdat.end), hhdr.hash_length);
+
+      std::sort(hbeg, hend);
+      hend = std::unique(hbeg, hend);
+
+      hdat.end = hend->rec.data();
+      hhdr.hash_count = hend - hbeg;
+
+      hb.emplace_back(
+        field.length,
+        hbeg,
+        hend,
+        nullptr,
+        nullptr
+      );
+
+      off += static_cast<uint8_t*>(hdat.end) - static_cast<uint8_t*>(hdat.beg);
+    }
+
+    // FEND
+    ftoc.entries.emplace_back(off, Chunk::Type::FEND);
+    off += length_fend();
+
+    // Write
+    write_chunks(out, ftoc, fhdr, rhdr, rdat, hb, off2hbidx);
   }
 
-  // FEND
-  check_toc(toc_itr++, out - beg, Chunk::Type::FEND);
-  out += write_fend(out);
+  std::filesystem::resize_file(outfile, off);
 
-  return out - beg;
+  return off;
 }
 
 void sfhash_hashset_builder_destroy(SFHASH_HashsetBuildCtx* bctx) {
   delete bctx;
 }
-
-// TODO: return a std::vector<std::string_view>
-// even better would be to lazily produce the string_views
-std::vector<std::string> split(const std::string& s, char delim) {
-  std::vector<std::string> splits;
-
-  auto i = s.begin();
-  do {
-    auto j = std::find(i, s.end(), delim);
-    splits.emplace_back(i, j);
-    i = j != s.end() ? j + 1 : j;
-  } while (i != s.end());
-
-  return splits;
-}
-
-size_t write_hashset(
-  const char* hashset_name,
-  const char* hashset_desc,
-  const SFHASH_HashAlgorithm* htypes,
-  size_t htypes_len,
-  std::istream& in,
-  std::vector<uint8_t>& out
-)
-{
-  // read stream into a lines vector
-  std::vector<std::string> lines;
-
-  while (in) {
-    std::getline(in, lines.emplace_back());
-  }
-
-  SFHASH_Error* err = nullptr;
-  auto bctx = make_unique_del(
-    sfhash_hashset_builder_open(
-      hashset_name,
-      hashset_desc,
-      htypes,
-      htypes_len,
-      lines.size(),
-      &err
-    ),
-    sfhash_hashset_builder_destroy
-  );
-
-  THROW_IF(err, err->message);
-
-  // collect the converter functions
-  std::vector<void (*)(uint8_t* dst, const char* src, size_t dlen)> conv;
-  for (size_t i = 0; i < htypes_len; ++i) {
-    conv.push_back(FIELDS.at(htypes[i]).second);
-  }
-
-  for (size_t l = 0; l < lines.size(); ++l) {
-    try {
-      const std::string& line = lines[l];
-
-      if (line.empty()) {
-        continue;
-      }
-
-      const auto& cols = split(line, ' ');
-
-      std::vector<std::vector<uint8_t>> rec;
-
-      for (size_t i = 0; i < htypes_len; ++i) {
-        if (cols[i].empty()) {
-          rec.emplace_back();
-        }
-        else {
-          const auto hi_len = bctx->rhdr.fields[i].length;
-          conv[i](
-            rec.emplace_back(hi_len, 0).data(),
-            cols[i].c_str(),
-            hi_len
-          );
-        }
-      }
-
-      bctx->records.push_back(std::move(rec));
-    }
-    catch (const std::exception& e) {
-      throw std::runtime_error(
-        "error parsing line " + std::to_string(l+1) + ": " + e.what()
-      );
-    }
-  }
-
-  const auto hset_size = sfhash_hashset_builder_required_size(bctx.get());
-  out.resize(hset_size);
-
-  sfhash_hashset_builder_set_output_buffer(bctx.get(), out.data());
-
-//  std::cerr << "buf.size() == " << buf.size() << std::endl;
 
   const auto wlen = sfhash_hashset_builder_write(bctx.get(), &err);
 
