@@ -227,11 +227,24 @@ TEST_CASE("length_ridx") {
 }
 
 TEST_CASE("write_ridx_data") {
-  const RecordIndex ridx{
-    reinterpret_cast<void*>(123),
-    reinterpret_cast<void*>(456)
+  const std::vector<uint64_t> ridx{
+    0,
+    97,
+    12345678
   };
-  CHECK(write_ridx_data(ridx, nullptr) == 456 - 123);
+
+  const uint8_t exp[] = {
+    // index 0
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // index 1
+    0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    // index 2
+    0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00,
+  };
+
+  chunk_data_tester<write_ridx_data>(
+    std::span{exp}, ridx
+  );
 }
 
 TEST_CASE("length_rhdr") {
