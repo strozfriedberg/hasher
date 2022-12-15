@@ -946,13 +946,25 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   return bctx.release();
 }
 
-void sfhash_hashset_builder_set_output_buffer(
+void sfhash_hashset_builder_add_record(
   SFHASH_HashsetBuildCtx* bctx,
-  void* buf)
+  const void* record)
 {
-// TODO: should be done only once
-  bctx->out = static_cast<char*>(buf);
-  bctx->rdat.beg = bctx->rdat.end = bctx->out + bctx->ftoc.entries.back().first + 12;
+  auto& rhdr = bctx->rhdr;
+  auto& field_pos = bctx->field_pos;
+
+  if (bctx->with_records) {
+    auto& out = bctx->out;
+    out.write(static_cast<const char*>(record), rhdr.record_length);
+  }
+  else { // with_hashsets
+    // TODO
+  }
+
+  // advance the field position
+  field_pos = 0;
+  // advance the record count
+  ++rhdr.record_count;
 }
 
 void sfhash_hashset_builder_add_record(
