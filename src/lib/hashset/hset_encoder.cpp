@@ -967,38 +967,44 @@ void sfhash_hashset_builder_add_record(
   ++rhdr.record_count;
 }
 
-void sfhash_hashset_builder_add_record(
+void sfhash_hashset_builder_add_hash(
   SFHASH_HashsetBuildCtx* bctx,
-  const void* record)
+  const void* record,
+  size_t length)
 {
-  std::vector<std::vector<uint8_t>> rec;
+// TODO: check length?
 
-  const uint8_t* ri = static_cast<const uint8_t*>(record);
-  for (const auto& hi: bctx->rhdr.fields) {
-    if (*ri) {
-      rec.emplace_back(ri + 1, ri + 1 + hi.length);
+  auto& field_pos = bctx->field_pos;
+
+  if (bctx->with_records) {
+    auto& out = bctx->out;
+    if (length > 0) {
+      out.put(1);
+      out.write(static_cast<const char*>(record), length);
     }
     else {
-      rec.emplace_back();
+      // FIXME: slow
+      for (size_t i = 0; i < length; ++i) {
+        out.put(0);
+      }
     }
-    ri += 1 + hi.length;
+  }
+  else { // with_hashsets
+    if (length > 0) {
+      auto& out = bctx->tmp_hashes_out[field_pos];
+      out.write(static_cast<const char*>(record), length);
+      ++std::get<0>(bctx->hsets[field_pos]).hash_count;
+    }
   }
 
-  bctx->rdat.end += write_rdat_record(
-    bctx->rhdr.fields,
-    rec,
-    static_cast<char*>(bctx->rdat.end)
-  );
-}
+  auto& rhdr = bctx->rhdr;
 
-void check_toc(auto toc_itr, uint64_t off, uint32_t chunk_type) {
-  THROW_IF(
-    toc_itr->second != chunk_type || off != toc_itr->first,
-    "writing " << printable_chunk_type(chunk_type) <<
-    " at " << off <<
-    ", expected " << printable_chunk_type(toc_itr->second) <<
-    " at " << toc_itr->first
-  );
+  // advance the field position
+  ++field_pos;
+  // advance the record count if we've finished a record
+  if ((field_pos %= rhdr.fields.size()) == 0) {
+    ++rhdr.record_count;
+  }
 }
 
 size_t sfhash_hashset_builder_write(
