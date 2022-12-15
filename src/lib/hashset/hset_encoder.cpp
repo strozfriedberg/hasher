@@ -27,6 +27,9 @@
 #include "hex.h"
 #include "rwutil.h"
 #include "util.h"
+#include "hashset/line_range.h"
+#include "hashset/field_iterator.h"
+#include "hashset/field_range.h"
 #include "hashset/record_iterator.h"
 #include "hashset/util.h"
 #include "hasher/hashset.h"
@@ -813,6 +816,114 @@ std::vector<std::string_view> split(std::string_view s, char delim) {
   } while (i != s.end());
 
   return splits;
+}
+
+void write_hset(
+  std::istream& in,
+  const std::vector<SFHASH_HashAlgorithm>& htypes,
+  const std::vector<std::pair<void (*)(uint8_t* dst, const char* src, size_t dlen), size_t>>& conv,
+  const char* hset_name,
+  const char* hset_desc,
+  const std::filesystem::path& outfile,
+  const std::filesystem::path& tmpdir,
+  bool with_records,
+  bool with_hashsets)
+{
+  SFHASH_Error* err = nullptr;
+
+  auto bctx = make_unique_del(
+    sfhash_hashset_builder_open(
+      hset_name,
+      hset_desc,
+      htypes.data(),
+      htypes.size(),
+      with_records,
+      with_hashsets,
+      outfile.c_str(),
+      tmpdir.c_str(),
+      &err
+    ),
+    sfhash_hashset_builder_destroy
+  );
+
+  THROW_IF(err, err->message);
+
+  if (with_records) {
+    std::vector<uint8_t> rec;
+    std::string line;
+    size_t lineno = 0;
+    while (in) {
+      std::getline(in, line);
+
+      ++lineno;
+  //    if (lineno % 10000 == 0) {
+  //      std::cerr << "read " << lineno << " lines\n";
+  //    }
+
+      if (line.empty()) {
+        continue;
+      }
+
+      const auto& cols = split(line, ' ');
+
+      for (size_t i = 0; i < htypes.size(); ++i) {
+        if (cols[i].empty()) {
+          rec.clear();
+        }
+        else {
+          rec.resize(conv[i].second);
+          conv[i].first(
+            rec.data(),
+            cols[i].data(),
+            conv[i].second
+          );
+        }
+
+        sfhash_hashset_builder_add_hash(bctx.get(), rec.data(), rec.size());
+      }
+    }
+
+  //  if (lineno % 10000) {
+    std::cerr << "read " << lineno << " lines\n";
+  //  }
+
+  }
+  else if (with_hashsets) {
+
+    std::vector<uint8_t> rec;
+    std::string line;
+    size_t lineno = 0;
+    size_t rcount = 0;
+
+    const size_t field_count = htypes.size();
+
+    for (const auto& line: LineRange(in)) {
+
+      ++lineno;
+  //    if (lineno % 10000 == 0) {
+  //      std::cerr << "read " << lineno << " lines\n";
+  //    }
+
+      if (line.empty()) {
+        continue;
+      }
+
+      const auto& cols = split(line, ' ');
+
+      FieldRange field_range(cols, conv);
+
+      FieldIterator field_itr = field_range.begin();
+      for (size_t i = 0; i < field_count; ++i, ++field_itr) {
+        sfhash_hashset_builder_add_hash(bctx.get(), field_itr->data(), field_itr->size());
+      }
+    }
+
+  //  if (lineno % 10000) {
+    std::cerr << "read " << lineno << " lines\n";
+  //  }
+  }
+
+  sfhash_hashset_builder_write(bctx.get(), &err);
 }
 
 SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
