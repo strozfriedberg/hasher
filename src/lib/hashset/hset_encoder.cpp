@@ -819,12 +819,27 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   const char* tmp_dir,
   SFHASH_Error** err)
 {
-  RecordHeader rhdr{
-    0,
-    record_count,
-    {}
-  };
+  auto bctx = make_unique_del(
+    new SFHASH_HashsetBuildCtx{
+      {},
+      { 2, hashset_name, hashset_desc, make_timestamp() },
+      { 0, 0, {} },
+      {},
+      {},
+      write_records,
+      write_hashsets,
+      {},
+      {},
+      {},
+      {},
+      0
+    },
+    sfhash_hashset_builder_destroy
+  );
 
+  auto& rhdr = bctx->rhdr;
+
+  // validate the args
   try {
     check_strlen(hashset_name, "hashset_name");
     check_strlen(hashset_desc, "hashset_desc");
