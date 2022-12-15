@@ -239,6 +239,18 @@ size_t write_ftoc(
 
 void check_strlen(const char* s, const char* sname);
 
+void write_hset(
+  std::istream& in,
+  const std::vector<SFHASH_HashAlgorithm>& htypes,
+  const std::vector<std::pair<void (*)(uint8_t* dst, const char* src, size_t dlen), size_t>>& conv,
+  const char* hset_name,
+  const char* hset_desc,
+  const std::filesystem::path& outfile,
+  const std::filesystem::path& tmpdir,
+  bool with_records,
+  bool with_hashsets
+);
+
 std::vector<
   std::pair<
     void (*)(uint8_t* dst, const char* src, size_t dlen),
@@ -246,4 +258,3 @@ std::vector<
   >
 >
 make_text_converters(const std::vector<SFHASH_HashAlgorithm>& htypes);
-
