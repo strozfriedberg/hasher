@@ -863,11 +863,14 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
         rhdr.record_length += 1 + hi.length;
       }
       catch (const std::out_of_range&) {
-        throw std::runtime_error(
-          "uknown hash type " + std::to_string(record_order[i])
-        );
+        THROW("uknown hash type " << std::to_string(record_order[i]));
       }
     }
+
+    THROW_IF(
+      !write_records && !write_hashsets,
+      "at least one of records and hashsets must be written"
+    );
   }
   catch (const std::exception& e) {
     fill_error(err, e.what());
