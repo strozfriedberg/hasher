@@ -240,7 +240,7 @@ TEST_CASE("parse_rhdr") {
 }
 
 TEST_CASE("parse_rdat") {
-  const uint8_t buf[] = {
+  uint8_t buf[] = {
     // data!
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
   };
