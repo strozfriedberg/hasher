@@ -121,7 +121,7 @@ void do_lookups(
 
 TEST_CASE("hashset_lookup") {
   // create a test hset
-  const std::array md5s{
+  std::array md5s{
     to_bytes<16>("081d3d40b257d8bbc5858345ad186beb"),
     to_bytes<16>("19875d9651a319fdb8f7332b660c432d"),
     to_bytes<16>("297da3f7f9c7a38fcb8872193cf3b609"),
@@ -134,7 +134,7 @@ TEST_CASE("hashset_lookup") {
     to_bytes<16>("eb6fe7367307473c86c3438744c3b1db")
   };
 
-  const std::array sha1s{
+  std::array sha1s{
     to_bytes<20>("0af8e028c7048ad772ddec2200ec7e0e4d58b0c3"),
     to_bytes<20>("1127ceb2c2d789c1d7615b12082ca30222f3c612"),
     to_bytes<20>("3e909896b309492e00444212bb2b270b5809a0cf"),
@@ -292,7 +292,7 @@ void do_record_lookups(
 
 TEST_CASE("hashset_record_lookup") {
   // create a test hset
-  const std::array md5s{
+  std::array md5s{
     to_bytes<16>("081d3d40b257d8bbc5858345ad186beb"),
     to_bytes<16>("19875d9651a319fdb8f7332b660c432d"),
     to_bytes<16>("297da3f7f9c7a38fcb8872193cf3b609"),
@@ -305,7 +305,7 @@ TEST_CASE("hashset_record_lookup") {
     to_bytes<16>("eb6fe7367307473c86c3438744c3b1db")
   };
 
-  const std::array sha1s{
+  std::array sha1s{
     to_bytes<20>("0af8e028c7048ad772ddec2200ec7e0e4d58b0c3"),
     to_bytes<20>("1127ceb2c2d789c1d7615b12082ca30222f3c612"),
     to_bytes<20>("3e909896b309492e00444212bb2b270b5809a0cf"),
@@ -318,7 +318,7 @@ TEST_CASE("hashset_record_lookup") {
     to_bytes<20>("fad37e52be19b7a6ea321b848f2d6de4b75efcc9")
   };
 
-  const std::array<uint64_t, 10> sizes{
+  std::array<uint64_t, 10> sizes{
     0,
     1,
     2,

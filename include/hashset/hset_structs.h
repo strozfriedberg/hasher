@@ -55,8 +55,8 @@ enum HintType {
 };
 
 struct HashsetData {
-  const void* beg;
-  const void* end;
+  void* beg;
+  void* end;
 
   bool operator==(const HashsetData&) const = default;
 };
@@ -64,8 +64,8 @@ struct HashsetData {
 std::ostream& operator<<(std::ostream& out, const HashsetData& hdat);
 
 struct RecordIndex {
-  const void* beg;
-  const void* end;
+  void* beg;
+  void* end;
 
   bool operator==(const RecordIndex&) const = default;
 };
@@ -93,8 +93,8 @@ struct RecordHeader {
 std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr);
 
 struct RecordData {
-  const void* beg;
-  const void* end;
+  void* beg;
+  void* end;
 
   bool operator==(const RecordData&) const = default;
 };
