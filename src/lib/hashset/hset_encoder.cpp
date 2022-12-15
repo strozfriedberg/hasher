@@ -877,54 +877,73 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
     return nullptr;
   }
 
-  FileHeader fhdr{
-    2,
-    hashset_name,
-    hashset_desc,
-    make_timestamp()
-  };
+// TODO: error handling
+  bctx->outfile = output_file;
+  auto& outfile = bctx->outfile;
 
-  // determination of leading chunk locations
+// TODO: error handling
+  // touch the output file so it exists (can't resize a file ab initio)
+  std::ofstream of;
+  of.open(outfile);
+  of.close();
 
-  TableOfContents toc;
+  // establish locations of initial chunks
+
+  auto& ftoc = bctx->ftoc;
+  const auto& fhdr = bctx->fhdr;
 
   uint64_t off = 0;
 
   off += length_magic();
 
   // FTOC
-  toc.entries.emplace_back(off, Chunk::Type::FTOC);
+  ftoc.entries.emplace_back(off, Chunk::Type::FTOC);
   off += length_ftoc(count_chunks(rhdr.fields));
 
   // FHDR
-  toc.entries.emplace_back(off, Chunk::Type::FHDR);
+  ftoc.entries.emplace_back(off, Chunk::Type::FHDR);
   off += length_fhdr(fhdr.name, fhdr.desc, fhdr.time);
 
-  // RHDR
-  toc.entries.emplace_back(off, Chunk::Type::RHDR);
-  off += length_rhdr(rhdr.fields);
+  if (write_records) {
+    // RHDR
+    ftoc.entries.emplace_back(off, Chunk::Type::RHDR);
+    off += length_rhdr(rhdr.fields);
 
-  // RDAT
-  toc.entries.emplace_back(off, Chunk::Type::RDAT);
+    // RDAT
+    ftoc.entries.emplace_back(off, Chunk::Type::RDAT);
 
-  return new SFHASH_HashsetBuildCtx{
-    std::move(toc),
-    std::move(fhdr),
-    std::move(rhdr),
-    {},
-    nullptr,
-    nullptr
-  };
-}
+// TODO: error handling
+    // resize the output file so the start of the RDAT data is at the end
+    std::filesystem::resize_file(outfile, off + 12);
 
-size_t sfhash_hashset_builder_required_size(const SFHASH_HashsetBuildCtx* bctx) {
-  return length_hset(
-    bctx->fhdr.name,
-    bctx->fhdr.desc,
-    bctx->fhdr.time,
-    bctx->rhdr.fields,
-    bctx->rhdr.record_count
-  );
+// TODO: error handling
+    // open the output file ready for appending
+    auto& out = bctx->out;
+    out.open(outfile, std::ios::binary | std::ios::app);
+  }
+  else { // write_hashsets
+    auto& hsets = bctx->hsets;
+    auto& tmp_hashes_files = bctx->tmp_hashes_files;
+    auto& tmp_hashes_out = bctx->tmp_hashes_out;
+
+    for (const auto& field: rhdr.fields) {
+      // initialize the hashsets from the RHDR fields
+      hsets.emplace_back(
+        HashsetHeader{ field.type, field.name, field.length, 0 },
+        HashsetHint{},
+        HashsetData{},
+        RecordIndex{}
+      );
+
+// TODO: error handling
+      // open the temp files for receiving the hashes
+      const auto f = std::string(tmp_dir) + "/tmp_" + std::to_string(field.type);
+      const auto& p = tmp_hashes_files.emplace_back(f);
+      tmp_hashes_out.emplace_back(p, std::ios::binary | std::ios::trunc);
+    }
+  }
+
+  return bctx.release();
 }
 
 void sfhash_hashset_builder_set_output_buffer(
