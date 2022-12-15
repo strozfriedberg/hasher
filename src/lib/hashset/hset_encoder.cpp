@@ -1264,8 +1264,45 @@ void sfhash_hashset_builder_destroy(SFHASH_HashsetBuildCtx* bctx) {
   delete bctx;
 }
 
-  const auto wlen = sfhash_hashset_builder_write(bctx.get(), &err);
+const std::map<
+  SFHASH_HashAlgorithm,
+  std::pair<
+    void (*)(uint8_t* dst, const char* src, size_t dlen),
+    size_t
+  >
+> CONV{
+  { SFHASH_MD5,       { from_hex, 16 } },
+  { SFHASH_SHA_1,     { from_hex, 20 } },
+  { SFHASH_SHA_2_224, { from_hex, 28 } },
+  { SFHASH_SHA_2_256, { from_hex, 32 } },
+  { SFHASH_SHA_2_384, { from_hex, 48 } },
+  { SFHASH_SHA_2_512, { from_hex, 64 } },
+  { SFHASH_SHA_3_224, { from_hex, 28 } },
+  { SFHASH_SHA_3_256, { from_hex, 32 } },
+  { SFHASH_SHA_3_384, { from_hex, 48 } },
+  { SFHASH_SHA_3_512, { from_hex, 64 } },
+  { SFHASH_BLAKE3,    { from_hex, 32 } },
+  { SFHASH_SIZE,      { size_to_u64, 8 } }
+};
 
-  out.resize(wlen);
-  return wlen;
+std::vector<
+  std::pair<
+    void (*)(uint8_t* dst, const char* src, size_t dlen),
+    size_t
+  >
+>
+make_text_converters(const std::vector<SFHASH_HashAlgorithm>& htypes) {
+  // collect the converter functions
+  std::vector<
+    std::pair<
+      void (*)(uint8_t* dst, const char* src, size_t dlen),
+      size_t
+    >
+  > conv;
+
+  for (const auto& ht: htypes) {
+    conv.push_back(CONV.at(ht));
+  }
+
+  return conv;
 }

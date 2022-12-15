@@ -238,3 +238,12 @@ size_t write_ftoc(
 );
 
 void check_strlen(const char* s, const char* sname);
+
+std::vector<
+  std::pair<
+    void (*)(uint8_t* dst, const char* src, size_t dlen),
+    size_t
+  >
+>
+make_text_converters(const std::vector<SFHASH_HashAlgorithm>& htypes);
+
