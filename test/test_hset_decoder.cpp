@@ -28,8 +28,8 @@ TEST_CASE("decode_chunk") {
     0x9e, 0x13, 0xf9, 0x78, 0xd7, 0xc8, 0x46, 0xf4
   };
 
-  const uint8_t* beg = in;
-  const uint8_t* end = beg + sizeof(in);
+  const uint8_t* beg = std::begin(in);
+  const uint8_t* end = std::end(in);
   const uint8_t* cur = beg;
 
   const Chunk exp{0x41424344, beg + 12, beg + 16};
@@ -77,7 +77,7 @@ TEST_CASE("parse_ftoc") {
     0xD0, 0xFB, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 'F', 'T', 'O', 'C'
   };
 
-  const Chunk ch{Chunk::Type::FTOC, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::FTOC, std::begin(buf), std::end(buf)};
 
   const TableOfContents exp{
     {
@@ -113,7 +113,7 @@ TEST_CASE("parse_fhdr") {
     'd', 'e', 's', 'c',
   };
 
-  const Chunk ch{Chunk::Type::FHDR, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::FHDR, std::begin(buf), std::end(buf)};
 
   const FileHeader exp{
     2,
@@ -139,7 +139,7 @@ TEST_CASE("parse_hhdr") {
 
   const uint32_t htype = std::bit_width(static_cast<uint32_t>(SFHASH_SHA_1)) - 1;
 
-  const Chunk ch{Chunk::Type::HHDR | htype, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::HHDR | htype, std::begin(buf), std::end(buf)};
 
   const HashsetHeader exp{
     SFHASH_SHA_1,
@@ -159,9 +159,9 @@ TEST_CASE("parse_hint") {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
   };
 
-  const Chunk ch{Chunk::Type::HINT, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::HINT, std::begin(buf), std::end(buf)};
 
-  const HashsetHint exp{ 0x1234, buf + 2, buf + sizeof(buf) };
+  const HashsetHint exp{ 0x1234, std::begin(buf) + 2, std::end(buf) };
 
   CHECK(parse_hint(ch) == exp);
 }
@@ -172,9 +172,9 @@ TEST_CASE("parse_hdat") {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
   };
 
-  const Chunk ch{Chunk::Type::HDAT, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::HDAT, std::begin(buf), std::end(buf)};
 
-  const HashsetData exp{ buf, buf + sizeof(buf) };
+  const HashsetData exp{ std::begin(buf), std::end(buf) };
 
   CHECK(parse_hdat(ch) == exp);
 }
@@ -188,9 +188,9 @@ TEST_CASE("parse_ridx") {
     0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
   };
 
-  const Chunk ch{Chunk::Type::RIDX, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::RIDX, std::begin(buf), std::end(buf)};
 
-  const RecordIndex exp{ buf, buf + sizeof(buf) };
+  const RecordIndex exp{ std::begin(buf), std::end(buf) };
 
   CHECK(parse_ridx(ch) == exp);
 }
@@ -225,7 +225,7 @@ TEST_CASE("parse_rhdr") {
     0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
   };
 
-  const Chunk ch{Chunk::Type::RHDR, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::RHDR, std::begin(buf), std::end(buf)};
 
   const RecordHeader exp{
     38,
@@ -245,9 +245,9 @@ TEST_CASE("parse_rdat") {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
   };
 
-  const Chunk ch{Chunk::Type::RDAT, buf, buf + sizeof(buf)};
+  const Chunk ch{Chunk::Type::RDAT, std::begin(buf), std::end(buf)};
 
-  const RecordData exp{ buf, buf + sizeof(buf) };
+  const RecordData exp{ std::begin(buf), std::end(buf) };
 
   CHECK(parse_rdat(ch) == exp);
 }

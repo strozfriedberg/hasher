@@ -80,7 +80,7 @@ TEST_CASE("union_one_empty_operand") {
     }
   };
 
-  const uint8_t abuf[] = {
+  uint8_t abuf[] = {
     0x01,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
@@ -90,7 +90,7 @@ TEST_CASE("union_one_empty_operand") {
     0x01, 0x23, 0x45, 0x67
   };
 
-  const RecordData ardat{ abuf, abuf + sizeof(abuf) };
+  const RecordData ardat{ std::begin(abuf), std::end(abuf) };
 
   const RecordHeader brhdr{
     38,
@@ -142,7 +142,7 @@ TEST_CASE("setops_self") {
     }
   };
 
-  const uint8_t abuf[] = {
+  uint8_t abuf[] = {
     0x01,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
@@ -152,7 +152,7 @@ TEST_CASE("setops_self") {
     0x01, 0x23, 0x45, 0x67
   };
 
-  const RecordData ardat{ abuf, abuf + sizeof(abuf) };
+  const RecordData ardat{ std::begin(abuf), std::end(abuf) };
 
   const auto [aua, aua_otypes] = union_op(arhdr, ardat, arhdr, ardat);
   const auto [ana, ana_otypes] = intersect_op(arhdr, ardat, arhdr, ardat);
@@ -207,7 +207,7 @@ TEST_CASE("setops_overlapping_nonequal") {
     }
   };
 
-  const uint8_t abuf[] = {
+  uint8_t abuf[] = {
     0x01,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
@@ -224,7 +224,7 @@ TEST_CASE("setops_overlapping_nonequal") {
     0xFE, 0xDC, 0xBA, 0x98
   };
 
-  const RecordData ardat{ abuf, abuf + sizeof(abuf) };
+  const RecordData ardat{ std::begin(abuf), std::end(abuf) };
 
   const RecordHeader brhdr{
     38,
@@ -235,7 +235,7 @@ TEST_CASE("setops_overlapping_nonequal") {
     }
   };
 
-  const uint8_t bbuf[] = {
+  uint8_t bbuf[] = {
     0x01,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
@@ -252,7 +252,7 @@ TEST_CASE("setops_overlapping_nonequal") {
     0xFF, 0xFF, 0xFF, 0xFF
   };
 
-  const RecordData brdat{ bbuf, bbuf + sizeof(bbuf) };
+  const RecordData brdat{ std::begin(bbuf), std::end(bbuf) };
 
   const auto [aub, aub_otypes] = union_op(arhdr, ardat, brhdr, brdat);
   const auto [bua, bua_otypes] = union_op(brhdr, brdat, arhdr, ardat);
@@ -358,7 +358,7 @@ TEST_CASE("setops_disjoint") {
     }
   };
 
-  const uint8_t abuf[] = {
+  uint8_t abuf[] = {
     0x01,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
@@ -375,7 +375,7 @@ TEST_CASE("setops_disjoint") {
     0xFE, 0xDC, 0xBA, 0x98
   };
 
-  const RecordData ardat{ abuf, abuf + sizeof(abuf) };
+  const RecordData ardat{ std::begin(abuf), std::end(abuf) };
 
   const RecordHeader brhdr{
     38,
@@ -386,7 +386,7 @@ TEST_CASE("setops_disjoint") {
     }
   };
 
-  const uint8_t bbuf[] = {
+  uint8_t bbuf[] = {
     0x01,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -403,7 +403,7 @@ TEST_CASE("setops_disjoint") {
     0xFF, 0xFF, 0xFF, 0xFF
   };
 
-  const RecordData brdat{ bbuf, bbuf + sizeof(bbuf) };
+  const RecordData brdat{ std::begin(bbuf), std::end(bbuf) };
 
   const auto [aub, aub_otypes] = union_op(arhdr, ardat, brhdr, brdat);
   const auto [bua, bua_otypes] = union_op(brhdr, brdat, arhdr, ardat);
