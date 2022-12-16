@@ -105,7 +105,7 @@ const SFHASH_HashsetRecord* sfhash_hashset_record_for_hash(
   size_t tidx,
   size_t ridx
 ) {
-  const auto& ri = std::get<RecordIndex>(hset->holder.hsets[tidx]);
+  const auto& ri = std::get<ConstRecordIndex>(hset->holder.hsets[tidx]);
   const auto record_index = static_cast<const uint64_t*>(ri.beg)[ridx];
   return reinterpret_cast<const SFHASH_HashsetRecord*>(static_cast<const uint8_t*>(hset->holder.rdat.beg) + record_index * hset->holder.rhdr.record_length);
 }

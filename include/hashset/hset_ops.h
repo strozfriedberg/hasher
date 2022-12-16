@@ -39,9 +39,9 @@ std::pair<
   std::vector<SFHASH_HashAlgorithm>
 > union_op(
   const RecordHeader& lrhdr,
-  const RecordData& lrdat,
+  const ConstRecordData& lrdat,
   const RecordHeader& rrhdr,
-  const RecordData& rrdat
+  const ConstRecordData& rrdat
 );
 
 std::pair<
@@ -49,9 +49,9 @@ std::pair<
   std::vector<SFHASH_HashAlgorithm>
 > intersect_op(
   const RecordHeader& lrhdr,
-  const RecordData& lrdat,
+  const ConstRecordData& lrdat,
   const RecordHeader& rrhdr,
-  const RecordData& rrdat
+  const ConstRecordData& rrdat
 );
 
 std::pair<
@@ -59,7 +59,7 @@ std::pair<
   std::vector<SFHASH_HashAlgorithm>
 > difference_op(
   const RecordHeader& lrhdr,
-  const RecordData& lrdat,
+  const ConstRecordData& lrdat,
   const RecordHeader& rrhdr,
-  const RecordData& rrdat
+  const ConstRecordData& rrdat
 );

@@ -78,25 +78,25 @@ TEST_CASE("hashset_index_for_type") {
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_SIZE, "size", 8, 0 },
     HashsetHint{},
-    HashsetData{},
+    ConstHashsetData{},
     std::unique_ptr<LookupStrategy>(),
-    RecordIndex{}
+    ConstRecordIndex{}
   );
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_MD5, "MD5", 16, 0 },
     HashsetHint{},
-    HashsetData{},
+    ConstHashsetData{},
     std::unique_ptr<LookupStrategy>(),
-    RecordIndex{}
+    ConstRecordIndex{}
   );
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_SHA_1, "SHA-1", 20, 0 },
     HashsetHint{},
-    HashsetData{},
+    ConstHashsetData{},
     std::unique_ptr<LookupStrategy>(),
-    RecordIndex{}
+    ConstRecordIndex{}
   );
 
   CHECK(sfhash_hashset_index_for_type(&hset, SFHASH_SIZE) == 0);
@@ -152,17 +152,17 @@ TEST_CASE("hashset_lookup") {
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_MD5, "md5", 16, 0 },
     HashsetHint{},
-    HashsetData{ md5s.begin(),  md5s.end() },
+    ConstHashsetData{ md5s.begin(),  md5s.end() },
     std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<16>(md5s.begin(), md5s.end())),
-    RecordIndex{}
+    ConstRecordIndex{}
   );
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_SHA_1, "sha1", 20, 0 },
     HashsetHint{},
-    HashsetData{ sha1s.begin(), sha1s.end() },
+    ConstHashsetData{ sha1s.begin(), sha1s.end() },
     std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<20>(sha1s.begin(), sha1s.end())),
-    RecordIndex{}
+    ConstRecordIndex{}
   );
 
   // lookup some MD5s
@@ -365,25 +365,25 @@ TEST_CASE("hashset_record_lookup") {
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_MD5, "MD5", 16, 0 },
     HashsetHint{},
-    HashsetData{ md5s.begin(), md5s.end() },
+    ConstHashsetData{ md5s.begin(), md5s.end() },
     std::unique_ptr<LookupStrategy>(),
-    RecordIndex{ md5s_r.begin(), md5s_r.end() }
+    ConstRecordIndex{ md5s_r.begin(), md5s_r.end() }
   );
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_SHA_1, "SHA-1", 20, 0 },
     HashsetHint{},
-    HashsetData{ sha1s.begin(), sha1s.end() },
+    ConstHashsetData{ sha1s.begin(), sha1s.end() },
     std::unique_ptr<LookupStrategy>(),
-    RecordIndex{ sha1s_r.begin(), sha1s_r.end() }
+    ConstRecordIndex{ sha1s_r.begin(), sha1s_r.end() }
   );
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_SIZE, "size", 8, 0 },
     HashsetHint{},
-    HashsetData{ sizes.begin(), sizes.end() },
+    ConstHashsetData{ sizes.begin(), sizes.end() },
     std::unique_ptr<LookupStrategy>(),
-    RecordIndex{ sizes_r.begin(), sizes_r.end() }
+    ConstRecordIndex{ sizes_r.begin(), sizes_r.end() }
   );
 
   // lookup records for some MD5s

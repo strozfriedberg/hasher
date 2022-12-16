@@ -158,7 +158,7 @@ struct MakeBlockLookupStrategy8: public MakeBlockLookupStrategy<HashLength, 8> {
 std::unique_ptr<LookupStrategy> make_lookup_strategy(
   const HashsetHeader& hsh,
   const HashsetHint& hnt,
-  const HashsetData& hsd)
+  const ConstHashsetData& hsd)
 {
   // TODO: check that hnt is long enough to hold data?
 
@@ -290,15 +290,15 @@ void check_data_length(const Chunk& ch, uint64_t exp_len) {
   );
 }
 
-RecordIndex parse_ridx(const Chunk& ch) {
+ConstRecordIndex parse_ridx(const Chunk& ch) {
   return { ch.dbeg, ch.dend };
 }
 
-HashsetData parse_hdat(const Chunk& ch) {
+ConstHashsetData parse_hdat(const Chunk& ch) {
   return { ch.dbeg, ch.dend };
 }
 
-RecordData parse_rdat(const Chunk& ch) {
+ConstRecordData parse_rdat(const Chunk& ch) {
   return { ch.dbeg, ch.dend };
 }
 
@@ -336,9 +336,9 @@ State::Type handle_hhdr(const Chunk& ch, Holder& h) {
   h.hsets.emplace_back(
     parse_hhdr(ch),
     HashsetHint(),
-    HashsetData(),
+    ConstHashsetData(),
     nullptr,
-    RecordIndex()
+    ConstRecordIndex()
   );
 
   return State::HHDR;
@@ -373,7 +373,7 @@ State::Type handle_hint(const Chunk& ch, Holder& h) {
 State::Type handle_hdat(const Chunk& ch, Holder& h) {
   auto& hset = h.hsets.back();
   const auto& hhdr = std::get<HashsetHeader>(hset);
-  auto& hdat = std::get<HashsetData>(hset);
+  auto& hdat = std::get<ConstHashsetData>(hset);
 
   check_data_length(ch, hhdr.hash_count * hhdr.hash_length);
 
@@ -384,7 +384,7 @@ State::Type handle_hdat(const Chunk& ch, Holder& h) {
 State::Type handle_ridx(const Chunk& ch, Holder& h) {
   auto& hset = h.hsets.back();
   const auto& hhdr = std::get<HashsetHeader>(hset);
-  auto& ridx = std::get<RecordIndex>(hset);
+  auto& ridx = std::get<ConstRecordIndex>(hset);
 
   check_data_length(ch, hhdr.hash_count * sizeof(uint64_t));
 

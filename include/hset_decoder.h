@@ -17,13 +17,13 @@ struct Holder {
     std::tuple<
       HashsetHeader,
       HashsetHint,
-      HashsetData,
+      ConstHashsetData,
       std::unique_ptr<LookupStrategy>,
-      RecordIndex
+      ConstRecordIndex
     >
   > hsets;
   RecordHeader rhdr;
-  RecordData rdat;
+  ConstRecordData rdat;
 };
 
 Chunk decode_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end);
@@ -53,13 +53,13 @@ HashsetHeader parse_hhdr(const Chunk& ch);
 
 HashsetHint parse_hint(const Chunk& ch);
 
-HashsetData parse_hdat(const Chunk& ch);
+ConstHashsetData parse_hdat(const Chunk& ch);
 
-RecordIndex parse_ridx(const Chunk& ch);
+ConstRecordIndex parse_ridx(const Chunk& ch);
 
 RecordHeader parse_rhdr(const Chunk& ch);
 
-RecordData parse_rdat(const Chunk& ch);
+ConstRecordData parse_rdat(const Chunk& ch);
 
 class TOCIterator {
 public:

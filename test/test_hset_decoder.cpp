@@ -174,7 +174,7 @@ TEST_CASE("parse_hdat") {
 
   const Chunk ch{Chunk::Type::HDAT, std::begin(buf), std::end(buf)};
 
-  const HashsetData exp{ std::begin(buf), std::end(buf) };
+  const ConstHashsetData exp{ std::begin(buf), std::end(buf) };
 
   CHECK(parse_hdat(ch) == exp);
 }
@@ -190,7 +190,7 @@ TEST_CASE("parse_ridx") {
 
   const Chunk ch{Chunk::Type::RIDX, std::begin(buf), std::end(buf)};
 
-  const RecordIndex exp{ std::begin(buf), std::end(buf) };
+  const ConstRecordIndex exp{ std::begin(buf), std::end(buf) };
 
   CHECK(parse_ridx(ch) == exp);
 }

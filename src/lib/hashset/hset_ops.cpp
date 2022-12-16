@@ -15,9 +15,9 @@ std::pair<
   std::vector<SFHASH_HashAlgorithm>
 > apply_op(
   const RecordHeader& lrhdr,
-  const RecordData& lrdat,
+  const ConstRecordData& lrdat,
   const RecordHeader& rrhdr,
-  const RecordData& rrdat)
+  const ConstRecordData& rrdat)
 {
   // collect the hash types from the input hashsets
   std::set<std::pair<SFHASH_HashAlgorithm, size_t>> ltypes, rtypes;
@@ -154,9 +154,9 @@ std::pair<
   std::vector<SFHASH_HashAlgorithm>
 > union_op(
   const RecordHeader& lrhdr,
-  const RecordData& lrdat,
+  const ConstRecordData& lrdat,
   const RecordHeader& rrhdr,
-  const RecordData& rrdat)
+  const ConstRecordData& rrdat)
 {
   return apply_op<
     std::set_union<
@@ -177,9 +177,9 @@ std::pair<
   std::vector<SFHASH_HashAlgorithm>
 > intersect_op(
   const RecordHeader& lrhdr,
-  const RecordData& lrdat,
+  const ConstRecordData& lrdat,
   const RecordHeader& rrhdr,
-  const RecordData& rrdat)
+  const ConstRecordData& rrdat)
 {
   return apply_op<
     std::set_intersection<
@@ -200,9 +200,9 @@ std::pair<
   std::vector<SFHASH_HashAlgorithm>
 > difference_op(
   const RecordHeader& lrhdr,
-  const RecordData& lrdat,
+  const ConstRecordData& lrdat,
   const RecordHeader& rrhdr,
-  const RecordData& rrdat)
+  const ConstRecordData& rrdat)
 {
   return apply_op<
     std::set_difference<

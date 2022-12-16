@@ -63,6 +63,13 @@ struct HashsetData {
 
 std::ostream& operator<<(std::ostream& out, const HashsetData& hdat);
 
+struct ConstHashsetData {
+  const void* beg;
+  const void* end;
+
+  bool operator==(const ConstHashsetData&) const = default;
+};
+
 struct RecordIndex {
   void* beg;
   void* end;
@@ -71,6 +78,13 @@ struct RecordIndex {
 };
 
 std::ostream& operator<<(std::ostream& out, const RecordIndex& ridx);
+
+struct ConstRecordIndex {
+  const void* beg;
+  const void* end;
+
+  bool operator==(const ConstRecordIndex&) const = default;
+};
 
 struct RecordFieldDescriptor {
   uint32_t type;
@@ -100,6 +114,15 @@ struct RecordData {
 };
 
 std::ostream& operator<<(std::ostream& out, const RecordData& rdat);
+
+struct ConstRecordData {
+  const void* beg;
+  const void* end;
+
+  bool operator==(const ConstRecordData&) const = default;
+};
+
+std::ostream& operator<<(std::ostream& out, const ConstRecordData& rdat);
 
 struct Chunk {
   enum Type {
