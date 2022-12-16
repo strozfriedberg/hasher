@@ -32,6 +32,7 @@
 /src/fuzzy/fuzzy
 /src/hasher/hasher
 /src/lib/hasher.pc
+/src/mkhashset/mkhashset
 /stamp-h1
 /test/bench_hex
 /test/bench_hsd
