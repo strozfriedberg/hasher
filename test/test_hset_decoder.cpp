@@ -247,7 +247,7 @@ TEST_CASE("parse_rdat") {
 
   const Chunk ch{Chunk::Type::RDAT, std::begin(buf), std::end(buf)};
 
-  const RecordData exp{ std::begin(buf), std::end(buf) };
+  const ConstRecordData exp{ std::begin(buf), std::end(buf) };
 
   CHECK(parse_rdat(ch) == exp);
 }
