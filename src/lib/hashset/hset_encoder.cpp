@@ -650,7 +650,7 @@ std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   // set the timestamp
   const auto tm = std::gmtime(&tt);
   // 0000-00-00T00:00:00Z
-  std::string ts(20, '\0');
+  std::string ts(21, '\0'); // max length + 1; strftime wants to write a null
 
 // TODO: check return value
 // TODO: fractional seconds?
