@@ -940,7 +940,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   auto bctx = make_unique_del(
     new SFHASH_HashsetBuildCtx{
       {},
-      { 2, hashset_name, hashset_desc, make_timestamp() },
+      { 2, hashset_name, make_timestamp(), hashset_desc },
       { 0, 0, {} },
       {},
       {},
