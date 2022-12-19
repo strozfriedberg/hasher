@@ -32,6 +32,18 @@ SFHASH_Hashset* sfhash_load_hashset(
  */
 void sfhash_destroy_hashset(SFHASH_Hashset* hset);
 
+
+const char* sfhash_hashset_name(const SFHASH_Hashset* hset);
+
+const char* sfhash_hashset_description(const SFHASH_Hashset* hset);
+
+const char* sfhash_hashset_timestamp(const SFHASH_Hashset* hset);
+
+size_t sfhash_hashset_count_for_type(
+  const SFHASH_Hashset* hset,
+  SFHASH_HashAlgorithm htype
+);
+
 /*
  * Get hashset data index for the given hash type.
  *

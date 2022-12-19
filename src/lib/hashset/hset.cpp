@@ -31,6 +31,33 @@ void sfhash_destroy_hashset(SFHASH_Hashset* hset) {
   delete hset;
 };
 
+const char* sfhash_hashset_name(const SFHASH_Hashset* hset) {
+  return hset->holder.fhdr.name.c_str();
+}
+
+const char* sfhash_hashset_description(const SFHASH_Hashset* hset) {
+  return hset->holder.fhdr.desc.c_str();
+}
+
+const char* sfhash_hashset_timestamp(const SFHASH_Hashset* hset) {
+  return hset->holder.fhdr.time.c_str();
+}
+
+size_t sfhash_hashset_count_for_type(
+  const SFHASH_Hashset* hset,
+  SFHASH_HashAlgorithm htype)
+{
+  const auto i = std::find_if(
+    hset->holder.hsets.begin(),
+    hset->holder.hsets.end(),
+    [htype](const auto& t) {
+      return htype == std::get<HashsetHeader>(t).hash_type;
+    }
+  );
+
+  return i == hset->holder.hsets.end() ? 0 : std::get<HashsetHeader>(*i).hash_count;
+}
+
 int sfhash_hashset_index_for_type(
   const SFHASH_Hashset* hset,
   SFHASH_HashAlgorithm htype
