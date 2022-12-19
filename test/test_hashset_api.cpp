@@ -621,7 +621,7 @@ TEST_CASE("hashset_builder_open_ok") {
 
   CHECK(hctx->fhdr.name == "123");
   CHECK(hctx->fhdr.desc == "abc");
-  CHECK(hctx->fhdr.time == ""); // no timestamp yet
+  // don't check the timestamp, it will differ on each run
   CHECK(hctx->rhdr.record_length == 38);
   CHECK(hctx->rhdr.fields == exp_fields);
 }
