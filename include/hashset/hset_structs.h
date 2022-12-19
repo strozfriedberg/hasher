@@ -17,8 +17,8 @@ std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc);
 struct FileHeader {
   uint64_t version;
   std::string name;
-  std::string desc;
   std::string time;
+  std::string desc;
 
   bool operator==(const FileHeader&) const = default;
 };
