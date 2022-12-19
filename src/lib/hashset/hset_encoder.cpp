@@ -27,12 +27,12 @@
 #include "hex.h"
 #include "rwutil.h"
 #include "util.h"
-#include "hashset/line_range.h"
 #include "hashset/field_iterator.h"
 #include "hashset/field_range.h"
 #include "hashset/record_iterator.h"
 #include "hashset/util.h"
 #include "hasher/hashset.h"
+#include "util/istream_line_range.h"
 
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
@@ -897,7 +897,7 @@ void write_hset(
 
     const size_t field_count = htypes.size();
 
-    for (const auto& line: LineRange(in)) {
+    for (const auto& line: IstreamLineRange(in)) {
 
       ++lineno;
   //    if (lineno % 10000 == 0) {
