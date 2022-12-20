@@ -1351,7 +1351,7 @@ size_t sfhash_hashset_builder_write(
         nullptr
       );
 
-      off += static_cast<uint8_t*>(hdat.end) - static_cast<uint8_t*>(hdat.beg);
+      off += length_hdat(hhdr.hash_count, hhdr.hash_length);
     }
 
     // FEND
