@@ -355,7 +355,8 @@ State::Type handle_ftoc(const Chunk&, Holder&) {
 }
 
 State::Type handle_hint(const Chunk& ch, Holder& h) {
-  auto& [hsh, hnt, hsd, ls, _] = h.hsets.back();
+  auto& hset = h.hsets.back();
+  auto& hnt = std::get<HashsetHint>(hset);
 
   hnt = parse_hint(ch);
 
@@ -364,8 +365,6 @@ State::Type handle_hint(const Chunk& ch, Holder& h) {
     hnt.hint_type != 0x6208,
     "bad hint type " << std::hex << std::setw(4) << std::setfill('0') << hnt.hint_type
   );
-
-  ls = make_lookup_strategy(hsh, hnt, hsd);
 
   return State::HINT;
 }
@@ -427,5 +426,12 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
 
   // decode the chunks listed in the FTOC
   TOCIterator ch(toc, beg, end), ch_end;
-  return decode_chunks(ch, ch_end);
+  Holder h = decode_chunks(ch, ch_end);
+
+  // install lookup strategies
+  for (auto& [hsh, hnt, hsd, ls, _]: h.hsets) {
+    ls = make_lookup_strategy(hsh, hnt, hsd);
+  }
+
+  return h;
 }
