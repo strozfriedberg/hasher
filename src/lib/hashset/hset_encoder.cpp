@@ -1341,10 +1341,6 @@ size_t sfhash_hashset_builder_write(
       RecordIterator hbeg(static_cast<uint8_t*>(hdat.beg), hhdr.hash_length);
       RecordIterator hend(static_cast<uint8_t*>(hdat.end), hhdr.hash_length);
 
-      std::sort(hbeg, hend);
-      hend = std::unique(hbeg, hend);
-
-      hdat.end = hend->rec.data();
       hhdr.hash_count = hend - hbeg;
 
       hb.emplace_back(
