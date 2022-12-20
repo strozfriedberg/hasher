@@ -40,6 +40,21 @@ TEST_CASE("load_hashset_good") {
   }
 
   CHECK(hset);
+
+  {
+    const auto h = to_bytes<20>("286ba1181663193d119d7ca18331395cd451de91");
+    CHECK(sfhash_hashset_lookup(hset.get(), 0, h.data()));
+  }
+
+  {
+    const auto h = to_bytes<20>("bc658126e1443d6455287378e4c273b08f947d3c");
+    CHECK(sfhash_hashset_lookup(hset.get(), 0, h.data()));
+  }
+
+  {
+    const auto h = to_bytes<20>("baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad");
+    CHECK(!sfhash_hashset_lookup(hset.get(), 0, h.data()));
+  }
 }
 
 TEST_CASE("load_hashset_nullptr") {
