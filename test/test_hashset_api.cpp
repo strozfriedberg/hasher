@@ -42,6 +42,18 @@ TEST_CASE("load_hashset_good") {
   CHECK(hset);
 
   {
+    // before first element in hashset
+    const auto h = to_bytes<20>("0053e9b602c2fa8473262b590f6d24a406ae1cc2");
+    CHECK(!sfhash_hashset_lookup(hset.get(), 0, h.data()));
+  }
+
+  {
+    // first element in hashset
+    const auto h = to_bytes<20>("0053e9b602c2fa8473262b590f6d24a406ae1cc3");
+    CHECK(sfhash_hashset_lookup(hset.get(), 0, h.data()));
+  }
+
+  {
     const auto h = to_bytes<20>("286ba1181663193d119d7ca18331395cd451de91");
     CHECK(sfhash_hashset_lookup(hset.get(), 0, h.data()));
   }
@@ -52,7 +64,20 @@ TEST_CASE("load_hashset_good") {
   }
 
   {
+    // not in hashset
     const auto h = to_bytes<20>("baaaaaadbaaaaaadbaaaaaadbaaaaaadbaaaaaad");
+    CHECK(!sfhash_hashset_lookup(hset.get(), 0, h.data()));
+  }
+
+  {
+    // last element in hashset
+    const auto h = to_bytes<20>("ff36a8ea9b657f9c068d91a67195dd0764fd75ff");
+    CHECK(sfhash_hashset_lookup(hset.get(), 0, h.data()));
+  }
+
+  {
+    // after last element in hashset
+    const auto h = to_bytes<20>("ff36a8ea9b657f9c068d91a67195dd0764fd7600");
     CHECK(!sfhash_hashset_lookup(hset.get(), 0, h.data()));
   }
 }
