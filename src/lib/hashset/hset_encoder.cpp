@@ -1335,8 +1335,8 @@ size_t sfhash_hashset_builder_write(
       tof.close();
       std::filesystem::remove(f);
 
-      hdat.beg = out + off;
-      hdat.end = out + off + fsize;
+      hdat.beg = out + off + 12;
+      hdat.end = out + off + 12 + fsize;
 
       RecordIterator hbeg(static_cast<uint8_t*>(hdat.beg), hhdr.hash_length);
       RecordIterator hend(static_cast<uint8_t*>(hdat.end), hhdr.hash_length);
