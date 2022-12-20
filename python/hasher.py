@@ -50,7 +50,8 @@ ALL_HASHES = [
     ('blake3',    1 << 10),
     ('fuzzy',     1 << 11),
     ('entropy',   1 << 12),
-    ('quick_md5', 1 << 13),
+    ('size',      1 << 13),
+    ('quick_md5', 1 << 14)
 ]
 
 # the list of hash names/enums for hashes which are hexadecimal
@@ -70,29 +71,10 @@ this_module = sys.modules[__name__]
 for name, mask in ALL_HASHES:
     setattr(this_module, name.upper(), mask)
 
-OTHER = 1 << 31
-
 
 #
 # structs
 #
-
-class HashSetInfoStruct(Structure):
-    _fields_ = [
-        ('version',        c_uint64),
-        ('hash_type',      c_uint32),
-        ('hash_length',    c_uint64),
-        ('flags',          c_uint64),
-        ('hashset_size',   c_uint64),
-        ('hashset_off',    c_uint64),
-        ('sizes_off',      c_uint64),
-        ('radius',         c_uint64),
-        ('hashset_sha256', c_uint8 * 32),
-        ('hashset_name',   c_char_p),
-        ('hashset_time',   c_char_p),
-        ('hashset_desc',   c_char_p)
-    ]
-
 
 class HasherHashes(Structure):
     _fields_ = [
@@ -216,65 +198,45 @@ _sfhash_destroy_hasher = _hasher.sfhash_destroy_hasher
 _sfhash_destroy_hasher.argtypes = [c_void_p]
 _sfhash_destroy_hasher.restype = None
 
-# SFHASH_HashSetInfo* sfhash_load_hashset_info(const void* beg, const void* end, SFHASH_Error** err);
-_sfhash_load_hashset_info = _hasher.sfhash_load_hashset_info
-_sfhash_load_hashset_info.argtypes = [c_void_p, c_void_p, POINTER(POINTER(HasherError))]
-_sfhash_load_hashset_info.restype = POINTER(HashSetInfoStruct)
-
-# void sfhash_destroy_hashset_info(SFHASH_HashSetInfo* hsinfo);
-_sfhash_destroy_hashset_info = _hasher.sfhash_destroy_hashset_info
-_sfhash_destroy_hashset_info.argtypes = [c_void_p]
-_sfhash_destroy_hashset_info.restype = None
-
 # SFHASH_HashSet* sfhash_load_hashset(const void* beg, const void* end, SFHASH_Error** err);
 _sfhash_load_hashset = _hasher.sfhash_load_hashset
 _sfhash_load_hashset.argtypes = [c_void_p, c_void_p, POINTER(POINTER(HasherError))]
 _sfhash_load_hashset.restype = c_void_p
-
-# const SFHASH_HashSetInfo* sfhash_info_for_hashset(const SFHASH_HashSet* hset);
-_sfhash_info_for_hashset = _hasher.sfhash_info_for_hashset
-_sfhash_info_for_hashset.argtypes = [c_void_p]
-_sfhash_info_for_hashset.restype = POINTER(HashSetInfoStruct)
-
-# bool sfhash_lookup_hashset(const SFHASH_HashSet* hset, const void* hash);
-_sfhash_lookup_hashset = _hasher.sfhash_lookup_hashset
-_sfhash_lookup_hashset.argtypes = [c_void_p, c_void_p]
-_sfhash_lookup_hashset.restype = c_bool
 
 # void sfhash_destroy_hashset(SFHASH_HashSet* hset);
 _sfhash_destroy_hashset = _hasher.sfhash_destroy_hashset
 _sfhash_destroy_hashset.argtypes = [c_void_p]
 _sfhash_destroy_hashset.restype = None
 
-# SFHASH_HashSet* sfhash_union_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, const char* out_name, const char* out_desc);
-_sfhash_union_hashsets = _hasher.sfhash_union_hashsets
-_sfhash_union_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, POINTER(POINTER(HasherError))]
-_sfhash_union_hashsets.restype = c_void_p
+# const char* sfhash_hashset_name(const SFHASH_Hashset* hset);
+_sfhash_hashset_name = _hasher.sfhash_hashset_name
+_sfhash_hashset_name.argtypes = [c_void_p]
+_sfhash_hashset_name.restype = c_char_p
 
-# SFHASH_HashSet* sfhash_intersect_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, const char* out_name, const char* out_desc);
-_sfhash_intersect_hashsets = _hasher.sfhash_intersect_hashsets
-_sfhash_intersect_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, POINTER(POINTER(HasherError))]
-_sfhash_intersect_hashsets.restype = c_void_p
+# const char* sfhash_hashset_description(const SFHASH_Hashset* hset);
+_sfhash_hashset_description = _hasher.sfhash_hashset_description
+_sfhash_hashset_description.argtypes = [c_void_p]
+_sfhash_hashset_description.restype = c_char_p
 
-# SFHASH_HashSet* sfhash_difference_hashsets(const SFHASH_HashSet* a, const SFHASH_HashSet* b, void* out, const char* out_name, const char* out_desc);
-_sfhash_difference_hashsets = _hasher.sfhash_difference_hashsets
-_sfhash_difference_hashsets.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, POINTER(POINTER(HasherError))]
-_sfhash_difference_hashsets.restype = c_void_p
+# const char* sfhash_hashset_timestamp(const SFHASH_Hashset* hset);
+_sfhash_hashset_timestamp = _hasher.sfhash_hashset_timestamp
+_sfhash_hashset_timestamp.argtypes = [c_void_p]
+_sfhash_hashset_timestamp.restype = c_char_p
 
-# SFHASH_SizeSet* sfhash_load_sizeset(SFHASH_HashSetInfo* hsinfo, const void* beg, const void* end, SFHASH_Error** err);
-_sfhash_load_sizeset = _hasher.sfhash_load_sizeset
-_sfhash_load_sizeset.argtypes = [c_void_p, c_void_p, c_void_p, POINTER(POINTER(HasherError))]
-_sfhash_load_sizeset.restype = c_void_p
+# size_t sfhash_hashset_count(const SFHASH_Hashset* hset, size_t tidx);
+_sfhash_hashset_count = _hasher.sfhash_hashset_count
+_sfhash_hashset_count.argtypes = [c_void_p, c_size_t]
+_sfhash_hashset_count.restype = c_size_t
 
-# void sfhash_destroy_sizeset(SFHASH_SizeSet* sset);
-_sfhash_destroy_sizeset = _hasher.sfhash_destroy_sizeset
-_sfhash_destroy_sizeset.argtypes = [c_void_p]
-_sfhash_destroy_sizeset.restype = None
+# int sfhash_hashset_index_for_type(const SFHASH_Hashset* hset, SFHASH_HashAlgorithm htype);
+_sfhash_hashset_index_for_type = _hasher.sfhash_hashset_index_for_type
+_sfhash_hashset_index_for_type.argtypes = [c_void_p, c_uint32]
+_sfhash_hashset_index_for_type.restype = c_int
 
-# bool sfhash_lookup_sizeset(const SFHASH_SizeSet* sset, uint64_t size);
-_sfhash_lookup_sizeset = _hasher.sfhash_lookup_sizeset
-_sfhash_lookup_sizeset.argtypes = [c_void_p, c_uint64]
-_sfhash_lookup_sizeset.restype = c_bool
+# bool sfhash_hashset_lookup(const SFHASH_Hashset* hset, size_t tidx, const void* hash);
+_sfhash_hashset_lookup = _hasher.sfhash_hashset_lookup
+_sfhash_hashset_lookup.argtypes = [c_void_p, c_size_t, c_void_p]
+_sfhash_hashset_lookup.restype = c_bool
 
 # SFHASH_FuzzyMatcher* sfhash_create_fuzzy_matcher(const void* beg, const void* end);
 _sfhash_create_fuzzy_matcher = _hasher.sfhash_create_fuzzy_matcher
@@ -448,39 +410,19 @@ class Hasher(Handle):
         return h
 
 
+class Hashset(object):
+    def __init__(self, hset, idx):
+        self.hset = hset
+        self.idx = idx
 
-# HashSetInfo owns the underlying struct; WeakHashSetInfo doesn't
-class HashSetInfo(Handle):
-    def __init__(self, buf):
-        with Error() as err:
-            super().__init__(_sfhash_load_hashset_info(*buf_range(buf, c_char), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
+    def __contains__(self, h):
+        return _sfhash_hashset_lookup(self.hset, self.idx, buf_beg(h, c_uint8))
 
-    def destroy(self):
-        _sfhash_destroy_hashset_info(self.handle)
-        super().destroy()
+    def count(self):
+        return _sfhash_hashset_count(self.hset, self.idx)
 
 
-class WeakHashSetInfo(Handle):
-    def __init__(self, info):
-        super().__init__(info)
-
-
-#
-# Reflect the fields of the C struct into our handle; yes, this is better
-# than listing them all out.
-#
-def make_pgetter(s):
-    return lambda self: getattr(self.get().contents, s)
-
-
-for f in HashSetInfoStruct._fields_:
-    setattr(HashSetInfo, f[0], property(make_pgetter(f[0])))
-    setattr(WeakHashSetInfo, f[0], property(make_pgetter(f[0])))
-
-
-class HashSet(Handle):
+class HSet(Handle):
     # For internal use only. Use load() to load a hashset.
     def __init__(self, buf):
         super().__init__(buf)
@@ -489,63 +431,28 @@ class HashSet(Handle):
         _sfhash_destroy_hashset(self.handle)
         super().destroy()
 
-    def info(self):
-        return WeakHashSetInfo(_sfhash_info_for_hashset(self.get()))
+    def name(self):
+        return _sfhash_hashset_name(self.get())
 
-    def __contains__(self, h):
-        return _sfhash_lookup_hashset(self.get(), buf_beg(h, c_uint8))
+    def description(self):
+        return _sfhash_hashset_description(self.get())
+
+    def timestamp(self):
+        return _sfhash_hashset_timestamp(self.get())
+
+    def index(self, ht):
+        return _sfhash_hashset_index_for_type(self.get(), ht)
+
+    def hashset(self, ht):
+        return Hashset(self.get(), self.index(ht))
 
     @classmethod
     def load(cls, buf):
         with Error() as err:
-            hs = cls(_sfhash_load_hashset(*buf_range(buf, c_char), byref(err.get())))
+            hset = cls(_sfhash_load_hashset(*buf_range(buf, c_char), byref(err.get())))
             if err:
                 raise RuntimeError(str(err))
-        return hs
-
-    @classmethod
-    def union(cls, left, right, obuf, oname, odesc):
-        with Error() as err:
-            hs = cls(_sfhash_union_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8'), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
-        return hs
-
-    @classmethod
-    def intersect(cls, left, right, obuf, oname, odesc):
-        with Error() as err:
-            hs = cls(_sfhash_intersect_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8'), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
-        return hs
-
-    @classmethod
-    def difference(cls, left, right, obuf, oname, odesc):
-        with Error() as err:
-            hs = cls(_sfhash_difference_hashsets(left.get(), right.get(), buf_beg(obuf, c_uint8), oname.encode('utf-8'), odesc.encode('utf-8'), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
-        return hs
-
-
-class SizeSet(Handle):
-    def __init__(self, info, buf):
-        # isolate the hashes in the buffer
-        sbeg = info.sizes_off
-        send = sbeg + info.hashset_size * 64
-        sdata = memoryview(buf)[sbeg:send]
-
-        with Error() as err:
-            super().__init__(_sfhash_load_sizeset(info.get(), *buf_range(sdata, c_char), byref(err.get())))
-            if err:
-                raise RuntimeError(str(err))
-
-    def destroy(self):
-        _sfhash_destroy_sizeset(self.handle)
-        super().destroy()
-
-    def __contains__(self, size):
-        return _sfhash_lookup_sizeset(self.get(), size)
+        return hset
 
 
 class FuzzyResult(Handle):
