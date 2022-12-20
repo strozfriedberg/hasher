@@ -43,19 +43,11 @@ const char* sfhash_hashset_timestamp(const SFHASH_Hashset* hset) {
   return hset->holder.fhdr.time.c_str();
 }
 
-size_t sfhash_hashset_count_for_type(
+size_t sfhash_hashset_count(
   const SFHASH_Hashset* hset,
-  SFHASH_HashAlgorithm htype)
+  size_t tidx)
 {
-  const auto i = std::find_if(
-    hset->holder.hsets.begin(),
-    hset->holder.hsets.end(),
-    [htype](const auto& t) {
-      return htype == std::get<HashsetHeader>(t).hash_type;
-    }
-  );
-
-  return i == hset->holder.hsets.end() ? 0 : std::get<HashsetHeader>(*i).hash_count;
+  return std::get<HashsetHeader>(hset->holder.hsets[tidx]).hash_count;
 }
 
 int sfhash_hashset_index_for_type(
