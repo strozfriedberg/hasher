@@ -446,6 +446,10 @@ class HSet(Handle):
     def hashset(self, ht):
         return Hashset(self.get(), self.index(ht))
 
+    def sha256(self):
+        # TODO
+        return b''
+
     @classmethod
     def load(cls, buf):
         with Error() as err:
