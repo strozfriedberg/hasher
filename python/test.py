@@ -304,9 +304,9 @@ class TestHashSetAPI(unittest.TestCase):
         with open('../test/good.hset', 'rb') as f:
             with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as buf:
                 with hasher.HSet.load(buf) as hset:
-                    self.assertEqual(b'Test Name', hset.name())
-                    self.assertEqual(b'Test Description', hset.description())
-                    self.assertEqual(b'2022-12-20T17:36:51Z', hset.timestamp())
+                    self.assertEqual('Test Name', hset.name())
+                    self.assertEqual('Test Description', hset.description())
+                    self.assertEqual('2022-12-20T17:36:51Z', hset.timestamp())
 
                     hs = hset.hashset(hasher.SHA1)
 
