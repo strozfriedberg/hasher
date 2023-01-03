@@ -432,13 +432,13 @@ class HSet(Handle):
         super().destroy()
 
     def name(self):
-        return _sfhash_hashset_name(self.get())
+        return _sfhash_hashset_name(self.get()).decode('utf-8')
 
     def description(self):
-        return _sfhash_hashset_description(self.get())
+        return _sfhash_hashset_description(self.get()).decode('utf-8')
 
     def timestamp(self):
-        return _sfhash_hashset_timestamp(self.get())
+        return _sfhash_hashset_timestamp(self.get()).decode('utf-8')
 
     def index(self, ht):
         return _sfhash_hashset_index_for_type(self.get(), ht)
