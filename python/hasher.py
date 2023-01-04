@@ -223,6 +223,11 @@ _sfhash_hashset_timestamp = _hasher.sfhash_hashset_timestamp
 _sfhash_hashset_timestamp.argtypes = [c_void_p]
 _sfhash_hashset_timestamp.restype = c_char_p
 
+# const char* sfhash_hashset_sha2_256(const SFHASH_Hashset* hset);
+_sfhash_hashset_sha2_256 = _hasher.sfhash_hashset_sha2_256
+_sfhash_hashset_sha2_256.argtypes = [c_void_p]
+_sfhash_hashset_sha2_256.restype = c_void_p
+
 # size_t sfhash_hashset_count(const SFHASH_Hashset* hset, size_t tidx);
 _sfhash_hashset_count = _hasher.sfhash_hashset_count
 _sfhash_hashset_count.argtypes = [c_void_p, c_size_t]
@@ -440,15 +445,14 @@ class HSet(Handle):
     def timestamp(self):
         return _sfhash_hashset_timestamp(self.get()).decode('utf-8')
 
+    def sha2_256(self):
+        return _sfhash_hashset_sha2_256(self.get())
+
     def index(self, ht):
         return _sfhash_hashset_index_for_type(self.get(), ht)
 
     def hashset(self, ht):
         return Hashset(self.get(), self.index(ht))
-
-    def sha256(self):
-        # TODO
-        return b''
 
     @classmethod
     def load(cls, buf):

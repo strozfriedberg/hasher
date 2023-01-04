@@ -39,6 +39,8 @@ const char* sfhash_hashset_description(const SFHASH_Hashset* hset);
 
 const char* sfhash_hashset_timestamp(const SFHASH_Hashset* hset);
 
+const void* sfhash_hashset_sha2_256(const SFHASH_Hashset* hset);
+
 /*
  * Get hashset data index for the given hash type.
  *

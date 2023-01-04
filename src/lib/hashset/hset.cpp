@@ -43,6 +43,10 @@ const char* sfhash_hashset_timestamp(const SFHASH_Hashset* hset) {
   return hset->holder.fhdr.time.c_str();
 }
 
+const void* sfhash_hashset_sha2_256(const SFHASH_Hashset* hset) {
+  return hset->holder.fhdr.sha2_256.data();
+}
+
 size_t sfhash_hashset_count(
   const SFHASH_Hashset* hset,
   size_t tidx)

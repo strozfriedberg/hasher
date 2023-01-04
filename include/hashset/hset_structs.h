@@ -20,7 +20,7 @@ struct FileHeader {
   std::string name;
   std::string time;
   std::string desc;
-  std::array<uint8_t, 32> sha256;
+  std::array<uint8_t, 32> sha2_256;
 
   bool operator==(const FileHeader&) const = default;
 };

@@ -440,7 +440,7 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
   Holder h = decode_chunks(ch, ch_end);
 
   // set the hset hash now that the FHDR exists to receive it
-  h.fhdr.sha256 = hset_hash;
+  h.fhdr.sha2_256 = hset_hash;
 
   // install lookup strategies
   for (auto& [hsh, hnt, hsd, ls, _]: h.hsets) {

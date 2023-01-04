@@ -23,7 +23,7 @@ std::ostream& operator<<(std::ostream& out, const FileHeader& fhdr) {
              << ' ' << fhdr.name << '\n'
              << ' ' << fhdr.desc << '\n'
              << ' ' << fhdr.time << '\n'
-             << ' ' << to_hex(fhdr.sha256);
+             << ' ' << to_hex(fhdr.sha2_256);
 }
 
 std::ostream& operator<<(std::ostream& out, const HashsetHeader& hhdr) {
