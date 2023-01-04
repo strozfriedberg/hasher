@@ -321,9 +321,9 @@ constexpr char MAGIC[] = {'S', 'e', 't', 'O', 'H', 'a', 's', 'h'};
 
 void check_magic(const uint8_t*& i, const uint8_t* end) {
   // read magic
-  THROW_IF(i + sizeof(MAGIC) > end, "out of data reading magic");
-  THROW_IF(std::memcmp(i, MAGIC, sizeof(MAGIC)), "bad magic");
-  i += sizeof(MAGIC);
+  THROW_IF(i + std::size(MAGIC) > end, "out of data reading magic");
+  THROW_IF(std::memcmp(i, MAGIC, std::size(MAGIC)), "bad magic");
+  i += std::size(MAGIC);
 }
 
 std::array<uint8_t, 32> read_hset_hash(const uint8_t*& i, const uint8_t* end) {
