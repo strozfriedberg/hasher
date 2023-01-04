@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <iosfwd>
 #include <string>
@@ -19,6 +20,7 @@ struct FileHeader {
   std::string name;
   std::string time;
   std::string desc;
+  std::array<uint8_t, 32> sha256;
 
   bool operator==(const FileHeader&) const = default;
 };

@@ -56,7 +56,8 @@ FileHeader parse_fhdr(const Chunk& ch) {
     read_le<uint64_t>(ch.dbeg, cur, ch.dend),
     read_pstring<std::string>(ch.dbeg, cur, ch.dend),
     read_pstring<std::string>(ch.dbeg, cur, ch.dend),
-    read_pstring<std::string>(ch.dbeg, cur, ch.dend)
+    read_pstring<std::string>(ch.dbeg, cur, ch.dend),
+    {}
   };
 }
 
@@ -325,6 +326,13 @@ void check_magic(const uint8_t*& i, const uint8_t* end) {
   i += sizeof(MAGIC);
 }
 
+std::array<uint8_t, 32> read_hset_hash(const uint8_t*& i, const uint8_t* end) {
+  std::array<uint8_t, 32> dst;
+  THROW_IF(i + dst.size() > end, "out of data reading hset hash");
+  std::memcpy(dst.data(), i, dst.size());
+  i += dst.size();
+}
+
 State::Type handle_fhdr(const Chunk& ch, Holder& h) {
   // INIT -> FHDR
   h.fhdr = parse_fhdr(ch);
@@ -421,12 +429,18 @@ Holder decode_hset(const uint8_t* beg, const uint8_t* end) {
   // check magic
   check_magic(cur, end);
 
+  // read the hset hash
+  auto hset_hash = read_hset_hash(cur, end);
+
   // read the FTOC chunk
   const TableOfContents toc = read_ftoc_chunk(beg, cur, end);
 
   // decode the chunks listed in the FTOC
   TOCIterator ch(toc, beg, end), ch_end;
   Holder h = decode_chunks(ch, ch_end);
+
+  // set the hset hash now that the FHDR exists to receive it
+  h.fhdr.sha256 = hset_hash;
 
   // install lookup strategies
   for (auto& [hsh, hnt, hsd, ls, _]: h.hsets) {

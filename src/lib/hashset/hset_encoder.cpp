@@ -114,6 +114,10 @@ size_t write_magic(char* out) {
   return 8;
 }
 
+size_t length_hset_hash() {
+  return 32;
+}
+
 size_t length_fhdr_data(
   const std::string& hashset_name,
   const std::string& hashset_desc,
@@ -573,6 +577,7 @@ size_t length_hset(
   size_t chunk_count = count_chunks(fields);
 
   size_t len = length_magic() +
+               length_hset_hash() +
                length_ftoc(chunk_count) +
                length_fhdr(hashset_name, hashset_desc, timestamp) +
                length_rhdr(fields) +
@@ -604,6 +609,7 @@ size_t length_hset_records_only(
   size_t record_count)
 {
   size_t len = length_magic() +
+               length_hset_hash() +
                length_ftoc(5) +
                length_fhdr(hashset_name, hashset_desc, timestamp) +
                length_rhdr(fields) +
@@ -625,6 +631,7 @@ size_t length_hset_hashsets_only(
   size_t chunk_count = count_chunks_hashsets_only(fields);
 
   size_t len = length_magic() +
+               length_hset_hash() +
                length_ftoc(chunk_count) +
                length_fhdr(hashset_name, hashset_desc, timestamp) +
                length_rhdr(fields);
@@ -685,9 +692,15 @@ void write_chunks(
 {
   char* out = beg;
 
-  // Magic
+  // magic
   out += write_magic(out);
 
+  // note the start of the hset hash
+  char* hset_hash = out;
+  // note the start of the data to be hashed
+  const char* hset_data = hset_hash + length_hset_hash();
+
+  // write the chunks
   for (const auto& [choff, chtype]: ftoc.entries) {
     out = beg + choff;
 
@@ -727,7 +740,7 @@ void write_chunks(
       break;
 
     case Chunk::Type::FEND:
-      write_fend(out);
+      out += write_fend(out);
       break;
 
     case Chunk::Type::RIDX:
@@ -750,6 +763,18 @@ void write_chunks(
       break;
     }
   }
+
+  // hash the hset data
+  auto hasher = make_unique_del(
+    sfhash_create_hasher(SFHASH_SHA_2_256), sfhash_destroy_hasher
+  );
+
+  sfhash_update_hasher(hasher.get(), hset_data, out);
+
+  SFHASH_HashValues hashes;
+  sfhash_get_hashes(hasher.get(), &hashes);
+
+  write_bytes(hashes.Sha2_256, std::size(hashes.Sha2_256), hset_hash);
 }
 
 void scatter_records_to_hashset(
@@ -940,7 +965,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   auto bctx = make_unique_del(
     new SFHASH_HashsetBuildCtx{
       {},
-      { 2, hashset_name, make_timestamp(), hashset_desc },
+      { 2, hashset_name, make_timestamp(), hashset_desc, {} },
       { 0, 0, {} },
       {},
       {},
@@ -1013,6 +1038,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   uint64_t off = 0;
 
   off += length_magic();
+  off += length_hset_hash();
 
   // FTOC
   ftoc.entries.emplace_back(off, Chunk::Type::FTOC);
