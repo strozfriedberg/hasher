@@ -456,8 +456,8 @@ class HSet(Handle):
     def index(self, ht):
         return _sfhash_hashset_index_for_type(self.get(), ht)
 
-    def hashset(self, ht):
-        return Hashset(self.get(), self.index(ht))
+    def hashset(self, idx):
+        return Hashset(self.get(), idx)
 
     @classmethod
     def load(cls, buf):
