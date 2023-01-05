@@ -331,6 +331,7 @@ std::array<uint8_t, 32> read_hset_hash(const uint8_t*& i, const uint8_t* end) {
   THROW_IF(i + dst.size() > end, "out of data reading hset hash");
   std::memcpy(dst.data(), i, dst.size());
   i += dst.size();
+  return dst;
 }
 
 State::Type handle_fhdr(const Chunk& ch, Holder& h) {
