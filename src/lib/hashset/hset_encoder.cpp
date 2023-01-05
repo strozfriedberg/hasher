@@ -864,8 +864,8 @@ void write_hset(
       htypes.size(),
       with_records,
       with_hashsets,
-      outfile.c_str(),
-      tmpdir.c_str(),
+      outfile.string().c_str(),
+      tmpdir.string().c_str(),
       &err
     ),
     sfhash_hashset_builder_destroy
@@ -1187,7 +1187,7 @@ size_t sfhash_hashset_builder_write(
 
     std::filesystem::resize_file(outfile, hset_size);
 
-    bip::file_mapping fm(outfile.c_str(), bip::read_write);
+    bip::file_mapping fm(outfile.string().c_str(), bip::read_write);
     bip::mapped_region mr(fm, bip::read_write);
 
     char* out = static_cast<char*>(mr.get_address());
@@ -1283,7 +1283,7 @@ size_t sfhash_hashset_builder_write(
       auto& hhdr = std::get<0>(bctx->hsets[i]);
 
       {
-        bip::file_mapping fm(f.c_str(), bip::read_write);
+        bip::file_mapping fm(f.string().c_str(), bip::read_write);
         bip::mapped_region mr(fm, bip::read_write);
 
         char* out = static_cast<char*>(mr.get_address());
@@ -1311,7 +1311,7 @@ size_t sfhash_hashset_builder_write(
 
     std::filesystem::resize_file(outfile, hset_size);
 
-    bip::file_mapping fm(outfile.c_str(), bip::read_write);
+    bip::file_mapping fm(outfile.string().c_str(), bip::read_write);
     bip::mapped_region mr(fm, bip::read_write);
 
     char* out = static_cast<char*>(mr.get_address());
