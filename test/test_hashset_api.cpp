@@ -41,6 +41,10 @@ TEST_CASE("load_hashset_good") {
 
   CHECK(hset);
 
+  CHECK(sfhash_hashset_name(hset.get()) == std::string("Test Name"));
+  CHECK(sfhash_hashset_description(hset.get()) == std::string("Test Description"));
+  CHECK(sfhash_hashset_timestamp(hset.get()) == std::string("2023-01-04T14:25:00Z"));
+
   const uint8_t hash[] = {
     0x3b, 0x60, 0xe6, 0xd2, 0xde, 0x97, 0x8f, 0x4e,
     0x05, 0x3d, 0xcc, 0xc6, 0x6c, 0xc0, 0x2d, 0xe2,
