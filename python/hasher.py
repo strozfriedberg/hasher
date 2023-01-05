@@ -153,6 +153,11 @@ _sfhash_hash_name = _hasher.sfhash_hash_name
 _sfhash_hash_name.argtypes = [c_uint32]
 _sfhash_hash_name.restype = c_char_p
 
+# const char* sfhash_hash_type(const char* name);
+_sfhash_hash_type = _hasher.sfhash_hash_type
+_sfhash_hash_type.argtypes = [c_char_p]
+_sfhash_hash_type.restype = c_uint32
+
 # uint32_t sfhash_hash_length(SFHASH_HashAlgorithm hash_type);
 _sfhash_hash_length = _hasher.sfhash_hash_length
 _sfhash_hash_length.argtypes = [c_uint32]
@@ -385,7 +390,7 @@ def hash_name(alg):
 
 
 def hash_alg(name):
-    return HASH_NAME_TO_ENUM.get(name.lower(), None)
+    return _sfhash_hash_type(name.encode('utf-8')) or None
 
 
 class Hasher(Handle):
