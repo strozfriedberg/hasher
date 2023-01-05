@@ -307,6 +307,7 @@ class TestHashSetAPI(unittest.TestCase):
                     self.assertEqual('Test Name', hset.name())
                     self.assertEqual('Test Description', hset.description())
                     self.assertEqual('2023-01-04T14:25:00Z', hset.timestamp())
+                    self.assertEqual(bytes.fromhex('3b60e6d2de978f4e053dccc66cc02de2be6ac37be5f9186feccfa18a2df0f85f'), hset.sha2_256())
 
                     hs = hset.hashset(hasher.SHA1)
 
