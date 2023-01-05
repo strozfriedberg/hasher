@@ -451,7 +451,7 @@ class HSet(Handle):
         return _sfhash_hashset_timestamp(self.get()).decode('utf-8')
 
     def sha2_256(self):
-        return _sfhash_hashset_sha2_256(self.get())
+        return bytes(cast(_sfhash_hashset_sha2_256(self.get()), POINTER(c_ubyte * 32)).contents)
 
     def index(self, ht):
         return _sfhash_hashset_index_for_type(self.get(), ht)
