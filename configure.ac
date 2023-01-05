@@ -147,7 +147,7 @@ else
     # -no-undefined is a libtool flag; adding it with AX_APPEND_LINK_FLAGS
     # will fail because that tries flags with LD. So don't do that.
     AX_APPEND_FLAG([-no-undefined], [HASHER_LIB_LDFLAGS])
-    HASHER_LIB_LDFLAGS="$HASHER_LIB_LDFLAGS -Wl,--output-def -Wl,src/.libs/$PACKAGE.def"
+    HASHER_LIB_LDFLAGS="$HASHER_LIB_LDFLAGS -Wl,--output-def -Wl,src/lib/.libs/$PACKAGE.def"
 #    LT_LANG([Windows Resource])
     ;;
   esac
