@@ -951,7 +951,7 @@ void write_hset(
   sfhash_hashset_builder_write(bctx.get(), &err);
 }
 
-SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
+SFHASH_HashsetBuildCtx* hashset_builder_open(
   const char* hashset_name,
   const char* hashset_desc,
   const SFHASH_HashAlgorithm* record_order,
@@ -959,8 +959,7 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   bool write_records,
   bool write_hashsets,
   const char* output_file,
-  const char* tmp_dir,
-  SFHASH_Error** err)
+  const char* tmp_dir)
 {
   auto bctx = make_unique_del(
     new SFHASH_HashsetBuildCtx{
@@ -983,42 +982,36 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   auto& rhdr = bctx->rhdr;
 
   // validate the args
-  try {
-    check_strlen(hashset_name, "hashset_name");
-    check_strlen(hashset_desc, "hashset_desc");
+  check_strlen(hashset_name, "hashset_name");
+  check_strlen(hashset_desc, "hashset_desc");
 
-    THROW_IF(
-      record_order_length == 0,
-      "record_order_length == 0, but there must be at least one record type"
-    );
+  THROW_IF(
+    record_order_length == 0,
+    "record_order_length == 0, but there must be at least one record type"
+  );
 
-    std::set<SFHASH_HashAlgorithm> tset;
+  std::set<SFHASH_HashAlgorithm> tset;
 
-    for (size_t i = 0; i < record_order_length; ++i) {
-      try {
-        THROW_IF(
-          !tset.emplace(record_order[i]).second,
-          "duplicate hash type " << std::to_string(record_order[i])
-        );
+  for (size_t i = 0; i < record_order_length; ++i) {
+    try {
+      THROW_IF(
+        !tset.emplace(record_order[i]).second,
+        "duplicate hash type " << std::to_string(record_order[i])
+      );
 
-        const auto& hi = FIELDS.at(record_order[i]).first;
-        rhdr.fields.emplace_back(hi);
-        rhdr.record_length += 1 + hi.length;
-      }
-      catch (const std::out_of_range&) {
-        THROW("uknown hash type " << std::to_string(record_order[i]));
-      }
+      const auto& hi = FIELDS.at(record_order[i]).first;
+      rhdr.fields.emplace_back(hi);
+      rhdr.record_length += 1 + hi.length;
     }
+    catch (const std::out_of_range&) {
+      THROW("uknown hash type " << std::to_string(record_order[i]));
+    }
+  }
 
-    THROW_IF(
-      !write_records && !write_hashsets,
-      "at least one of records and hashsets must be written"
-    );
-  }
-  catch (const std::exception& e) {
-    fill_error(err, e.what());
-    return nullptr;
-  }
+  THROW_IF(
+    !write_records && !write_hashsets,
+    "at least one of records and hashsets must be written"
+  );
 
 // TODO: error handling
   bctx->outfile = output_file;
@@ -1090,6 +1083,35 @@ SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
   return bctx.release();
 }
 
+SFHASH_HashsetBuildCtx* sfhash_hashset_builder_open(
+  const char* hashset_name,
+  const char* hashset_desc,
+  const SFHASH_HashAlgorithm* record_order,
+  size_t record_order_length,
+  bool write_records,
+  bool write_hashsets,
+  const char* output_file,
+  const char* tmp_dir,
+  SFHASH_Error** err)
+{
+  try {
+    return hashset_builder_open(
+      hashset_name,
+      hashset_desc,
+      record_order,
+      record_order_length,
+      write_records,
+      write_hashsets,
+      output_file,
+      tmp_dir
+    );
+  }
+  catch (const std::exception& e) {
+    fill_error(err, e.what());
+    return 0;
+  }
+}
+
 void sfhash_hashset_builder_add_record(
   SFHASH_HashsetBuildCtx* bctx,
   const void* record)
@@ -1151,10 +1173,7 @@ void sfhash_hashset_builder_add_hash(
   }
 }
 
-size_t sfhash_hashset_builder_write(
-  SFHASH_HashsetBuildCtx* bctx,
-  SFHASH_Error** err)
-{
+size_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
   const auto& outfile = bctx->outfile;
 
   auto& ftoc = bctx->ftoc;
@@ -1391,6 +1410,19 @@ size_t sfhash_hashset_builder_write(
   std::filesystem::resize_file(outfile, off);
 
   return off;
+}
+
+size_t sfhash_hashset_builder_write(
+  SFHASH_HashsetBuildCtx* bctx,
+  SFHASH_Error** err)
+{
+  try {
+    return hashset_builder_write(bctx);
+  }
+  catch (const std::exception& e) {
+    fill_error(err, e.what());
+    return 0;
+  }
 }
 
 void sfhash_hashset_builder_destroy(SFHASH_HashsetBuildCtx* bctx) {
