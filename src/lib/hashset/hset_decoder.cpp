@@ -25,14 +25,12 @@ std::ostream& operator<<(std::ostream& out, const Chunk& ch) {
              << "]";
 }
 
-// TODO: optionally? check chunk hash
-
 Chunk decode_chunk(const uint8_t* beg, const uint8_t*& cur, const uint8_t* end) {
   const uint32_t type = read_be<uint32_t>(beg, cur, end);
   const uint64_t len = read_le<uint64_t>(beg, cur, end);
   const uint8_t* dbeg = cur;
 
-  cur = dbeg + len + 32;  // 32 is the length of the trailing hash
+  cur = dbeg + len;
 
   return Chunk{ type, dbeg, dbeg + len };
 }

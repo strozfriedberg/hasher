@@ -56,12 +56,7 @@ TEST_CASE("write_chunk") {
     // chunk data length
     0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     // chunk data
-    '1', '2', '3', '4',
-    // chunk hash
-    0x03, 0xac, 0x67, 0x42, 0x16, 0xf3, 0xe1, 0x5c,
-    0x76, 0x1e, 0xe1, 0xa5, 0xe2, 0x55, 0xf0, 0x67,
-    0x95, 0x36, 0x23, 0xc8, 0xb3, 0x88, 0xb4, 0x45,
-    0x9e, 0x13, 0xf9, 0x78, 0xd7, 0xc8, 0x46, 0xf4
+    '1', '2', '3', '4'
   };
 
   std::vector<char> buf(sizeof(exp));
@@ -115,7 +110,7 @@ TEST_CASE("write_magic") {
 
 TEST_CASE("length_fhdr") {
   CHECK(length_fhdr_data("123", "4567", "890") == 24);
-  CHECK(length_fhdr("123", "4567", "890") == 68);
+  CHECK(length_fhdr("123", "4567", "890") == 36);
 }
 
 template <auto func, typename... Args>
@@ -156,7 +151,7 @@ TEST_CASE("write_fhdr_data") {
 TEST_CASE("length_hhnn") {
   const RecordFieldDescriptor hi{SFHASH_SHA_1, "SHA-1", 20};
   CHECK(length_hhnn_data(hi) == 23);
-  CHECK(length_hhnn(hi) == 67);
+  CHECK(length_hhnn(hi) == 35);
 }
 
 TEST_CASE("write_hhnn_data") {
@@ -181,7 +176,7 @@ TEST_CASE("write_hhnn_data") {
 
 TEST_CASE("length_hint") {
   CHECK(length_hint_data() == 4098);
-  CHECK(length_hint() == 4142);
+  CHECK(length_hint() == 4110);
 }
 
 TEST_CASE("write_hint_data") {
@@ -210,7 +205,7 @@ TEST_CASE("write_hint_data") {
 
 TEST_CASE("length_hdat") {
   CHECK(length_hdat_data(3914, 20) == 78280);
-  CHECK(length_hdat(3914, 20) == 78324);
+  CHECK(length_hdat(3914, 20) == 78292);
 }
 
 TEST_CASE("write_hdat_data") {
@@ -223,7 +218,7 @@ TEST_CASE("write_hdat_data") {
 
 TEST_CASE("length_ridx") {
   CHECK(length_ridx_data(134) == 1072);
-  CHECK(length_ridx(134) == 1116);
+  CHECK(length_ridx(134) == 1084);
 }
 
 TEST_CASE("write_ridx_data") {
@@ -240,7 +235,7 @@ TEST_CASE("length_rhdr") {
     {SFHASH_SHA_1, "SHA-1", 20}
   };
   CHECK(length_rhdr_data(fields) == 48);
-  CHECK(length_rhdr(fields) == 92);
+  CHECK(length_rhdr(fields) == 60);
 }
 
 TEST_CASE("write_rhdr_data") {
@@ -291,7 +286,7 @@ TEST_CASE("length_rdat") {
     {SFHASH_SHA_1, "SHA-1", 20}
   };
   CHECK(length_rdat_data(fields, 87) == 3306);
-  CHECK(length_rdat(fields, 87) == 3350);
+  CHECK(length_rdat(fields, 87) == 3318);
 }
 
 TEST_CASE("write_rdat_data") {
@@ -304,7 +299,7 @@ TEST_CASE("write_rdat_data") {
 
 TEST_CASE("length_ftoc") {
   CHECK(length_ftoc_data(57) == 684);
-  CHECK(length_ftoc(57) == 728);
+  CHECK(length_ftoc(57) == 696);
 }
 
 TEST_CASE("write_ftoc_data") {

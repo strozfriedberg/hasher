@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "rwutil.h"
-#include "hasher/hasher.h"
 #include "hasher/hashset.h"
 #include "hashset/hset_structs.h"
 
@@ -51,11 +50,6 @@ size_t write_hashset(
 
 void size_to_u64(uint8_t* dst, const char* src, size_t dlen);
 
-SFHASH_HashValues hash_chunk_data(
-  const char* chunk_beg,
-  const char* chunk_end
-);
-
 template <auto func, typename... Args>
 size_t write_chunk(
   char* out,
@@ -73,8 +67,6 @@ size_t write_chunk(
 
   write_le<uint64_t>(out - dbeg, lbeg); // data length
 
-  const auto hashes = hash_chunk_data(dbeg, out);
-  out += write_bytes(hashes.Sha2_256, sizeof(hashes.Sha2_256), out);
   return out - beg;
 }
 

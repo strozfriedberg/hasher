@@ -31,6 +31,7 @@
 #include "hashset/field_range.h"
 #include "hashset/record_iterator.h"
 #include "hashset/util.h"
+#include "hasher/hasher.h"
 #include "hasher/hashset.h"
 #include "util/istream_line_range.h"
 
@@ -71,30 +72,12 @@ size_t write_to(char* out, const void* buf, size_t len) {
   return len;
 }
 
-SFHASH_HashValues hash_chunk_data(
-  const char* chunk_beg,
-  const char* chunk_end)
-{
-  // hash the chunk data
-  auto hasher = make_unique_del(
-    sfhash_create_hasher(SFHASH_SHA_2_256), sfhash_destroy_hasher
-  );
-
-  sfhash_update_hasher(hasher.get(), chunk_beg, chunk_end);
-
-  SFHASH_HashValues hashes;
-  sfhash_get_hashes(hasher.get(), &hashes);
-
-  return hashes;
-}
-
 template <auto func, typename... Args>
 size_t length_chunk(Args&&... args)
 {
   return 4 + // chunk type
          8 + // chunk data length
-         func(std::forward<Args>(args)...) +
-         32; // chunk hash
+         func(std::forward<Args>(args)...);
 }
 
 size_t length_alignment_padding(uint64_t pos, uint64_t align) {
