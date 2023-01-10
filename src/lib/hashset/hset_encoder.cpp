@@ -193,7 +193,7 @@ size_t length_hhnn(
 
 size_t write_hhnn_data(
   const RecordFieldDescriptor& hi,
-  size_t hash_count,
+  uint64_t hash_count,
   char* out)
 {
   const char* beg = out;
@@ -207,7 +207,7 @@ size_t write_hhnn_data(
 
 size_t write_hhnn(
   const RecordFieldDescriptor& hi,
-  size_t hash_count,
+  uint64_t hash_count,
   char* out)
 {
   return write_chunk<write_hhnn_data>(

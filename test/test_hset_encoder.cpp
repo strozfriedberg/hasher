@@ -156,7 +156,7 @@ TEST_CASE("length_hhnn") {
 
 TEST_CASE("write_hhnn_data") {
   const RecordFieldDescriptor hi{SFHASH_SHA_1, "SHA-1", 20};
-  const size_t hash_count = 4886718345;
+  const uint64_t hash_count = 4886718345;
 
   const uint8_t exp[] = {
     // hash type name length
