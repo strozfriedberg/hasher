@@ -32,13 +32,26 @@ SFHASH_Hashset* sfhash_load_hashset(
  */
 void sfhash_destroy_hashset(SFHASH_Hashset* hset);
 
-
+/*
+ * Returns the name of a hashset.
+ */
 const char* sfhash_hashset_name(const SFHASH_Hashset* hset);
 
+/*
+ * Returns the description of a hashset.
+ */
 const char* sfhash_hashset_description(const SFHASH_Hashset* hset);
 
+/*
+ * Returns the ISO-8601 timestamp of a hashset.
+ */
 const char* sfhash_hashset_timestamp(const SFHASH_Hashset* hset);
 
+/*
+ * Returns the SHA2-256 hash of the hashset data.
+ *
+ * The hash is produced from the hset file from offset 40 to the end.
+ */
 const void* sfhash_hashset_sha2_256(const SFHASH_Hashset* hset);
 
 /*
