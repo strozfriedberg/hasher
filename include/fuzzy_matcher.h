@@ -35,8 +35,7 @@ public:
 private:
   FuzzyFileOffsets getOffsets() const;
 
-  const char *Beg;
-  const char *End;
+  std::string_view Data;
 };
 
 struct SFHASH_FuzzyMatcher {

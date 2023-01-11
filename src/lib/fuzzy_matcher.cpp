@@ -48,22 +48,21 @@ void sfhash_destroy_fuzzy_matcher(FuzzyMatcher* matcher) {
 }
 
 FuzzyHash::FuzzyHash(const char* a, const char* b):
-  Beg(a),
-  End(b)
+  Data(a, b)
 {}
 
 std::string FuzzyHash::hash() const {
-  return std::string(Beg, End - Beg);
+  return std::string(Data);
 }
 
 uint64_t FuzzyHash::blocksize() const {
-  return std::strtoull(Beg, nullptr, 10);
+  return std::strtoull(Data.data(), nullptr, 10);
 }
 
 FuzzyFileOffsets FuzzyHash::getOffsets() const {
-  const char* i = std::find(Beg, End, ':');
-  const char* j = std::find(i + 1, End, ':');
-  const char* k = std::find(j + 1, End, ',');
+  const char* i = std::find(std::begin(Data), std::end(Data), ':');
+  const char* j = std::find(i + 1, std::end(Data), ':');
+  const char* k = std::find(j + 1, std::end(Data), ',');
   return {i, j, k};
 }
 
@@ -104,11 +103,11 @@ std::string replaceAll(
 
 std::string FuzzyHash::filename() const {
   auto o = getOffsets();
-  if (o.k != End) {
+  if (o.k != std::end(Data)) {
     return replaceAll(
       {
         *(o.k + 1) == '"' ? o.k + 2 : o.k + 1,
-        *(End - 1) == '"' ? End - 1 : End
+        *(std::end(Data) - 1) == '"' ? std::end(Data) - 1 : std::end(Data)
       },
       "\\\"",
       "\""

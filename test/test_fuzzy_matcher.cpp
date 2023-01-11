@@ -53,7 +53,7 @@ TEST_CASE("test_remove_duplicates") {
 
 TEST_CASE("test_hash_filename") {
   const std::string
-    sig           = "786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab";
+    sig           = "786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,\"c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab\"";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
   REQUIRE("c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab" == hash.filename());
