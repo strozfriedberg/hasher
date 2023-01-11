@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -73,8 +74,8 @@ private:
 
 int validate_hash(const char* a, const char* b);
 
-std::string removeDuplicates(const std::string& s);
+std::string removeDuplicates(std::string_view s);
 
-std::unordered_set<uint64_t> decode_chunks(const std::string& s);
+std::unordered_set<uint64_t> decode_chunks(std::string_view s);
 
 std::unique_ptr<SFHASH_FuzzyMatcher, void (*)(SFHASH_FuzzyMatcher*)> load_fuzzy_hashset(const char* beg, const char* end);

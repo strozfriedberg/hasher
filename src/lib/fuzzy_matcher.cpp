@@ -4,8 +4,6 @@
 
 #include <fuzzy.h>
 
-#include <string_view>
-
 #include "fuzzy_matcher.h"
 #include "parser.h"
 
@@ -272,7 +270,7 @@ int validate_hash(const char* beg, const char* end) {
   return 0;
 }
 
-uint64_t decode_base64(const std::string& s) {
+uint64_t decode_base64(std::string_view s) {
   using base64_iterator = boost::archive::iterators::transform_width<
     boost::archive::iterators::binary_from_base64<std::string::const_iterator>,
     8,
@@ -283,8 +281,8 @@ uint64_t decode_base64(const std::string& s) {
   return val;
 }
 
-std::string removeDuplicates(const std::string& s) {
-  std::string rtn = s.substr(0, 3);
+std::string removeDuplicates(std::string_view s) {
+  std::string rtn(s.substr(0, 3));
   for (size_t i = 3; i < s.length(); ++i) {
     if (s[i] != s[i - 1] || s[i] != s[i - 2] || s[i] != s[i - 3]) {
       rtn.push_back(s[i]);
@@ -293,23 +291,25 @@ std::string removeDuplicates(const std::string& s) {
   return rtn;
 }
 
-std::unordered_set<uint64_t> decode_chunks(const std::string& s) {
+std::unordered_set<uint64_t> decode_chunks(std::string_view s) {
   // Get all of the 7-grams from the hash string,
   // base64 decode and reinterpret as (6-byte) integer
   if (s.length() == 0) {
     return {0};
   }
+
   std::string t(removeDuplicates(s));
   if (t.length() < 7) {
     // Pad to 6 characters
-    std::string block(t);
+    std::string block(std::move(t));
     block.append(6 - block.length(), '=');
     return {decode_base64(block)};
   }
 
+  std::string_view tv(t);
   std::unordered_set<uint64_t> results;
-  for (size_t i = 0; i + 7 <= t.length(); ++i) {
-    results.insert(decode_base64(t.substr(i, 7)));
+  for (size_t i = 0; i + 7 <= tv.length(); ++i) {
+    results.insert(decode_base64(tv.substr(i, 7)));
   }
   return results;
 }
@@ -320,7 +320,8 @@ std::unique_ptr<SFHASH_FuzzyMatcher, void (*)(SFHASH_FuzzyMatcher*)> load_fuzzy_
   if (l == lend) {
     return {nullptr, nullptr};
   }
-  const std::string firstLine(l->first, l->second - l->first);
+
+  const std::string_view firstLine(l->first, l->second - l->first);
   if (firstLine != "ssdeep,1.1--blocksize:hash:hash,filename") {
     return {nullptr, nullptr};
   }
