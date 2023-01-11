@@ -34,7 +34,8 @@ public:
 private:
   FuzzyFileOffsets getOffsets() const;
 
-  const char *Beg, *End;
+  const char *Beg;
+  const char *End;
 };
 
 struct SFHASH_FuzzyMatcher {

@@ -4,6 +4,8 @@
 
 #include <fuzzy.h>
 
+#include <string_view>
+
 #include "fuzzy_matcher.h"
 #include "parser.h"
 
