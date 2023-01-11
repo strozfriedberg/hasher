@@ -64,6 +64,9 @@ int sfhash_hashset_index_for_type(
   SFHASH_HashAlgorithm htype
 );
 
+/*
+ * Get the number of hashes in the hashset with the given index.
+ */
 uint64_t sfhash_hashset_count(
   const SFHASH_Hashset* hset,
   size_t tidx
@@ -108,10 +111,6 @@ const void* sfhash_hashset_record_field(
   const SFHASH_HashsetRecord* rec,
   size_t tidx
 );
-
-/*
- *
- */
 
 struct SFHASH_HashsetBuildCtx;
 
