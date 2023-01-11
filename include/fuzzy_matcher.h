@@ -72,7 +72,7 @@ private:
   std::string QueryFilename;
 };
 
-int validate_hash(const char* a, const char* b);
+bool validate_hash(const char* a, const char* b);
 
 std::string removeDuplicates(std::string_view s);
 

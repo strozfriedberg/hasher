@@ -154,7 +154,7 @@ void FuzzyMatcher::reserve_space(const char* beg, const char* end) {
     }
     FuzzyHash hash(l->first, l->second);
 
-    if (validate_hash(l->first, l->second)) {
+    if (!validate_hash(l->first, l->second)) {
       continue;
     }
     const size_t idx = blocksize_index(hash.blocksize());
@@ -253,31 +253,31 @@ int FuzzyResult::score(size_t i) const {
   return Matches[i].second;
 }
 
-int validate_hash(const char* beg, const char* end) {
+bool validate_hash(const char* beg, const char* end) {
   // blocksize:hash1:hash2,"filename"
   const char* i = std::find(beg, end, ':');
   if (i == end) {
-    return 1;
+    return false;
   }
 
   const char* j = std::find(i + 1, end, ':');
   if (j == end) {
-    return 1;
+    return false;
   }
 
   const char* k = std::find(j + 1, end, ',');
   if (k == end || k[1] != '"' || end[-1] != '"') {
-    return 1;
+    return false;
   }
 
   try {
     boost::lexical_cast<uint64_t>(beg, i - beg);
   }
   catch (const boost::bad_lexical_cast&) {
-    return 1;
+    return false;
   }
 
-  return 0;
+  return true;
 }
 
 uint64_t decode_base64(std::string_view s) {
@@ -349,7 +349,7 @@ std::unique_ptr<SFHASH_FuzzyMatcher, void (*)(SFHASH_FuzzyMatcher*)> load_fuzzy_
       continue;
     }
 
-    if (validate_hash(l->first, l->second)) {
+    if (!validate_hash(l->first, l->second)) {
       return {nullptr, nullptr};
     }
 

@@ -65,7 +65,7 @@ TEST_CASE("test_parse_valid_sig") {
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
 
-  REQUIRE(0 == validate_hash(beg, end));
+  REQUIRE(validate_hash(beg, end));
   REQUIRE(192 == hash.blocksize());
   REQUIRE("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV" == hash.block());
   REQUIRE("R4qzN+idbyboj19xRRZE2IkWO/5Z" == hash.double_block());
@@ -78,7 +78,7 @@ TEST_CASE("test_parse_valid_sig_no_filename") {
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
 
-  REQUIRE(1 == validate_hash(beg, end));
+  REQUIRE(!validate_hash(beg, end));
   REQUIRE(192 == hash.blocksize());
   REQUIRE("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV" == hash.block());
   REQUIRE("R4qzN+idbyboj19xRRZE2IkWO/5Z" == hash.double_block());
@@ -88,7 +88,7 @@ TEST_CASE("test_parse_valid_sig_no_filename") {
 TEST_CASE("test_parse_invalid_sig") {
   const std::vector<std::string> tests = {"abcd", "6:abcd:defg,\"no_trailing_quote", ""};
   for (const auto& s: tests) {
-    REQUIRE(1 == validate_hash(s.c_str(), s.c_str() + s.length()));
+    REQUIRE(!validate_hash(s.c_str(), s.c_str() + s.length()));
   }
 }
 
