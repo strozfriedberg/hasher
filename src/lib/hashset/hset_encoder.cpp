@@ -456,7 +456,7 @@ size_t write_rdat_data(
   const RecordData& rdat,
   char* out)
 {
-  return static_cast<char*>(rdat.end) - static_cast<char*>(rdat.beg);
+  return rdat.end - rdat.beg;
 }
 
 size_t write_rdat(
@@ -773,8 +773,8 @@ void scatter_records_to_hashset(
     >
   >& hb)
 {
-  RecordIterator rbeg(static_cast<uint8_t*>(rdat.beg), rhdr.record_length);
-  RecordIterator rend(static_cast<uint8_t*>(rdat.end), rhdr.record_length);
+  RecordIterator rbeg(rdat.beg, rhdr.record_length);
+  RecordIterator rend(rdat.end, rhdr.record_length);
   size_t recno = 0;
   // Scatter each record out to the hash sections
   for (auto i = rbeg; i != rend; ++i) {
@@ -1192,14 +1192,14 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
     bip::file_mapping fm(outfile.string().c_str(), bip::read_write);
     bip::mapped_region mr(fm, bip::read_write);
 
-    char* out = static_cast<char*>(mr.get_address());
+    uint8_t* out = static_cast<uint8_t*>(mr.get_address());
 
     rdat.beg = out + ftoc.entries.back().first + 12;
     rdat.end = rdat.beg + rhdr.record_count * rhdr.record_length;
 
     // sort the records
-    RecordIterator rbeg(static_cast<uint8_t*>(rdat.beg), rhdr.record_length);
-    RecordIterator rend(static_cast<uint8_t*>(rdat.end), rhdr.record_length);
+    RecordIterator rbeg(rdat.beg, rhdr.record_length);
+    RecordIterator rend(rdat.end, rhdr.record_length);
 
     std::sort(rbeg, rend);
     rend = std::unique(rbeg, rend);
@@ -1245,8 +1245,8 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
 
         hb.emplace_back(
           field.length,
-          RecordIterator(reinterpret_cast<uint8_t*>(out) + off + 12, field.length),
-          RecordIterator(reinterpret_cast<uint8_t*>(out) + off + 12, field.length),
+          RecordIterator(out + off + 12, field.length),
+          RecordIterator(out + off + 12, field.length),
           nullptr,
           nullptr
         );
@@ -1272,7 +1272,7 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
     }
 
     // Write
-    write_chunks(out, ftoc, fhdr, rhdr, rdat, hb, off2hbidx);
+    write_chunks(reinterpret_cast<char*>(out), ftoc, fhdr, rhdr, rdat, hb, off2hbidx);
   }
   else if (bctx->with_hashsets) {
     // close the temp files

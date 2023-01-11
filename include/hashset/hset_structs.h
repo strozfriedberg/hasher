@@ -109,8 +109,8 @@ struct RecordHeader {
 std::ostream& operator<<(std::ostream& out, const RecordHeader& rhdr);
 
 struct RecordData {
-  void* beg;
-  void* end;
+  uint8_t* beg;
+  uint8_t* end;
 
   bool operator==(const RecordData&) const = default;
 };

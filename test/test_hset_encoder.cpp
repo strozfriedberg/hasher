@@ -291,8 +291,8 @@ TEST_CASE("length_rdat") {
 
 TEST_CASE("write_rdat_data") {
   const RecordData rdat{
-    reinterpret_cast<void*>(123),
-    reinterpret_cast<void*>(456)
+    reinterpret_cast<uint8_t*>(123),
+    reinterpret_cast<uint8_t*>(456)
   };
   CHECK(write_rdat_data(rdat, nullptr) == 456 - 123);
 }
