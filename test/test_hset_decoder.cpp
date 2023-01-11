@@ -114,7 +114,8 @@ TEST_CASE("parse_fhdr") {
     2,
     "name",
     "2022-10-26T18:13:07Z",
-    "desc"
+    "desc",
+    {}
   };
 
   CHECK(parse_fhdr(ch) == exp);
