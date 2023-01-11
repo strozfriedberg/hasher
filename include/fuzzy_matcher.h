@@ -12,13 +12,6 @@
 
 #include "hasher/fuzzy.h"
 
-struct FuzzyFileOffsets {
-  // Offsets of block, double_block, and filename in ssdeep format hash file
-  const char* i;
-  const char* j;
-  const char* k;
-};
-
 class FuzzyHash {
 public:
   FuzzyHash(const char* a, const char* b);
