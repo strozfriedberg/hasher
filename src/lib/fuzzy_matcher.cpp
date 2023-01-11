@@ -4,6 +4,8 @@
 
 #include <fuzzy.h>
 
+#include <algorithm>
+
 #include "fuzzy_matcher.h"
 #include "parser.h"
 
@@ -59,23 +61,20 @@ uint64_t FuzzyHash::blocksize() const {
 }
 
 FuzzyFileOffsets FuzzyHash::getOffsets() const {
-  const char* i = static_cast<const char*>(std::memchr(Beg, ':', End - Beg));
-  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', End - (i + 1)));
-  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', End - (j + 1)));
+  const char* i = std::find(Beg, End, ':');
+  const char* j = std::find(i + 1, End, ':');
+  const char* k = std::find(j + 1, End, ',');
   return {i, j, k};
 }
 
 std::string FuzzyHash::block() const {
   auto o = getOffsets();
-  return std::string(o.i + 1, o.j - (o.i + 1));
+  return std::string(o.i + 1, o.j);
 }
 
 std::string FuzzyHash::double_block() const {
   auto o = getOffsets();
-  if (!o.k) {
-    o.k = End;
-  }
-  return std::string(o.j + 1, o.k - (o.j + 1));
+  return std::string(o.j + 1, o.k);
 }
 
 std::string replaceAll(
@@ -105,9 +104,19 @@ std::string replaceAll(
 
 std::string FuzzyHash::filename() const {
   auto o = getOffsets();
-  return o.k ?
-    replaceAll({o.k + 2, End - (o.k + 3)}, "\\\"", "\"") :
-    "";
+  if (o.k != End) {
+    return replaceAll(
+      {
+        *(o.k + 1) == '"' ? o.k + 2 : o.k + 1,
+        *(End - 1) == '"' ? End - 1 : End
+      },
+      "\\\"",
+      "\""
+    );
+  }
+  else {
+    return "";
+  }
 }
 
 std::unordered_set<uint64_t> FuzzyHash::chunks() const {

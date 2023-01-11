@@ -56,7 +56,7 @@ TEST_CASE("test_hash_filename") {
     sig           = "786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
-  REQUIRE(":\\MSOCache\\All Users\\Access.en-us\\AccLR.ca" == hash.filename());
+  REQUIRE("c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab" == hash.filename());
 }
 
 TEST_CASE("test_parse_valid_sig") {
