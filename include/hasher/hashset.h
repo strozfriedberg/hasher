@@ -51,7 +51,7 @@ int sfhash_hashset_index_for_type(
   SFHASH_HashAlgorithm htype
 );
 
-size_t sfhash_hashset_count(
+uint64_t sfhash_hashset_count(
   const SFHASH_Hashset* hset,
   size_t tidx
 );

@@ -236,7 +236,7 @@ _sfhash_hashset_sha2_256.restype = c_void_p
 # size_t sfhash_hashset_count(const SFHASH_Hashset* hset, size_t tidx);
 _sfhash_hashset_count = _hasher.sfhash_hashset_count
 _sfhash_hashset_count.argtypes = [c_void_p, c_size_t]
-_sfhash_hashset_count.restype = c_size_t
+_sfhash_hashset_count.restype = c_uint64
 
 # int sfhash_hashset_index_for_type(const SFHASH_Hashset* hset, SFHASH_HashAlgorithm htype);
 _sfhash_hashset_index_for_type = _hasher.sfhash_hashset_index_for_type
