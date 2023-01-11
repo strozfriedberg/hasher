@@ -255,18 +255,18 @@ int FuzzyResult::score(size_t i) const {
 
 int validate_hash(const char* beg, const char* end) {
   // blocksize:hash1:hash2,"filename"
-  const char* i = static_cast<const char*>(std::memchr(beg, ':', end - beg));
-  if (!i) {
+  const char* i = std::find(beg, end, ':');
+  if (i == end) {
     return 1;
   }
 
-  const char* j = static_cast<const char*>(std::memchr(i + 1, ':', end - (i + 1)));
-  if (!j) {
+  const char* j = std::find(i + 1, end, ':');
+  if (j == end) {
     return 1;
   }
 
-  const char* k = static_cast<const char*>(std::memchr(j + 1, ',', end - (j + 1)));
-  if (!k || k[1] != '"' || end[-1] != '"') {
+  const char* k = std::find(j + 1, end, ',');
+  if (k == end || k[1] != '"' || end[-1] != '"') {
     return 1;
   }
 
@@ -276,6 +276,7 @@ int validate_hash(const char* beg, const char* end) {
   catch (const boost::bad_lexical_cast&) {
     return 1;
   }
+
   return 0;
 }
 
