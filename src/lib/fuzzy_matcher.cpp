@@ -80,19 +80,36 @@ std::string FuzzyHash::double_block() const {
   return std::string(o.j + 1, o.k - (o.j + 1));
 }
 
+std::string replaceAll(
+  std::string_view s,
+  const char* match,
+  const char* repl)
+{
+  const auto match_len = std::strlen(match);
+  std::string result;
+
+  auto i = std::string_view::size_type(0);
+  do {
+    auto j = s.find(match, i);
+    if (j == s.npos) {
+      result.append(s, i);
+      i = s.npos;
+    }
+    else {
+      result.append(s, i, j - i);
+      result.append(repl);
+      i = j + match_len;
+    }
+  } while (i != s.npos);
+
+  return result;
+}
+
 std::string FuzzyHash::filename() const {
   auto o = getOffsets();
-  std::string filename;
-  if (!o.k) {
-    filename = "";
-  }
-  else {
-    filename = std::string(o.k + 2, End - (o.k + 3));
-    while (filename.find("\\\"") != std::string::npos) {
-      filename.replace(filename.find("\\\""), 2, "\"");
-    }
-  }
-  return filename;
+  return o.k ?
+    replaceAll({o.k + 2, End - (o.k + 3)}, "\\\"", "\"") :
+    "";
 }
 
 std::unordered_set<uint64_t> FuzzyHash::chunks() const {
