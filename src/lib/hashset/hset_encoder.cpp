@@ -1156,7 +1156,7 @@ void sfhash_hashset_builder_add_hash(
   }
 }
 
-size_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
+uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
   const auto& outfile = bctx->outfile;
 
   auto& ftoc = bctx->ftoc;
@@ -1395,7 +1395,7 @@ size_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
   return off;
 }
 
-size_t sfhash_hashset_builder_write(
+uint64_t sfhash_hashset_builder_write(
   SFHASH_HashsetBuildCtx* bctx,
   SFHASH_Error** err)
 {
