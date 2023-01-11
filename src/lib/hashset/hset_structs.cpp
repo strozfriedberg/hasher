@@ -8,7 +8,7 @@
 
 std::ostream& operator<<(std::ostream& out, const TableOfContents& ftoc) {
   out << "FTOC\n";
-  for (const auto [off, type]: ftoc.entries) {
+  for (const auto& [off, type]: ftoc.entries) {
     out << off << ' '
         << std::hex << std::setw(8) << std::setfill('0')
         << type
