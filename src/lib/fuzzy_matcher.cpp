@@ -49,7 +49,15 @@ void sfhash_destroy_fuzzy_matcher(FuzzyMatcher* matcher) {
 
 FuzzyHash::FuzzyHash(const char* a, const char* b):
   Data(a, b)
-{}
+{
+  const char* i = std::find(std::begin(Data), std::end(Data), ':');
+  const char* j = std::find(i + 1, std::end(Data), ':');
+  const char* k = std::find(j + 1, std::end(Data), ',');
+
+  Block = {std::min(i + 1, std::end(Data)), j};
+  DoubleBlock = {std::min(j + 1, std::end(Data)), k};
+  Filename = {std::min(k + 1, std::end(Data)), std::end(Data)};
+}
 
 std::string FuzzyHash::hash() const {
   return std::string(Data);
@@ -59,21 +67,12 @@ uint64_t FuzzyHash::blocksize() const {
   return std::strtoull(Data.data(), nullptr, 10);
 }
 
-FuzzyFileOffsets FuzzyHash::getOffsets() const {
-  const char* i = std::find(std::begin(Data), std::end(Data), ':');
-  const char* j = std::find(i + 1, std::end(Data), ':');
-  const char* k = std::find(j + 1, std::end(Data), ',');
-  return {i, j, k};
-}
-
 std::string FuzzyHash::block() const {
-  auto o = getOffsets();
-  return std::string(o.i + 1, o.j);
+  return std::string(Block);
 }
 
 std::string FuzzyHash::double_block() const {
-  auto o = getOffsets();
-  return std::string(o.j + 1, o.k);
+  return std::string(DoubleBlock);
 }
 
 std::string replaceAll(
@@ -102,19 +101,15 @@ std::string replaceAll(
 }
 
 std::string FuzzyHash::filename() const {
-  auto o = getOffsets();
-  if (o.k != std::end(Data)) {
-    return replaceAll(
-      {
-        *(o.k + 1) == '"' ? o.k + 2 : o.k + 1,
-        *(std::end(Data) - 1) == '"' ? std::end(Data) - 1 : std::end(Data)
-      },
-      "\\\"",
-      "\""
-    );
+  if (Filename.empty()) {
+    return "";
   }
   else {
-    return "";
+    // strip leading and trailing double quotes
+    const auto pos = Filename.starts_with('"') ? 1 : 0;
+    const auto len = Filename.size() - (Filename.ends_with('"') ? 1 : 0) - pos;
+    // unguard the remaining double quotes
+    return replaceAll(Filename.substr(pos, len), "\\\"", "\"");
   }
 }
 

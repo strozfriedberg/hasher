@@ -33,9 +33,7 @@ public:
   std::unordered_set<uint64_t> double_chunks() const;
 
 private:
-  FuzzyFileOffsets getOffsets() const;
-
-  std::string_view Data;
+  std::string_view Data, Block, DoubleBlock, Filename;
 };
 
 struct SFHASH_FuzzyMatcher {
