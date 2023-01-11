@@ -86,7 +86,11 @@ TEST_CASE("test_parse_valid_sig_no_filename") {
 }
 
 TEST_CASE("test_parse_invalid_sig") {
-  const std::vector<std::string> tests = {"abcd", "6:abcd:defg,\"no_trailing_quote", ""};
+  const std::vector<std::string> tests = {
+    "abcd",
+    "6:abcd:defg,\"no_trailing_quote",
+    ""
+  };
   for (const auto& s: tests) {
     REQUIRE(!validate_hash(s.c_str(), s.c_str() + s.length()));
   }
