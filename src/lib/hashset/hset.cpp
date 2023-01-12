@@ -114,9 +114,9 @@ const void* sfhash_hashset_record_field(
 }
 
 const SFHASH_HashsetRecordRange sfhash_hashset_records_lookup(
-  const SFHASH_Hashset* hset,
-  size_t tidx,
-  const void* hash
+  const SFHASH_Hashset* /* hset */,
+  size_t /* tidx */,
+  const void* /* hash */
 ) {
 // TODO: std::binary_search doesn't return a location, so we have nothing
 // to use yet to implement this; maybe we need std::lower_bound?
