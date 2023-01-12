@@ -1287,15 +1287,15 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
         bip::file_mapping fm(f.string().c_str(), bip::read_write);
         bip::mapped_region mr(fm, bip::read_write);
 
-        char* out = static_cast<char*>(mr.get_address());
+        uint8_t* out = static_cast<uint8_t*>(mr.get_address());
 
-        RecordIterator hbeg(reinterpret_cast<uint8_t*>(out), hhdr.hash_length);
-        RecordIterator hend(reinterpret_cast<uint8_t*>(out + fsize), hhdr.hash_length);
+        RecordIterator hbeg(out, hhdr.hash_length);
+        RecordIterator hend(out + fsize, hhdr.hash_length);
 
         std::sort(hbeg, hend);
         hend = std::unique(hbeg, hend);
 
-        fsize = hend->rec.data() - reinterpret_cast<uint8_t*>(out);
+        fsize = hend->rec.data() - out;
       }
 
       std::filesystem::resize_file(f, fsize);
