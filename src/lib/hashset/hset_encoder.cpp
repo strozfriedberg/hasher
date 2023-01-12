@@ -1131,10 +1131,8 @@ void sfhash_hashset_builder_add_hash(
       out.write(static_cast<const char*>(record), length);
     }
     else {
-      // FIXME: slow
-      for (size_t i = 0; i < length; ++i) {
-        out.put(0);
-      }
+      std::vector<char> buf(length, 0);
+      out.write(buf.data(), length);
     }
   }
   else { // with_hashsets
