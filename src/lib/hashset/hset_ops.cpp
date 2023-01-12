@@ -50,8 +50,8 @@ std::pair<
 
   // rewrite left records to joint format
   make_output_records(
-    static_cast<const uint8_t*>(lrdat.beg),
-    static_cast<const uint8_t*>(lrdat.end),
+    lrdat.beg,
+    lrdat.end,
     lrhdr.record_length,
     lf,
     l_ex
@@ -59,8 +59,8 @@ std::pair<
 
   // rewrite right records to joint format
   make_output_records(
-    static_cast<const uint8_t*>(rrdat.beg),
-    static_cast<const uint8_t*>(rrdat.end),
+    rrdat.beg,
+    rrdat.end,
     rrhdr.record_length,
     rf,
     r_ex

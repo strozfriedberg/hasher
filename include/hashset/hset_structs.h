@@ -118,8 +118,8 @@ struct RecordData {
 std::ostream& operator<<(std::ostream& out, const RecordData& rdat);
 
 struct ConstRecordData {
-  const void* beg;
-  const void* end;
+  const uint8_t* beg;
+  const uint8_t* end;
 
   bool operator==(const ConstRecordData&) const = default;
 };

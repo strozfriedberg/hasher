@@ -412,7 +412,10 @@ TEST_CASE("hashset_record_lookup") {
     }
   };
 
-  hset.holder.rdat = { recs.begin(), recs.end() };
+  hset.holder.rdat = {
+    reinterpret_cast<uint8_t*>(recs.begin()),
+    reinterpret_cast<uint8_t*>(recs.end())
+  };
 
   hset.holder.hsets.emplace_back(
     HashsetHeader{ SFHASH_MD5, "MD5", 16, 0 },

@@ -178,13 +178,13 @@ TEST_CASE("hset_union_round_trip") {
 
   const size_t rlen = hc->holder.rhdr.record_length;
 
-  const SFHASH_HashsetRecord* ar = static_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.beg);
-  const SFHASH_HashsetRecord* br = static_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.beg);
-  const SFHASH_HashsetRecord* cr = static_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.beg);
+  const SFHASH_HashsetRecord* ar = reinterpret_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.beg);
+  const SFHASH_HashsetRecord* br = reinterpret_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.beg);
+  const SFHASH_HashsetRecord* cr = reinterpret_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.beg);
 
-  const SFHASH_HashsetRecord* ae = static_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.end);
-  const SFHASH_HashsetRecord* be = static_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.end);
-  const SFHASH_HashsetRecord* ce = static_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.end);
+  const SFHASH_HashsetRecord* ae = reinterpret_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.end);
+  const SFHASH_HashsetRecord* be = reinterpret_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.end);
+  const SFHASH_HashsetRecord* ce = reinterpret_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.end);
 
   // we're not already past the end
   REQUIRE(ar <= ae);
@@ -287,13 +287,13 @@ TEST_CASE("hset_intersection_round_trip") {
 
   const size_t rlen = hc->holder.rhdr.record_length;
 
-  const SFHASH_HashsetRecord* ar = static_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.beg);
-  const SFHASH_HashsetRecord* br = static_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.beg);
-  const SFHASH_HashsetRecord* cr = static_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.beg);
+  const SFHASH_HashsetRecord* ar = reinterpret_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.beg);
+  const SFHASH_HashsetRecord* br = reinterpret_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.beg);
+  const SFHASH_HashsetRecord* cr = reinterpret_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.beg);
 
-  const SFHASH_HashsetRecord* ae = static_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.end);
-  const SFHASH_HashsetRecord* be = static_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.end);
-  const SFHASH_HashsetRecord* ce = static_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.end);
+  const SFHASH_HashsetRecord* ae = reinterpret_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.end);
+  const SFHASH_HashsetRecord* be = reinterpret_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.end);
+  const SFHASH_HashsetRecord* ce = reinterpret_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.end);
 
   // we're not already past the end
   REQUIRE(ar <= ae);
@@ -390,13 +390,13 @@ TEST_CASE("hset_difference_round_trip") {
 
   const size_t rlen = hc->holder.rhdr.record_length;
 
-  const SFHASH_HashsetRecord* ar = static_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.beg);
-  const SFHASH_HashsetRecord* br = static_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.beg);
-  const SFHASH_HashsetRecord* cr = static_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.beg);
+  const SFHASH_HashsetRecord* ar = reinterpret_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.beg);
+  const SFHASH_HashsetRecord* br = reinterpret_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.beg);
+  const SFHASH_HashsetRecord* cr = reinterpret_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.beg);
 
-  const SFHASH_HashsetRecord* ae = static_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.end);
-  const SFHASH_HashsetRecord* be = static_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.end);
-  const SFHASH_HashsetRecord* ce = static_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.end);
+  const SFHASH_HashsetRecord* ae = reinterpret_cast<const SFHASH_HashsetRecord*>(ha->holder.rdat.end);
+  const SFHASH_HashsetRecord* be = reinterpret_cast<const SFHASH_HashsetRecord*>(hb->holder.rdat.end);
+  const SFHASH_HashsetRecord* ce = reinterpret_cast<const SFHASH_HashsetRecord*>(hc->holder.rdat.end);
 
   // we're not already past the end
   REQUIRE(ar <= ae);
