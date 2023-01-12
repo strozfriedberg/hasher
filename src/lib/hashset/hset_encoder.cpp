@@ -1164,7 +1164,6 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
   uint64_t off = 0;
 
   if (bctx->with_records) {
-// TODO: error handling
     bctx->out.close();
 
     const auto hset_size = bctx->with_hashsets ?
