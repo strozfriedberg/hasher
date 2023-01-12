@@ -36,7 +36,6 @@ struct State {
     FTOC,
     FHDR,
     RHDR,
-    RDAT,
     SBRK, // section break
     HHDR,
     HINT,
