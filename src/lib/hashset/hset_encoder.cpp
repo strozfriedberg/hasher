@@ -329,7 +329,7 @@ size_t length_ridx(size_t record_count) {
 
 size_t write_ridx_data(
   const RecordIndex& ridx,
-  char* out)
+  char* /* out */)
 {
   return static_cast<char*>(ridx.end) - static_cast<char*>(ridx.beg);
 }
@@ -454,7 +454,7 @@ size_t write_rdat_record(
 
 size_t write_rdat_data(
   const RecordData& rdat,
-  char* out)
+  char* /* out */)
 {
   return rdat.end - rdat.beg;
 }
