@@ -230,6 +230,10 @@ Holder decode_chunks(ChunkIterator ch, ChunkIterator ch_end) {
           state = State::SBRK;
         }
         break;
+
+      case State::DONE:
+        // should not happen, loop will exit first
+        break;
       }
     }
   }
