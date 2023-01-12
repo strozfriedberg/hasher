@@ -1356,10 +1356,10 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
       const auto fsize = std::filesystem::file_size(f);
 
       {
-        std::ifstream tof;
-        tof.exceptions(std::ifstream::failbit);
-        tof.open(f, std::ios::binary);
-        tof.read(out + off + 12, fsize);
+        std::ifstream tif;
+        tif.exceptions(std::ifstream::failbit);
+        tif.open(f, std::ios::binary);
+        tif.read(out + off + 12, fsize);
       }
       std::filesystem::remove(f);
 
