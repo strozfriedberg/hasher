@@ -1354,9 +1354,13 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
       const auto& f = bctx->tmp_hashes_files[i];
 
       const auto fsize = std::filesystem::file_size(f);
-      std::ifstream tof(f, std::ios::binary);
-      tof.read(out + off + 12, fsize);
-      tof.close();
+
+      {
+        std::ifstream tof;
+        tof.exceptions(std::ifstream::failbit);
+        tof.open(f, std::ios::binary);
+        tof.read(out + off + 12, fsize);
+      }
       std::filesystem::remove(f);
 
       hdat.beg = reinterpret_cast<uint8_t*>(out) + off + 12;
