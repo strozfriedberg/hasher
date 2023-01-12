@@ -639,11 +639,13 @@ size_t length_hset_hashsets_only(
 std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   // set the timestamp
   const auto tm = std::gmtime(&tt);
+
   // 0000-00-00T00:00:00Z
   std::string ts(21, '\0'); // max length + 1; strftime wants to write a null
 
-// TODO: check return value
-  ts.resize(std::strftime(ts.data(), ts.size(), "%FT%TZ", tm));
+  const auto len = std::strftime(ts.data(), ts.size(), "%FT%TZ", tm);
+  THROW_IF(len == 0, "buffer too short for timestamp, should be impossible");
+  ts.resize(len);
   return ts;
 }
 
