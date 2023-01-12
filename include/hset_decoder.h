@@ -212,6 +212,7 @@ Holder decode_chunks(ChunkIterator ch, ChunkIterator ch_end) {
           // intentional fall-through to HINT state
           ;
         }
+        [[fallthrough]];
 
       case State::HINT:
         if (ch->type == Chunk::HDAT) {
