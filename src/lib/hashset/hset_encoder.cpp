@@ -1054,11 +1054,14 @@ SFHASH_HashsetBuildCtx* hashset_builder_open(
         RecordIndex{}
       );
 
-// TODO: error handling
       // open the temp files for receiving the hashes
       const auto f = std::string(tmp_dir) + "/tmp_" + std::to_string(field.type);
       const auto& p = tmp_hashes_files.emplace_back(f);
-      tmp_hashes_out.emplace_back(p, std::ios::binary | std::ios::trunc);
+
+      std::ofstream tof;
+      tof.exceptions(std::ofstream::failbit);
+      tof.open(p, std::ios::binary | std::ios::trunc);
+      tmp_hashes_out.push_back(std::move(tof));
     }
   }
 
