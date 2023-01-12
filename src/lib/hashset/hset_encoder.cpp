@@ -996,7 +996,6 @@ SFHASH_HashsetBuildCtx* hashset_builder_open(
     "at least one of records and hashsets must be written"
   );
 
-// TODO: error handling
   bctx->outfile = output_file;
   auto& outfile = bctx->outfile;
 
