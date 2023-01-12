@@ -643,7 +643,6 @@ std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   std::string ts(21, '\0'); // max length + 1; strftime wants to write a null
 
 // TODO: check return value
-// TODO: fractional seconds?
   ts.resize(std::strftime(ts.data(), ts.size(), "%FT%TZ", tm));
   return ts;
 }
