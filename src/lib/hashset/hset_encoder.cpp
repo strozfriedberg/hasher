@@ -999,11 +999,12 @@ SFHASH_HashsetBuildCtx* hashset_builder_open(
   bctx->outfile = output_file;
   auto& outfile = bctx->outfile;
 
-// TODO: error handling
   // touch the output file so it exists (can't resize a file ab initio)
-  std::ofstream of;
-  of.open(outfile);
-  of.close();
+  {
+    std::ofstream of;
+    of.exceptions(std::ofstream::failbit);
+    of.open(outfile);
+  }
 
   // establish locations of initial chunks
 
