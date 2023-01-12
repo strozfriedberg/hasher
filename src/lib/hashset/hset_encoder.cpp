@@ -1035,9 +1035,9 @@ SFHASH_HashsetBuildCtx* hashset_builder_open(
     // resize the output file so the start of the RDAT data is at the end
     std::filesystem::resize_file(outfile, off + 12);
 
-// TODO: error handling
     // open the output file ready for appending
     auto& out = bctx->out;
+    out.exceptions(std::ofstream::failbit);
     out.open(outfile, std::ios::binary | std::ios::app);
   }
   else { // write_hashsets
