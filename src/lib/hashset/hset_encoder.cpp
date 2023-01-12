@@ -303,7 +303,7 @@ size_t length_hdat(size_t hash_count, size_t hash_size) {
 
 size_t write_hdat_data(
   const HashsetData& hdat,
-  char* out)
+  char* /* out */)
 {
   return hdat.end - hdat.beg;
 }
