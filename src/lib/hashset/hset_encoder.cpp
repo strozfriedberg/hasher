@@ -1032,7 +1032,6 @@ SFHASH_HashsetBuildCtx* hashset_builder_open(
     // RDAT
     ftoc.entries.emplace_back(off, Chunk::Type::RDAT);
 
-// TODO: error handling
     // resize the output file so the start of the RDAT data is at the end
     std::filesystem::resize_file(outfile, off + 12);
 
