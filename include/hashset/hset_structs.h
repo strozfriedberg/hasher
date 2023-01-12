@@ -57,8 +57,8 @@ enum HintType {
 };
 
 struct HashsetData {
-  void* beg;
-  void* end;
+  uint8_t* beg;
+  uint8_t* end;
 
   bool operator==(const HashsetData&) const = default;
 };

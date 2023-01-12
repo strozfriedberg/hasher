@@ -210,8 +210,8 @@ TEST_CASE("length_hdat") {
 
 TEST_CASE("write_hdat_data") {
   const HashsetData hdat{
-    reinterpret_cast<void*>(123),
-    reinterpret_cast<void*>(456)
+    reinterpret_cast<uint8_t*>(123),
+    reinterpret_cast<uint8_t*>(456)
   };
   CHECK(write_hdat_data(hdat, nullptr) == 456 - 123);
 }

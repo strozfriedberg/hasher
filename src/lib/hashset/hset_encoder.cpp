@@ -305,7 +305,7 @@ size_t write_hdat_data(
   const HashsetData& hdat,
   char* out)
 {
-  return static_cast<char*>(hdat.end) - static_cast<char*>(hdat.beg);
+  return hdat.end - hdat.beg;
 }
 
 size_t write_hdat(
@@ -1362,11 +1362,11 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
       tof.close();
       std::filesystem::remove(f);
 
-      hdat.beg = out + off + 12;
-      hdat.end = out + off + 12 + fsize;
+      hdat.beg = reinterpret_cast<uint8_t*>(out) + off + 12;
+      hdat.end = hdat.beg + fsize;
 
-      RecordIterator hbeg(static_cast<uint8_t*>(hdat.beg), hhdr.hash_length);
-      RecordIterator hend(static_cast<uint8_t*>(hdat.end), hhdr.hash_length);
+      RecordIterator hbeg(hdat.beg, hhdr.hash_length);
+      RecordIterator hend(hdat.end, hhdr.hash_length);
 
       hhdr.hash_count = hend - hbeg;
 
