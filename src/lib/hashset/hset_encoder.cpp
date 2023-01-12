@@ -901,7 +901,6 @@ void write_hset(
     std::vector<uint8_t> rec;
     std::string line;
     size_t lineno = 0;
-    size_t rcount = 0;
 
     const size_t field_count = htypes.size();
 
