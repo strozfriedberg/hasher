@@ -367,7 +367,6 @@ State::Type handle_hint(const Chunk& ch, Holder& h) {
 
   hnt = parse_hint(ch);
 
-  // TODO: check for recognized type?
   THROW_IF(
     hnt.hint_type != 0x6208,
     "bad hint type " << std::hex << std::setw(4) << std::setfill('0') << hnt.hint_type
