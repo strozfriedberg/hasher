@@ -194,7 +194,6 @@ std::unique_ptr<LookupStrategy> make_lookup_strategy(
     );
   case HintType::BLOCK:
     {
-// TODO: bounds check
       const uint8_t bits = *static_cast<const uint8_t*>(hnt.beg);
       switch (bits) {
       case 1:
