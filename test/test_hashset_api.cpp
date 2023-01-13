@@ -538,7 +538,6 @@ TEST_CASE("hashset_record_lookup") {
   do_record_lookups(&hset, SFHASH_SHA_1, tests_20);
 }
 
-// { 1, "test", "2022-10-05T12:05:35Z", "a test" }
 
 TEST_CASE("hashset_builder_open_overlong_name") {
   const std::string longname(65536, 'x');
