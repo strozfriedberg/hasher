@@ -1,5 +1,7 @@
 /*
 
+TODO: Update examples
+
 Make a hashset from a list of filenames:
 
 find -type f | xargs sha1sum | cut -f1 -d' ' | mkhashset 'Some test hashes' 'These are test hashes.' sha1 >sha1.hset
