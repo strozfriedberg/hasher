@@ -17,6 +17,7 @@ for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | mkhashset 'NSRL
 */
 
 #include <cstring>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -28,39 +29,43 @@ for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | mkhashset 'NSRL
 
 int main(int argc, char** argv) {
   if (argc < 7) {
-    std::cerr << "Usage: mkhashset NAME DESC TYPE... RECORDS HASHSETS INFILE OUTIFLE\n";
+    std::cerr << "Usage: mkhashset NAME DESC TYPE... RECORDS HASHSETS INFILE OUTIFLE" << std::endl;
     return -1;
   }
 
-// TODO: add outer catch
+  try {
+    // turn off synchronization of C++ streams with C streams
+    std::ios_base::sync_with_stdio(false);
 
-  // turn off synchronization of C++ streams with C streams
-  std::ios_base::sync_with_stdio(false);
+    std::vector<SFHASH_HashAlgorithm> htypes;
+    for (int i = 3; i < argc - 4; ++i) {
+      const SFHASH_HashAlgorithm t = sfhash_hash_type(argv[i]);
+      THROW_IF(
+        t == SFHASH_INVALID,
+        "unrecognized hash type '" << argv[i] << "'"
+      );
 
-  std::vector<SFHASH_HashAlgorithm> htypes;
-  for (int i = 3; i < argc - 4; ++i) {
-    const SFHASH_HashAlgorithm t = sfhash_hash_type(argv[i]);
-    THROW_IF(
-      t == SFHASH_INVALID,
-      "unrecognized hash type '" << argv[i] << "'"
-    );
+      htypes.push_back(t);
+    }
 
-    htypes.push_back(t);
+    const auto& conv = make_text_converters(htypes);
+
+    std::cerr << "creating hset file\n";
+
+    bool with_records = !std::strcmp(argv[argc-4], "true");
+    bool with_hashsets = !std::strcmp(argv[argc-3], "true");
+
+    const std::filesystem::path outfile = argv[argc-1];
+    const std::filesystem::path infile = argv[argc-2];
+    const std::filesystem::path tmpdir = ".";
+    std::ifstream in(infile);
+
+    write_hset(in, htypes, conv, argv[1], argv[2], outfile, tmpdir, with_records, with_hashsets);
   }
-
-  const auto& conv = make_text_converters(htypes);
-
-  std::cerr << "creating hset file\n";
-
-  bool with_records = !std::strcmp(argv[argc-4], "true");
-  bool with_hashsets = !std::strcmp(argv[argc-3], "true");
-
-  const std::filesystem::path outfile = argv[argc-1];
-  const std::filesystem::path infile = argv[argc-2];
-  const std::filesystem::path tmpdir = ".";
-  std::ifstream in(infile);
-
-  write_hset(in, htypes, conv, argv[1], argv[2], outfile, tmpdir, with_records, with_hashsets);
+  catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return -1;
+  }
 
   return 0;
 }
