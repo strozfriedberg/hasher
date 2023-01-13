@@ -246,8 +246,8 @@ TEST_CASE("hashset_lookup") {
   do_lookups(&hset, SFHASH_SHA_1, tests_20);
 }
 
-// TODO: lookup with bad hset ptr?
-// TODO: lookup with bad hash type index?
+// TODO: lookup with bad hset ptr? (Should we guard against this?)
+// TODO: lookup with bad hash type index? (Should we guard against this?)
 
 TEST_CASE("hashset_record_field_index_for_type") {
   SFHASH_Hashset hset;
@@ -537,7 +537,6 @@ TEST_CASE("hashset_record_lookup") {
 
   do_record_lookups(&hset, SFHASH_SHA_1, tests_20);
 }
-
 
 TEST_CASE("hashset_builder_open_overlong_name") {
   const std::string longname(65536, 'x');
