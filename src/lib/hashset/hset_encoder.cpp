@@ -1109,7 +1109,7 @@ void sfhash_hashset_builder_add_record(
     out.write(static_cast<const char*>(record), rhdr.record_length);
   }
   else { // with_hashsets
-    // TODO
+    // TODO: implement
   }
 
   // advance the field position
