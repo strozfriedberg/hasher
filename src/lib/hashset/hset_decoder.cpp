@@ -159,8 +159,6 @@ std::unique_ptr<LookupStrategy> make_lookup_strategy(
   const HashsetHint& hnt,
   const ConstHashsetData& hsd)
 {
-  // TODO: check that hnt is long enough to hold data?
-
   if (hnt.hint_type == 0x6208) {
     return std::unique_ptr<LookupStrategy>(
       hashset_dispatcher<MakeBlockLookupStrategy8>(
