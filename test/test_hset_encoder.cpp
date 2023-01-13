@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <ctime>
 #include <initializer_list>
 #include <span>
 #include <string_view>
@@ -341,3 +342,26 @@ TEST_CASE("write_ftoc_data") {
   }
   std::cerr << '\n';
 */
+
+#ifdef __MINGW32__
+TEST_CASE("unsupported_mingw_format_strings") {
+  // Once this test fails, that means MinGW supports %F and %T and we can
+  // remove it and simplify the format string in make_timestamp().
+  //
+  // See https://sourceforge.net/p/mingw-w64/bugs/793/
+  //
+  std::tm tm;
+  tm.tm_year = 2023 - 1900;
+  tm.tm_mon = 0;
+  tm.tm_mday = 13;
+  tm.tm_hour = 16;
+  tm.tm_min = 23;
+  tm.tm_sec = 45;
+
+  std::string ts = "0000-00-00 ";
+  CHECK(std::strftime(ts.data(), ts.size(), "%F", tm) == 0);
+
+  ts = "00:00:00 ";
+  CHECK(std::strftime(ts.data(), ts.size(), "%T", tm) == 0);
+}
+#endif

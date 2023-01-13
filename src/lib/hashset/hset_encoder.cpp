@@ -643,7 +643,15 @@ std::string make_timestamp(std::time_t tt = std::time(nullptr)) {
   // 0000-00-00T00:00:00Z
   std::string ts(21, '\0'); // max length + 1; strftime wants to write a null
 
-  const auto len = std::strftime(ts.data(), ts.size(), "%FT%TZ", tm);
+  // Remove this once MinGW supports %F and %T; the test
+  // unsupported_mingw_format_strings should fail when that happens.
+#ifdef __MINGW32__
+  const char fmt[] = "%Y-%m-%dT%H:%M:%SZ";
+#else
+  const char fmt[] = "%FT%TZ";
+#endif
+
+  const auto len = std::strftime(ts.data(), ts.size(), fmt, tm);
   THROW_IF(len == 0, "buffer too short for timestamp, should be impossible");
   ts.resize(len);
   return ts;
