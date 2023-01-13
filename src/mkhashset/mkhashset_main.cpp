@@ -1,6 +1,7 @@
 /*
 
 TODO: Update examples
+TODO: Determine whether we can still use stdin
 
 Make a hashset from a list of filenames:
 
