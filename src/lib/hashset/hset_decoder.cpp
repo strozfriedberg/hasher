@@ -256,7 +256,7 @@ std::unique_ptr<LookupStrategy> make_lookup_strategy(
       }
     }
   case HintType::BLOCK_LINEAR:
-    // TODO
+    // TODO: implement this
   default:
     return std::unique_ptr<LookupStrategy>(
       hashset_dispatcher<MakeBasicLookupStrategy>(
