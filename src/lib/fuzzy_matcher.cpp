@@ -276,9 +276,10 @@ bool validate_hash(const char* beg, const char* end) {
 
 uint64_t decode_base64(std::string_view s) {
   using base64_iterator = boost::archive::iterators::transform_width<
-    boost::archive::iterators::binary_from_base64<std::string::const_iterator>,
+    boost::archive::iterators::binary_from_base64<std::string_view::iterator>,
     8,
-    6>;
+    6
+  >;
   uint64_t val = 0;
   const std::string decoded(base64_iterator(s.begin()), base64_iterator(s.end()));
   std::memcpy(&val, decoded.c_str(), decoded.length());
