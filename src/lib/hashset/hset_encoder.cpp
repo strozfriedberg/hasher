@@ -27,8 +27,6 @@
 #include "hex.h"
 #include "rwutil.h"
 #include "util.h"
-#include "hashset/field_iterator.h"
-#include "hashset/field_range.h"
 #include "hashset/record_iterator.h"
 #include "hashset/util.h"
 #include "hasher/hasher.h"
@@ -857,78 +855,42 @@ void write_hset(
 
   THROW_IF(err, err->message);
 
-  if (with_records) {
-    std::vector<uint8_t> rec;
-    std::string line;
-    size_t lineno = 0;
-    while (in) {
-      std::getline(in, line);
+  std::vector<uint8_t> rec;
+  std::string line;
+  size_t lineno = 0;
+  while (in) {
+    std::getline(in, line);
 
-      ++lineno;
+    ++lineno;
   //    if (lineno % 10000 == 0) {
   //      std::cerr << "read " << lineno << " lines\n";
   //    }
 
-      if (line.empty()) {
-        continue;
-      }
-
-      const auto& cols = split(line, ' ');
-
-      for (size_t i = 0; i < htypes.size(); ++i) {
-        if (cols[i].empty()) {
-          rec.clear();
-        }
-        else {
-          rec.resize(conv[i].second);
-          conv[i].first(
-            rec.data(),
-            cols[i].data(),
-            conv[i].second
-          );
-        }
-
-        sfhash_hashset_builder_add_hash(bctx.get(), rec.data(), rec.size());
-      }
+    if (line.empty()) {
+      continue;
     }
 
-  //  if (lineno % 10000) {
-    std::cerr << "read " << lineno << " lines\n";
-  //  }
+    const auto& cols = split(line, ' ');
 
-  }
-  else if (with_hashsets) {
-
-    std::vector<uint8_t> rec;
-    std::string line;
-    size_t lineno = 0;
-
-    const size_t field_count = htypes.size();
-
-    for (const auto& line: IstreamLineRange(in)) {
-
-      ++lineno;
-  //    if (lineno % 10000 == 0) {
-  //      std::cerr << "read " << lineno << " lines\n";
-  //    }
-
-      if (line.empty()) {
-        continue;
+    for (size_t i = 0; i < htypes.size(); ++i) {
+      if (cols[i].empty()) {
+        rec.clear();
+      }
+      else {
+        rec.resize(conv[i].second);
+        conv[i].first(
+          rec.data(),
+          cols[i].data(),
+          conv[i].second
+        );
       }
 
-      const auto& cols = split(line, ' ');
-
-      FieldRange field_range(cols, conv);
-
-      FieldIterator field_itr = field_range.begin();
-      for (size_t i = 0; i < field_count; ++i, ++field_itr) {
-        sfhash_hashset_builder_add_hash(bctx.get(), field_itr->data(), field_itr->size());
-      }
+      sfhash_hashset_builder_add_hash(bctx.get(), rec.data(), rec.size());
     }
 
-  //  if (lineno % 10000) {
-    std::cerr << "read " << lineno << " lines\n";
-  //  }
+//  if (lineno % 10000) {
+  std::cerr << "read " << lineno << " lines\n";
+//  }
   }
 
   sfhash_hashset_builder_write(bctx.get(), &err);
