@@ -872,7 +872,10 @@ void write_hset(
 
     const auto& cols = split(line, ' ');
 
-    for (size_t i = 0; i < htypes.size(); ++i) {
+    THROW_IF(cols.size() > htypes.size(), "too many columns at line " << lineno);
+    THROW_IF(cols.size() < htypes.size(), "too few columns at line " << lineno);
+
+    for (size_t i = 0; i < cols.size(); ++i) {
       if (cols[i].empty()) {
         rec.clear();
       }
