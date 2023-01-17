@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include "hasher/api.h"
+#include "hasher/hex.h"
 #include "hex.h"
 
 #include <algorithm>

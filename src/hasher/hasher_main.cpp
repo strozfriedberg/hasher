@@ -1,4 +1,4 @@
-#include "hasher/api.h"
+#include "hasher/hasher.h"
 #include "hash_types.h"
 #include "hex.h"
 #include "throw.h"

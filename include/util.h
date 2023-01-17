@@ -32,12 +32,6 @@ std::unique_ptr<ArgOf<D>, D> make_unique_del(std::nullptr_t, D&& deleter) {
 }
 
 //
-// Functions for reading unsigned integers from bytes
-//
-
-uint64_t read_le_8(const uint8_t* beg, const uint8_t*& i, const uint8_t* end);
-
-//
 // Functions for writing unsigned integers to bytes
 //
 

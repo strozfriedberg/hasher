@@ -6,7 +6,7 @@ AC_INIT([hasher], [0.3.0], [juckelman@strozfriedberg.co.uk])
 
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([src/lib/hasher.cpp])
+AC_CONFIG_SRCDIR([src/lib/hasher/hasher.cpp])
 AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([1.12 subdir-objects foreign])
@@ -17,7 +17,7 @@ AC_PROG_CXX
 AM_PROG_CC_C_O
 
 AC_LANG([C++])
-AX_CXX_COMPILE_STDCXX_17([noext], [mandatory])
+AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
 
 AX_APPEND_COMPILE_FLAGS([-W -Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe -O3 -g], [PROJECT_CXXFLAGS])
 AX_APPEND_LINK_FLAGS([-g], [PROJECT_LDFLAGS])

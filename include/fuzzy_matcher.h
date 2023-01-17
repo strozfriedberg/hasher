@@ -3,20 +3,14 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include <parallel_hashmap/phmap.h>
 
-#include "hasher/api.h"
-
-struct FuzzyFileOffsets {
-  // Offsets of block, double_block, and filename in ssdeep format hash file
-  const char* i;
-  const char* j;
-  const char* k;
-};
+#include "hasher/fuzzy.h"
 
 class FuzzyHash {
 public:
@@ -32,9 +26,7 @@ public:
   std::unordered_set<uint64_t> double_chunks() const;
 
 private:
-  FuzzyFileOffsets getOffsets() const;
-
-  const char *Beg, *End;
+  std::string_view Data, Block, DoubleBlock, Filename;
 };
 
 struct SFHASH_FuzzyMatcher {
@@ -70,10 +62,10 @@ private:
   std::string QueryFilename;
 };
 
-int validate_hash(const char* a, const char* b);
+bool validate_hash(const char* a, const char* b);
 
-std::string removeDuplicates(const std::string& s);
+std::string removeDuplicates(std::string_view s);
 
-std::unordered_set<uint64_t> decode_chunks(const std::string& s);
+std::unordered_set<uint64_t> decode_chunks(std::string_view s);
 
 std::unique_ptr<SFHASH_FuzzyMatcher, void (*)(SFHASH_FuzzyMatcher*)> load_fuzzy_hashset(const char* beg, const char* end);

@@ -53,10 +53,10 @@ TEST_CASE("test_remove_duplicates") {
 
 TEST_CASE("test_hash_filename") {
   const std::string
-    sig           = "786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab";
+    sig           = "786432:T48a50LQkKsHYLJAhbWOc82KY91w6aqotEtmS8Pjk9eQG9m/HA:TcXpsTlchVvlaqcEtmclo,\"c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab\"";
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
-  REQUIRE(":\\MSOCache\\All Users\\Access.en-us\\AccLR.ca" == hash.filename());
+  REQUIRE("c:\\MSOCache\\All Users\\Access.en-us\\AccLR.cab" == hash.filename());
 }
 
 TEST_CASE("test_parse_valid_sig") {
@@ -65,7 +65,7 @@ TEST_CASE("test_parse_valid_sig") {
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
 
-  REQUIRE(0 == validate_hash(beg, end));
+  REQUIRE(validate_hash(beg, end));
   REQUIRE(192 == hash.blocksize());
   REQUIRE("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV" == hash.block());
   REQUIRE("R4qzN+idbyboj19xRRZE2IkWO/5Z" == hash.double_block());
@@ -78,7 +78,7 @@ TEST_CASE("test_parse_valid_sig_no_filename") {
   const char *beg = sig.c_str(), *end = sig.c_str() + sig.length();
   const FuzzyHash hash(beg, end);
 
-  REQUIRE(1 == validate_hash(beg, end));
+  REQUIRE(!validate_hash(beg, end));
   REQUIRE(192 == hash.blocksize());
   REQUIRE("RZawL6QiUA4t+idbepZN0Dj19Lwm3RKiZE2IPcWO/5jV" == hash.block());
   REQUIRE("R4qzN+idbyboj19xRRZE2IkWO/5Z" == hash.double_block());
@@ -86,9 +86,13 @@ TEST_CASE("test_parse_valid_sig_no_filename") {
 }
 
 TEST_CASE("test_parse_invalid_sig") {
-  const std::vector<std::string> tests = {"abcd", "6:abcd:defg,\"no_trailing_quote", ""};
+  const std::vector<std::string> tests = {
+    "abcd",
+    "6:abcd:defg,\"no_trailing_quote",
+    ""
+  };
   for (const auto& s: tests) {
-    REQUIRE(1 == validate_hash(s.c_str(), s.c_str() + s.length()));
+    REQUIRE(!validate_hash(s.c_str(), s.c_str() + s.length()));
   }
 }
 
@@ -119,11 +123,12 @@ TEST_CASE("test_decode_padding") {
 TEST_CASE("test_decode_chunks") {
   const std::string hash               = "HEI9Xg7+P9yImaNk3qrDwpXe9gf5xkIZ";
   const std::vector<uint64_t> expected = {
-    61710615068,   822542307088, 978982065443, 1099381307637, 945966419550, 150182281091,
-    591782601711,  438664626168, 702655552575, 933755233015,  331628579272, 526461527586,
-    733875577753,  758770030952, 260599074102, 43212569235,   643217730270, 513885122730,
-    1028060167340, 929782237711, 34206553538,  1093098370981, 672151957341, 111251806331,
-    286806050806,  577949007489,
+    61710615068, 822542307088, 978982065443, 1099381307637, 945966419550,
+    150182281091, 591782601711, 438664626168, 702655552575, 933755233015,
+    331628579272, 526461527586, 733875577753, 758770030952, 260599074102,
+    43212569235, 643217730270, 513885122730, 1028060167340, 929782237711,
+    34206553538, 1093098370981, 672151957341, 111251806331, 286806050806,
+    577949007489
   };
   check_decode_chunks(hash, expected);
 }

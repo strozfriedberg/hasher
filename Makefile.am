@@ -20,26 +20,30 @@ nodist_EXTRA_src_lib_libhasher_la_SOURCES = dummy.cpp # forces C++ linking
 noinst_LTLIBRARIES = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT)
 
 src_lib_libhasherint_la_SOURCES = \
-	src/lib/entropy.cpp \
 	src/lib/error.cpp \
-	src/lib/fuzzy_hasher.cpp \
 	src/lib/fuzzy_matcher.cpp \
 	src/lib/hash_types.cpp \
-	src/lib/hasher.cpp \
-	src/lib/hashset.cpp \
-	src/lib/hashsetdata.cpp \
 	src/lib/hashsetinfo.cpp \
-	src/lib/hex.cpp \
-	src/lib/libblake3_hasher.cpp \
-	src/lib/libcrypto_hasher.cpp \
 	src/lib/parser.cpp \
-	src/lib/quick_hasher.cpp \
-	src/lib/sizeset.cpp \
+	src/lib/rwutil.cpp \
 	src/lib/util.cpp \
-	src/lib/hex_impls/hex_avx2.cpp \
-	src/lib/hex_impls/hex_sse41.cpp \
-	src/lib/hsd_impls/convex_hull.cpp \
-	src/lib/hsd_impls/hsd_utils.cpp
+	src/lib/hasher/entropy.cpp \
+	src/lib/hasher/fuzzy_hasher.cpp \
+	src/lib/hasher/hasher.cpp \
+	src/lib/hasher/libblake3_hasher.cpp \
+	src/lib/hasher/libcrypto_hasher.cpp \
+	src/lib/hasher/quick_hasher.cpp \
+	src/lib/hashset/convex_hull.cpp \
+	src/lib/hashset/hset.cpp \
+	src/lib/hashset/hset_decoder.cpp \
+	src/lib/hashset/hset_encoder.cpp \
+	src/lib/hashset/hset_ops.cpp \
+	src/lib/hashset/hset_structs.cpp \
+	src/lib/hashset/record_iterator.cpp \
+	src/lib/hashset/util.cpp \
+	src/lib/hex/hex.cpp \
+	src/lib/hex/hex_avx2.cpp \
+	src/lib/hex/hex_sse41.cpp
 
 src_lib_libhasher_la_LIBADD = $(HASHER_LIB_INT) $(BLAKE3_LIB_INT) $(PROJECT_LIBS)
 if BUILD_DLL
@@ -51,7 +55,12 @@ endif
 src_lib_libhasher_ladir = $(includedir)/hasher
 
 src_lib_libhasher_la_HEADERS = \
-	include/hasher/api.h
+	include/hasher/api.h \
+	include/hasher/common.h \
+	include/hasher/fuzzy.h \
+	include/hasher/hasher.h \
+	include/hasher/hashset.h \
+	include/hasher/hex.h
 
 vendors_BLAKE3_c_libblake3int_la_CPPFLAGS = $(AM_CPPFLAGS)
 
@@ -97,7 +106,12 @@ src_hasher_hasher_SOURCES = \
 
 src_hasher_hasher_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
-bin_PROGRAMS = src/fuzzy/fuzzy src/hasher/hasher
+src_mkhashset_mkhashset_SOURCES = \
+	src/mkhashset/mkhashset_main.cpp
+
+src_mkhashset_mkhashset_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
+
+bin_PROGRAMS = src/fuzzy/fuzzy src/hasher/hasher src/mkhashset/mkhashset
 
 check_PROGRAMS = test/test
 
@@ -113,10 +127,14 @@ test_test_SOURCES = \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
 	test/test_hasher.cpp \
-	test/test_hashset.cpp \
+	test/test_hashset_api.cpp \
 	test/test_hashsetdata_util.cpp \
-	test/test_hashset_setops.cpp \
 	test/test_hex.cpp \
+	test/test_hset_decoder.cpp \
+	test/test_hset_encoder.cpp \
+	test/test_hset_ops.cpp \
+	test/test_hset_round_trip.cpp \
+	test/test_record_iterator.cpp \
 	test/test_parser.cpp \
 	test/test_util.cpp
 

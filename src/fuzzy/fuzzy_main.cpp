@@ -7,7 +7,9 @@
 
 #include <sys/stat.h>
 
-#include "hasher/api.h"
+#include "hasher/fuzzy.h"
+#include "hasher/hasher.h"
+
 #include "parser.h"
 #include "throw.h"
 #include "util.h"
