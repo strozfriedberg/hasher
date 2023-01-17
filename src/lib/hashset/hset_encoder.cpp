@@ -799,7 +799,7 @@ void scatter_records_to_hashset(
 */
   }
 
-  std::cerr << "scattered " << recno << " records\n";
+//  std::cerr << "scattered " << recno << " records\n";
 
   for (auto& [hlen, hbeg, hend, ibeg, iend]: hb) {
     // Sort hashes and ridx together
@@ -808,7 +808,7 @@ void scatter_records_to_hashset(
     std::sort(hrbeg, hrend);
   }
 
-  std::cerr << "sorted HDAT blocks\n";
+//  std::cerr << "sorted HDAT blocks\n";
 }
 
 // TODO: switch to a std::view for producing these lazily
@@ -892,7 +892,7 @@ void write_hset(
     }
 
 //  if (lineno % 10000) {
-  std::cerr << "read " << lineno << " lines\n";
+//  std::cerr << "read " << lineno << " lines\n";
 //  }
   }
 
