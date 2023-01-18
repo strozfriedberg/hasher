@@ -44,6 +44,7 @@ constexpr uint64_t hash_length(SFHASH_HashAlgorithm type) {
   case SFHASH_SHA_3_256: return sizeof(SFHASH_HashValues::Sha3_256);
   case SFHASH_SHA_3_384: return sizeof(SFHASH_HashValues::Sha3_384);
   case SFHASH_SHA_3_512: return sizeof(SFHASH_HashValues::Sha3_512);
+  case SFHASH_BLAKE3:    return sizeof(SFHASH_HashValues::Blake3);
   case SFHASH_FUZZY:     return sizeof(SFHASH_HashValues::Fuzzy);
   case SFHASH_ENTROPY:   return sizeof(SFHASH_HashValues::Entropy);
   case SFHASH_SIZE:      return sizeof(uint64_t);
