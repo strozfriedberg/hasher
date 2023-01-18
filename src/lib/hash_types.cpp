@@ -37,6 +37,10 @@ const std::map<std::string, SFHASH_HashAlgorithm> NAMES_TO_TYPES{
 };
 
 SFHASH_HashAlgorithm hash_type(const char* name) {
+  if (!name) {
+    return SFHASH_INVALID;
+  }
+
   std::string norm(name);
 
   // remove all the hyphens and underscores
