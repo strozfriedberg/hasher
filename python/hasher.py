@@ -386,7 +386,8 @@ class Error(Handle):
 
 
 def hash_name(alg):
-    return _sfhash_hash_name(alg).decode('utf-8')
+    name = _sfhash_hash_name(alg)
+    return name.decode('utf-8') if name else None
 
 
 def hash_alg(name):

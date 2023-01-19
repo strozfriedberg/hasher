@@ -123,10 +123,11 @@ TESTS = \
 
 test_test_SOURCES = \
 	test/helper.cpp \
+	test/test_common_api.cpp \
 	test/test_convex_hull.cpp \
 	test/test_entropy.cpp \
 	test/test_fuzzy_matcher.cpp \
-	test/test_hasher.cpp \
+	test/test_hasher_api.cpp \
 	test/test_hashset_api.cpp \
 	test/test_hashsetdata_util.cpp \
 	test/test_hex.cpp \
