@@ -249,27 +249,6 @@ std::pair<int64_t, int64_t> make_left_right(const ConstHashsetData& hsd) {
   return { left, right };
 }
 
-template<size_t HashLength>
-auto make_hsds(SFHASH_Hashset* hset, SFHASH_HashAlgorithm htype) {
-  REQUIRE(sfhash_hash_length(htype) == HashLength);
-
-  const int hidx = sfhash_hashset_index_for_type(hset, htype);
-  REQUIRE(hidx != -1);
-
-  auto hsd = std::get<2>(hset->holder.hsets[hidx]);
-
-  const auto [left, right] = make_left_right<HashLength>(hsd);
-  const auto radius = std::max(left, right);
-
-// TODO: should be a way to do this with the ctor and return a temp
-  std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> lss;
-
-  lss.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
-  lss.emplace_back("std",    make_std_hsd<HashLength>(hsd));
-
-  return lss;
-}
-
 const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare/vs-445.hset"};
 const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
 
