@@ -293,7 +293,7 @@ template <
   size_t HashLength,
   size_t BucketBits
 >
-std::array<std::pair<ssize_t, ssize_t>, (1 << BucketBits)> make_buckets(const ConstHashsetData& hsd) {
+std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_buckets(const ConstHashsetData& hsd) {
   const uint8_t* const beg = static_cast<const uint8_t*>(hsd.beg);
   const uint8_t* const end = static_cast<const uint8_t*>(hsd.end);
 
@@ -301,19 +301,19 @@ std::array<std::pair<ssize_t, ssize_t>, (1 << BucketBits)> make_buckets(const Co
 
   const size_t count = (end - beg) / HashLength;
 
-  std::array<std::pair<ssize_t, ssize_t>, (1 << BucketBits)> block_bounds;
+  std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> block_bounds;
   std::fill(
     block_bounds.begin(),
     block_bounds.end(),
     std::make_pair(
-      std::numeric_limits<ssize_t>::max(),
-      std::numeric_limits<ssize_t>::min()
+      std::numeric_limits<int64_t>::max(),
+      std::numeric_limits<int64_t>::min()
     )
   );
 
   for (size_t i = 0; i < count; ++i) {
     const size_t e = expected_index(hh[i].data(), count);
-    const ssize_t delta = static_cast<ssize_t>(e) - static_cast<ssize_t>(i);
+    const int64_t delta = static_cast<int64_t>(e) - static_cast<int64_t>(i);
 
     const size_t bi = hh[i][0] >> (8 - BucketBits);
     block_bounds[bi].first = std::min(block_bounds[bi].first, delta);
