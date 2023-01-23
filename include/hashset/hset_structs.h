@@ -89,6 +89,10 @@ struct ConstRecordIndex {
 };
 
 struct RecordFieldDescriptor {
+  #if defined __clang__ && __clang_major__ <= 15
+  RecordFieldDescriptor(uint32_t type, std::string name, uint64_t length)
+    : type(type), name(std::move(name)), length(length) {}
+  #endif
   uint32_t type;
   std::string name;
   uint64_t length;
