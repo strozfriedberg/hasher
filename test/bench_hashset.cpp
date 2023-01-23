@@ -330,6 +330,54 @@ std::array<std::pair<ssize_t, ssize_t>, (1 << BucketBits)> make_buckets(const Co
   return block_bounds;
 }
 
+TEST_CASE("MmapLookupBenchVS") {
+  MmapHolder h(VS);
+  const size_t HashLength = 16;
+
+  auto hset = load_hset(h.beg, h.end);
+
+  const auto htype = SFHASH_MD5;
+  REQUIRE(sfhash_hash_length(htype) == HashLength);
+
+  const int hidx = sfhash_hashset_index_for_type(hset.get(), htype);
+  REQUIRE(hidx != -1);
+
+  auto hsd = std::get<2>(hset->holder.hsets[hidx]);
+
+  RNG rng;
+  auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
+
+  const auto [left, right] = make_left_right<HashLength>(hsd);
+  const auto radius = std::max(std::abs(left), std::abs(right));
+
+  const auto bucket1 = make_buckets<HashLength, 1>(hsd);
+  const auto bucket2 = make_buckets<HashLength, 2>(hsd);
+  const auto bucket3 = make_buckets<HashLength, 3>(hsd);
+  const auto bucket4 = make_buckets<HashLength, 4>(hsd);
+  const auto bucket5 = make_buckets<HashLength, 5>(hsd);
+  const auto bucket6 = make_buckets<HashLength, 6>(hsd);
+  const auto bucket7 = make_buckets<HashLength, 7>(hsd);
+  const auto bucket8 = make_buckets<HashLength, 8>(hsd);
+
+  const auto linear8 = make_linear();
+
+  std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
+  sets.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
+  sets.emplace_back("2radius", make_two_sided_radius_hsd<HashLength>(hsd, left, right));
+  sets.emplace_back("bradius2", make_block_radius_hsd<HashLength, 1>(hsd, bucket1));
+  sets.emplace_back("bradius4", make_block_radius_hsd<HashLength, 2>(hsd, bucket2));
+  sets.emplace_back("bradius8", make_block_radius_hsd<HashLength, 3>(hsd, bucket3));
+  sets.emplace_back("bradius16", make_block_radius_hsd<HashLength, 4>(hsd, bucket4));
+  sets.emplace_back("bradius32", make_block_radius_hsd<HashLength, 5>(hsd, bucket5));
+  sets.emplace_back("bradius64", make_block_radius_hsd<HashLength, 6>(hsd, bucket6));
+  sets.emplace_back("bradius128", make_block_radius_hsd<HashLength, 7>(hsd, bucket7));
+  sets.emplace_back("bradius256", make_block_radius_hsd<HashLength, 8>(hsd, bucket8));
+//  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd, linear8));
+  sets.emplace_back("std", make_std_hsd<HashLength>(hsd));
+
+  do_some_lookups(gen, sets);
+}
+
 TEST_CASE("MmapLookupBenchNSRL") {
   MmapHolder h(NSRL);
   const size_t HashLength = 20;
