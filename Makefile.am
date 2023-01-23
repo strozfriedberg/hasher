@@ -150,7 +150,7 @@ test_bench_hex_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
 test_bench_hex_LDADD = $(HASHER_LIB) $(TEST_LIBS) $(CATCH2_LIBS)
 
 test_bench_hsd_SOURCES = \
-	test/bench_hsd_lookup.cpp
+	test/bench_hashset.cpp
 
 test_bench_hsd_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
 test_bench_hsd_LDADD = $(HASHER_LIB) $(TEST_LIBS) $(CATCH2_LIBS)
