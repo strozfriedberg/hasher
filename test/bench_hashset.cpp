@@ -146,8 +146,8 @@ template <size_t HashLength>
 auto make_radius_hsd(const ConstHashsetData& hsd, uint32_t radius) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<RadiusLookupStrategy<HashLength>>(
-      static_cast<const char*>(hsd.beg),
-      static_cast<const char*>(hsd.end),
+      hsd.beg,
+      hsd.end,
       radius
     )
   };
@@ -157,8 +157,8 @@ template <size_t HashLength>
 auto make_std_hsd(const ConstHashsetData& hsd) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<BasicLookupStrategy<HashLength>>(
-      static_cast<const char*>(hsd.beg),
-      static_cast<const char*>(hsd.end)
+      hsd.beg,
+      hsd.end
     )
   };
 }
@@ -167,8 +167,8 @@ template <size_t HashLength>
 auto make_two_sided_radius_hsd(const ConstHashsetData& hsd, int64_t left, int64_t right) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<RangeLookupStrategy<HashLength>>(
-      static_cast<const char*>(hsd.beg),
-      static_cast<const char*>(hsd.end),
+      hsd.beg,
+      hsd.end,
       left,
       right
     )
@@ -183,8 +183,8 @@ template <
 auto make_block_radius_hsd(const ConstHashsetData& hsd, Blocks blocks) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<BlockLookupStrategy<HashLength, BucketBits>>(
-      static_cast<const char*>(hsd.beg),
-      static_cast<const char*>(hsd.end),
+      hsd.beg,
+      hsd.end,
       blocks
     )
   };
@@ -198,8 +198,8 @@ template <
 auto make_block_linear_hsd(const ConstHashsetData& hsd, Blocks blocks) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<BlockLinearLookupStrategy<HashLength, BucketBits>>(
-      static_cast<const char*>(hsd.beg),
-      static_cast<const char*>(hsd.end),
+      hsd.beg,
+      hsd.end,
       blocks
     )
   };
