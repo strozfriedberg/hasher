@@ -273,46 +273,10 @@ auto make_hsds(SFHASH_Hashset* hset, SFHASH_HashAlgorithm htype) {
 const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare/vs-445.hset"};
 const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
 
-TEST_CASE("MmapLookupBenchVirusShare") {
-  MmapHolder h(VS);
-  auto hset = load_hset(h.beg, h.end);
-
-  const size_t HashLength = 16;
-  const auto sets = make_hsds<HashLength>(hset.get(), SFHASH_MD5);
-
-  RNG rng;
-  auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
-
-  do_some_lookups(gen, sets);
-}
-
 /*
 TEST_CASE("MemoryLookupBenchVirusShare") {
   MemoryHolder h{read_file(VS)};
   const size_t HashLength = 16;
-  const auto sets = make_hsds<HashLength>(h);
-  RNG rng;
-  do_some_lookups<HashLength>(rng, sets);
-}
-*/
-
-TEST_CASE("MmapLookupBenchNSRL") {
-  MmapHolder h(NSRL);
-  auto hset = load_hset(h.beg, h.end);
-
-  const size_t HashLength = 20;
-  const auto sets = make_hsds<HashLength>(hset.get(), SFHASH_SHA_1);
-
-  RNG rng;
-  auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
-
-  do_some_lookups(gen, sets);
-}
-
-/*
-TEST_CASE("MemoryLookupBenchNSRL") {
-  MemoryHolder h{read_file(NSRL)};
-  const size_t HashLength = 20;
   const auto sets = make_hsds<HashLength>(h);
   RNG rng;
   do_some_lookups<HashLength>(rng, sets);
@@ -397,7 +361,7 @@ std::array<std::pair<ssize_t, ssize_t>, (1 << BucketBits)> make_buckets(const Co
   return block_bounds;
 }
 
-TEST_CASE("MmapLookupBenchNSRL_X") {
+TEST_CASE("MmapLookupBenchNSRL") {
   MmapHolder h(NSRL);
   const size_t HashLength = 20;
 
