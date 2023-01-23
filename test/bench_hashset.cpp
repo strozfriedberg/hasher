@@ -348,7 +348,7 @@ TEST_CASE("MmapLookupBenchNSRL") {
   auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
 
   const auto [left, right] = make_left_right<HashLength>(hsd);
-  const auto radius = std::max(left, right);
+  const auto radius = std::max(std::abs(left), std::abs(right));
 
   const auto bucket1 = make_buckets<HashLength, 1>(hsd);
   const auto bucket2 = make_buckets<HashLength, 2>(hsd);
@@ -363,7 +363,7 @@ TEST_CASE("MmapLookupBenchNSRL") {
 
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
-  sets.emplace_back("2radius", make_two_sided_radius_hsd<HashLength>(hsd, std::abs(left), std::abs(right)));
+  sets.emplace_back("2radius", make_two_sided_radius_hsd<HashLength>(hsd, left, right));
   sets.emplace_back("bradius2", make_block_radius_hsd<HashLength, 1>(hsd, bucket1));
   sets.emplace_back("bradius4", make_block_radius_hsd<HashLength, 2>(hsd, bucket2));
   sets.emplace_back("bradius8", make_block_radius_hsd<HashLength, 3>(hsd, bucket3));
@@ -497,7 +497,7 @@ TEST_CASE("xxxxx") {
   auto hsd = std::get<2>(hset->holder.hsets[hidx]);
 
   const auto [left, right] = make_left_right<HashLength>(hsd);
-  const auto radius = std::max(left, right);
+  const auto radius = std::max(std::abs(left), std::abs(right));
 
   std::cout << left << ' ' << right << '\n';
 /*
