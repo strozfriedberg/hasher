@@ -22,7 +22,7 @@ SFHASH_Hashset* sfhash_load_hashset(
     };
   }
   catch (const std::exception& e) {
-    fill_error(err, e.what());
+    fill_error(err, std::string("failed to load hset: ") + e.what());
     return nullptr;
   }
 }
