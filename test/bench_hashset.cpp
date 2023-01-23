@@ -94,9 +94,6 @@ auto load_hset(void* beg, void* end) {
   return hs;
 }
 
-// HERE
-
-
 template <class V>
 bool lookup_func(const V& hashes, const LookupStrategy& ls) {
   bool r = false;
