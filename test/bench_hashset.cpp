@@ -240,7 +240,7 @@ std::pair<int64_t, int64_t> make_left_right(const ConstHashsetData& hsd) {
 
   for (size_t i = 0; i < count; ++i) {
     const size_t e = expected_index(hh[i].data(), count);
-    const int64_t delta = static_cast<int64_t>(e) - static_cast<int64_t>(i);
+    const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
 
     left = std::min(left, delta);
     right = std::max(right, delta);
@@ -313,7 +313,7 @@ std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_buckets(const Co
 
   for (size_t i = 0; i < count; ++i) {
     const size_t e = expected_index(hh[i].data(), count);
-    const int64_t delta = static_cast<int64_t>(e) - static_cast<int64_t>(i);
+    const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
 
     const size_t bi = hh[i][0] >> (8 - BucketBits);
     block_bounds[bi].first = std::min(block_bounds[bi].first, delta);
