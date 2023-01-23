@@ -273,16 +273,6 @@ auto make_hsds(SFHASH_Hashset* hset, SFHASH_HashAlgorithm htype) {
 const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare/vs-445.hset"};
 const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
 
-/*
-TEST_CASE("MemoryLookupBenchVirusShare") {
-  MemoryHolder h{read_file(VS)};
-  const size_t HashLength = 16;
-  const auto sets = make_hsds<HashLength>(h);
-  RNG rng;
-  do_some_lookups<HashLength>(rng, sets);
-}
-*/
-
 std::array<std::tuple<double, double, double, double>, 8> make_linear() {
   return std::array<std::tuple<double, double, double, double>, 8> {
     std::make_tuple(
