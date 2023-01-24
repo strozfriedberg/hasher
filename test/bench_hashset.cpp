@@ -8,6 +8,7 @@
 #include "hset_decoder.h"
 #include "throw.h"
 #include "util.h"
+#include "hashset/convex_hull.h"
 #include "hashset/hset.h"
 #include "hashset/lookupstrategy.h"
 #include "hashset/basic_ls.h"
@@ -18,6 +19,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -179,7 +181,7 @@ template <
   size_t BucketBits,
   class Blocks
 >
-auto make_block_radius_hsd(const ConstHashsetData& hsd, Blocks blocks) {
+auto make_block_const_hsd(const ConstHashsetData& hsd, Blocks blocks) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<BlockLookupStrategy<HashLength, BucketBits>>(
       hsd.beg,
@@ -248,44 +250,141 @@ std::pair<int64_t, int64_t> make_left_right(const ConstHashsetData& hsd) {
   return { left, right };
 }
 
-const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare/vs-445.hset"};
-const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
+double distance(const Point& p, double a, double b) {
+  return std::abs(b + a * p.x - p.y) / std::sqrt(1 + a * a);
+}
 
-std::array<std::tuple<double, double, double, double>, 8> make_linear() {
-  return std::array<std::tuple<double, double, double, double>, 8> {
-    std::make_tuple(
-      1193.88763743939 + 1800, -0.000644969328527935,
-      1193.88763743939 - 2000, -0.000644969328527935
-    ),
-    std::make_tuple(
-      -3716.08775230379 + 1500, -0.000309682721874173,
-      -3716.08775230379 - 1500, -0.000309682721874173
-    ),
-    std::make_tuple(
-      -13474.4499500540 + 2600, 0.000173121434859497,
-      -13474.4499500540 - 2300, 0.000173121434859497
-    ),
-    std::make_tuple(
-      -9317.58469445582 + 1700, 0.000106712798053326,
-      -9317.58469445582 - 1600, 0.000106712798053326
-    ),
-    std::make_tuple(
-      -520.117837030724 + 1500, -0.000118529066484211,
-      -520.117837030724 - 1500, -0.000118529066484211
-    ),
-    std::make_tuple(
-      6333.35311611681 + 2200, -0.000223693482308163,
-      6333.35311611681 - 2500, -0.000223693482308163
-    ),
-    std::make_tuple(
-      -12744.7868642145 + 1800, 0.000088634456540151,
-      -14800, 0.000088634456540151
-    ),
-    std::make_tuple(
-      -42000, 0.0005539,
-      -46500, 0.0005539
-    )
-  };
+//std::pair<double, double> least_upper_bound(const std::vector<Point>& pts) {
+std::pair<float, float> least_upper_bound(const std::vector<Point>& pts) {
+
+  float min_err = std::numeric_limits<float>::max();
+  float best_a = 0.0;
+  float best_b = 0.0;
+
+  // check each segment for best fit
+
+  for (auto j = 1; j < pts.size(); ++j) {
+    auto i = j - 1;
+
+    const float a = float(pts[j].y - pts[i].y) / (pts[j].x - pts[i].x);
+    const float b = pts[j].y - a * pts[j].x;
+
+    float err = 0.0;
+    for (auto k = 0u; k < pts.size(); ++k) {
+      const auto d = distance(pts[k], a, b);
+      err += d * d;
+    }
+
+    if (err < min_err) {
+      best_a = a;
+      best_b = b;
+      min_err = err;
+    }
+  }
+
+  return { best_a, best_b };
+}
+
+//std::pair<double, double> greatest_lower_bound(const std::vector<Point>& pts) {
+std::pair<float, float> greatest_lower_bound(const std::vector<Point>& pts) {
+  float min_err = std::numeric_limits<double>::max();
+  float best_a = 0.0;
+  float best_b = 0.0;
+
+  // check each segment for best fit
+
+  for (auto j = 1; j < pts.size(); ++j) {
+    auto i = j - 1;
+
+    const float a = double(pts[j].y - pts[i].y) / (pts[j].x - pts[i].x);
+    const float b = pts[j].y - a * pts[j].x;
+
+    float err = 0.0;
+    for (auto k = 0u; k < pts.size(); ++k) {
+      const auto d = distance(pts[k], a, b);
+      err += d * d;
+    }
+
+    if (err < min_err) {
+      best_a = a;
+      best_b = b;
+      min_err = err;
+    }
+  }
+
+  return { best_a, best_b };
+}
+
+//std::tuple<double, double, double, double> make_linear_bounds(const std::vector<Point> pts, size_t active_bucket) {
+std::tuple<float, float, float, float> make_linear_bounds(const std::vector<Point> pts, size_t active_bucket) {
+  const auto uch = upper_ch(pts);
+  const auto lch = lower_ch(pts);
+
+/*
+  std::cout << "uch " << active_bucket << '\n';
+  for (const auto& p: uch) {
+    std::cout << p << '\n';
+  }
+  std::cout << '\n';
+*/
+  const auto ub = least_upper_bound(uch);
+  std::cout << ub.first << ' ' << ub.second << "\n\n";
+
+/*
+  std::cout << "lch " << active_bucket << '\n';
+  for (const auto& p: lch) {
+    std::cout << p << '\n';
+  }
+  std::cout << '\n';
+*/
+
+  const auto lb = greatest_lower_bound(lch);
+  std::cout << lb.first << ' ' << lb.second << "\n\n";
+
+  return { lb.first, lb.second, ub.first, ub.second };
+}
+
+template <
+  size_t HashLength,
+  size_t BucketBits
+>
+//std::array<std::tuple<double, double, double, double>, (1 << BucketBits)> make_linear(const ConstHashsetData& hsd) {
+std::array<std::tuple<float, float, float, float>, (1 << BucketBits)> make_linear(const ConstHashsetData& hsd) {
+
+//  std::array<std::tuple<double, double, double, double>, (1 << BucketBits)> coef;
+  std::array<std::tuple<float, float, float, float>, (1 << BucketBits)> coef;
+
+  const uint8_t* const beg = static_cast<const uint8_t*>(hsd.beg);
+  const uint8_t* const end = static_cast<const uint8_t*>(hsd.end);
+
+  const std::array<uint8_t, HashLength>* hh = reinterpret_cast<const std::array<uint8_t, HashLength>*>(beg);
+
+  const size_t count = (end - beg) / HashLength;
+
+  std::vector<Point> pts;
+  size_t active_bucket = 0;
+
+  for (size_t i = 0; i < count; ++i) {
+    const size_t e = expected_index(hh[i].data(), count);
+    const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
+
+    const size_t bi = hh[i][0] >> (8 - BucketBits);
+    if (bi > active_bucket) {
+      // close the bucket
+      coef[active_bucket] = make_linear_bounds(pts, active_bucket);
+      pts.clear();
+      active_bucket = bi;
+    }
+
+    pts.emplace_back(e, delta);
+  }
+
+  if (!pts.empty()) {
+    // close the last bucket
+    coef[active_bucket] = make_linear_bounds(pts, active_bucket);
+  }
+
+  return coef;
 }
 
 template <
@@ -360,24 +459,43 @@ void do_bench(const std::filesystem::path & p) {
   const auto bucket7 = make_buckets<HashLength, 7>(hsd);
   const auto bucket8 = make_buckets<HashLength, 8>(hsd);
 
-  const auto linear8 = make_linear();
+  const auto linear0 = make_linear<HashLength, 0>(hsd);
+  const auto linear1 = make_linear<HashLength, 1>(hsd);
+  const auto linear2 = make_linear<HashLength, 2>(hsd);
+  const auto linear3 = make_linear<HashLength, 3>(hsd);
+  const auto linear4 = make_linear<HashLength, 4>(hsd);
+  const auto linear5 = make_linear<HashLength, 5>(hsd);
+  const auto linear6 = make_linear<HashLength, 6>(hsd);
+  const auto linear7 = make_linear<HashLength, 7>(hsd);
+  const auto linear8 = make_linear<HashLength, 8>(hsd);
 
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
   sets.emplace_back("2radius", make_two_sided_radius_hsd<HashLength>(hsd, left, right));
-  sets.emplace_back("bradius2", make_block_radius_hsd<HashLength, 1>(hsd, bucket1));
-  sets.emplace_back("bradius4", make_block_radius_hsd<HashLength, 2>(hsd, bucket2));
-  sets.emplace_back("bradius8", make_block_radius_hsd<HashLength, 3>(hsd, bucket3));
-  sets.emplace_back("bradius16", make_block_radius_hsd<HashLength, 4>(hsd, bucket4));
-  sets.emplace_back("bradius32", make_block_radius_hsd<HashLength, 5>(hsd, bucket5));
-  sets.emplace_back("bradius64", make_block_radius_hsd<HashLength, 6>(hsd, bucket6));
-  sets.emplace_back("bradius128", make_block_radius_hsd<HashLength, 7>(hsd, bucket7));
-  sets.emplace_back("bradius256", make_block_radius_hsd<HashLength, 8>(hsd, bucket8));
-//  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd, linear8));
+  sets.emplace_back("bconst2", make_block_const_hsd<HashLength, 1>(hsd, bucket1));
+  sets.emplace_back("bconst4", make_block_const_hsd<HashLength, 2>(hsd, bucket2));
+  sets.emplace_back("bconst8", make_block_const_hsd<HashLength, 3>(hsd, bucket3));
+  sets.emplace_back("bconst16", make_block_const_hsd<HashLength, 4>(hsd, bucket4));
+  sets.emplace_back("bconst32", make_block_const_hsd<HashLength, 5>(hsd, bucket5));
+  sets.emplace_back("bconst64", make_block_const_hsd<HashLength, 6>(hsd, bucket6));
+  sets.emplace_back("bconst128", make_block_const_hsd<HashLength, 7>(hsd, bucket7));
+  sets.emplace_back("bconst256", make_block_const_hsd<HashLength, 8>(hsd, bucket8));
+  sets.emplace_back("blinear1", make_block_linear_hsd<HashLength, 0>(hsd, linear0));
+  sets.emplace_back("blinear2", make_block_linear_hsd<HashLength, 1>(hsd, linear1));
+  sets.emplace_back("blinear4", make_block_linear_hsd<HashLength, 2>(hsd, linear2));
+  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd, linear3));
+  sets.emplace_back("blinear16", make_block_linear_hsd<HashLength, 4>(hsd, linear4));
+  sets.emplace_back("blinear32", make_block_linear_hsd<HashLength, 5>(hsd, linear5));
+  sets.emplace_back("blinear64", make_block_linear_hsd<HashLength, 6>(hsd, linear6));
+  sets.emplace_back("blinear128", make_block_linear_hsd<HashLength, 7>(hsd, linear7));
+  sets.emplace_back("blinear256", make_block_linear_hsd<HashLength, 8>(hsd, linear8));
   sets.emplace_back("std", make_std_hsd<HashLength>(hsd));
 
   do_some_lookups(gen, sets);
 }
+
+const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare/vs-445.hset"};
+const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
 
 TEST_CASE("MmapLookupBenchVS") {
   do_bench<16, SFHASH_MD5>(VS);
@@ -387,7 +505,6 @@ TEST_CASE("MmapLookupBenchNSRL") {
   do_bench<20, SFHASH_SHA_1>(NSRL);
 }
 
-/*
 TEST_CASE("xxxxx") {
   const std::vector<std::array<uint8_t, 20>> test1_in{
     to_bytes<20>("03056bc08003a879889005a316b5f9159b1cba5a"),
@@ -509,35 +626,57 @@ TEST_CASE("xxxxx") {
   const auto radius = std::max(std::abs(left), std::abs(right));
 
   std::cout << left << ' ' << right << '\n';
-/*
-  const auto bucket1 = make_buckets<HashLength, 1>(h);
-  const auto bucket2 = make_buckets<HashLength, 2>(h);
-  const auto bucket3 = make_buckets<HashLength, 3>(h);
-  const auto bucket4 = make_buckets<HashLength, 4>(h);
-  const auto bucket5 = make_buckets<HashLength, 5>(h);
-  const auto bucket6 = make_buckets<HashLength, 6>(h);
-  const auto bucket7 = make_buckets<HashLength, 7>(h);
-  const auto bucket8 = make_buckets<HashLength, 8>(h);
-
-  const auto linear8 = make_linear();
-*/
-
   std::cout << radius << '\n';
+
+  const auto bucket1 = make_buckets<HashLength, 1>(hsd);
+  const auto bucket2 = make_buckets<HashLength, 2>(hsd);
+  const auto bucket3 = make_buckets<HashLength, 3>(hsd);
+  const auto bucket4 = make_buckets<HashLength, 4>(hsd);
+  const auto bucket5 = make_buckets<HashLength, 5>(hsd);
+  const auto bucket6 = make_buckets<HashLength, 6>(hsd);
+  const auto bucket7 = make_buckets<HashLength, 7>(hsd);
+  const auto bucket8 = make_buckets<HashLength, 8>(hsd);
+
+/*
+  const auto linear0 = make_linear<HashLength, 0>(hsd);
+  const auto linear1 = make_linear<HashLength, 1>(hsd);
+  const auto linear2 = make_linear<HashLength, 2>(hsd);
+*/
+  const auto linear3 = make_linear<HashLength, 3>(hsd);
+/*
+  const auto linear4 = make_linear<HashLength, 4>(hsd);
+  const auto linear5 = make_linear<HashLength, 5>(hsd);
+  const auto linear6 = make_linear<HashLength, 6>(hsd);
+  const auto linear7 = make_linear<HashLength, 7>(hsd);
+  const auto linear8 = make_linear<HashLength, 8>(hsd);
+*/
 
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("std", make_std_hsd<HashLength>(hsd));
   sets.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
   sets.emplace_back("2radius", make_two_sided_radius_hsd<HashLength>(hsd, left, right));
+
+  sets.emplace_back("bconst2", make_block_const_hsd<HashLength, 1>(hsd, bucket1));
+  sets.emplace_back("bconst4", make_block_const_hsd<HashLength, 2>(hsd, bucket2));
+  sets.emplace_back("bconst8", make_block_const_hsd<HashLength, 3>(hsd, bucket3));
+  sets.emplace_back("bconst16", make_block_const_hsd<HashLength, 4>(hsd, bucket4));
+  sets.emplace_back("bconst32", make_block_const_hsd<HashLength, 5>(hsd, bucket5));
+  sets.emplace_back("bconst64", make_block_const_hsd<HashLength, 6>(hsd, bucket6));
+  sets.emplace_back("bconst128", make_block_const_hsd<HashLength, 7>(hsd, bucket7));
+  sets.emplace_back("bconst256", make_block_const_hsd<HashLength, 8>(hsd, bucket8));
+
 /*
-  sets.emplace_back("bradius2", make_block_radius_hsd<HashLength, 1>(h, *hsinfo, bucket1));
-  sets.emplace_back("bradius4", make_block_radius_hsd<HashLength, 2>(h, *hsinfo, bucket2));
-  sets.emplace_back("bradius8", make_block_radius_hsd<HashLength, 3>(h, *hsinfo, bucket3));
-  sets.emplace_back("bradius16", make_block_radius_hsd<HashLength, 4>(h, *hsinfo, bucket4));
-  sets.emplace_back("bradius32", make_block_radius_hsd<HashLength, 5>(h, *hsinfo, bucket5));
-  sets.emplace_back("bradius64", make_block_radius_hsd<HashLength, 6>(h, *hsinfo, bucket6));
-  sets.emplace_back("bradius128", make_block_radius_hsd<HashLength, 7>(h, *hsinfo, bucket7));
-  sets.emplace_back("bradius256", make_block_radius_hsd<HashLength, 8>(h, *hsinfo, bucket8));
-//  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(h, *hsinfo, linear8));
+  sets.emplace_back("blinear1", make_block_linear_hsd<HashLength, 0>(hsd, linear0));
+  sets.emplace_back("blinear2", make_block_linear_hsd<HashLength, 1>(hsd, linear1));
+  sets.emplace_back("blinear4", make_block_linear_hsd<HashLength, 2>(hsd, linear2));
+*/
+  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd, linear3));
+/*
+  sets.emplace_back("blinear16", make_block_linear_hsd<HashLength, 4>(hsd, linear4));
+  sets.emplace_back("blinear32", make_block_linear_hsd<HashLength, 5>(hsd, linear5));
+  sets.emplace_back("blinear64", make_block_linear_hsd<HashLength, 6>(hsd, linear6));
+  sets.emplace_back("blinear128", make_block_linear_hsd<HashLength, 7>(hsd, linear7));
+  sets.emplace_back("blinear256", make_block_linear_hsd<HashLength, 8>(hsd, linear8));
 */
 
   std::vector<bool> hits(sets.size());
