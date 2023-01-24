@@ -27,7 +27,9 @@ TEST_CASE("hash_type_metadata") {
   };
 
   for (const auto& [e_alg, e_name, e_len]: tests) {
-    DYNAMIC_SECTION("alg " << e_alg << " => name " << e_name) {
+    const auto e_name_str = e_name ? std::string(e_name) : std::string("<nullptr>");
+
+    DYNAMIC_SECTION("alg " << e_alg << " => name " << e_name_str) {
       const auto a_name = sfhash_hash_name(e_alg);
       if (!e_name) {
         CHECK(!a_name);
@@ -37,11 +39,11 @@ TEST_CASE("hash_type_metadata") {
       }
     }
 
-    DYNAMIC_SECTION("name " << e_name << " => alg " << e_alg) {
+    DYNAMIC_SECTION("name " << e_name_str << " => alg " << e_alg) {
       CHECK(sfhash_hash_type(e_name) == e_alg);
     }
 
-    DYNAMIC_SECTION(e_name << " length") {
+    DYNAMIC_SECTION(e_name_str << " length") {
       CHECK(sfhash_hash_length(e_alg) == e_len);
     }
   }
