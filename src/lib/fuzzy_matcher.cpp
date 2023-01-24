@@ -48,15 +48,35 @@ void sfhash_destroy_fuzzy_matcher(FuzzyMatcher* matcher) {
 }
 
 FuzzyHash::FuzzyHash(const char* a, const char* b):
+  /*
+  * This is a workaround for clang <= 14. Once 15 is out
+  * we should remove this #if.
+  */
+  #if defined __clang__ && __clang_major__ <= 14
+  Data(a, std::distance(a, b))
+  #else
   Data(a, b)
+  #endif
 {
   const char* i = std::find(std::begin(Data), std::end(Data), ':');
   const char* j = std::find(i + 1, std::end(Data), ':');
   const char* k = std::find(j + 1, std::end(Data), ',');
-
+  #if defined __clang__ && __clang_major__ <= 14
+  const char* bls = std::min(i + 1, std::end(Data));
+  const char* dbs = std::min(j + 1, std::end(Data));
+  const char* fns = std::min(k + 1, std::end(Data));
+  typedef std::string_view::size_type sv_size_type;
+  const sv_size_type i2j = std::distance(bls, j);
+  const sv_size_type j2k = std::distance(dbs, k);
+  const sv_size_type k2e = std::distance(fns, std::end(Data));
+  Block = {bls, i2j};
+  DoubleBlock = {dbs, j2k};
+  Filename = {fns, k2e};
+  #else
   Block = {std::min(i + 1, std::end(Data)), j};
   DoubleBlock = {std::min(j + 1, std::end(Data)), k};
   Filename = {std::min(k + 1, std::end(Data)), std::end(Data)};
+  #endif
 }
 
 std::string FuzzyHash::hash() const {
