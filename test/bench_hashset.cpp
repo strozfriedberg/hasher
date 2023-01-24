@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cerrno>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
