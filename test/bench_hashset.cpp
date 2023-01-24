@@ -552,3 +552,48 @@ TEST_CASE("xxxxx") {
 //    CHECK(std::find(hits.begin() + 1, hits.end(), !hits[0]) == hits.end());
   }
 }
+
+
+template <
+  size_t HashLength,
+  SFHASH_HashAlgorithm HType
+>
+void dump_data(const std::filesystem::path & p) {
+  MmapHolder h(p);
+
+  auto hset = load_hset(h.beg, h.end);
+
+  const auto htype = SFHASH_SHA_1;
+  REQUIRE(sfhash_hash_length(HType) == HashLength);
+
+  const int hidx = sfhash_hashset_index_for_type(hset.get(), HType);
+  REQUIRE(hidx != -1);
+
+  auto hsd = std::get<2>(hset->holder.hsets[hidx]);
+
+  const uint8_t* const beg = static_cast<const uint8_t*>(hsd.beg);
+  const uint8_t* const end = static_cast<const uint8_t*>(hsd.end);
+
+  const std::array<uint8_t, HashLength>* hh = reinterpret_cast<const std::array<uint8_t, HashLength>*>(beg);
+
+  const size_t count = (end - beg) / HashLength;
+
+  for (size_t i = 0; i < count; ++i) {
+    const size_t e = expected_index(hh[i].data(), count);
+    const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
+
+    std::cout << e << ' ' << delta << '\n';
+  }
+}
+
+/*
+TEST_CASE("DumpNSRLDelta") {
+  dump_data<20, SFHASH_SHA_1>(NSRL);
+}
+*/
+
+/*
+TEST_CASE("DumpVSDelta") {
+  dump_data<16, SFHASH_MD5>(VS);
+}
+*/
