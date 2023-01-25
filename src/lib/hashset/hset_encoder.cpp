@@ -818,7 +818,15 @@ std::vector<std::string_view> split(std::string_view s, char delim) {
   auto i = s.begin();
   do {
     auto j = std::find(i, s.end(), delim);
+    /*
+    * This is a workaround for clang <= 14. Once 15 is out
+    * we should remove this #if.
+    */
+    #if defined __clang__ && __clang_major__ <= 14
+    splits.emplace_back(i, std::distance(i, j));
+    #else
     splits.emplace_back(i, j);
+    #endif
     i = j != s.end() ? j + 1 : j;
   } while (i != s.end());
 
