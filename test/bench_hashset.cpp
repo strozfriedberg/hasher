@@ -37,18 +37,8 @@
 
 namespace bip = boost::interprocess;
 
-struct DataHolder {
-  DataHolder(void* beg, void* end): beg(beg), end(end) {}
-
-  virtual ~DataHolder() = default;
-
-  void* beg;
-  void* end;
-};
-
-struct MmapHolder: public DataHolder {
+struct MmapHolder {
   MmapHolder(const std::filesystem::path& p):
-    DataHolder(nullptr, nullptr),
     fm(p.string().c_str(), bip::read_write),
     mr(fm, bip::read_write)
   {
@@ -58,14 +48,19 @@ struct MmapHolder: public DataHolder {
 
   bip::file_mapping fm;
   bip::mapped_region mr;
+  void* beg;
+  void* end;
 };
 
-struct MemoryHolder: public DataHolder {
+struct MemoryHolder {
   MemoryHolder(std::vector<char>&& buf):
-    DataHolder(buf.data(), buf.data() + buf.size()),
+    beg(buf.data()),
+    end(buf.data() + buf.size()),
     buf(buf)
   {}
 
+  void* beg;
+  void* end;
   std::vector<char> buf;
 };
 
