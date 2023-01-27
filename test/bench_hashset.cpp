@@ -52,19 +52,7 @@ struct MmapHolder {
   void* end;
 };
 
-struct MemoryHolder {
-  MemoryHolder(std::vector<char>&& buf):
-    beg(buf.data()),
-    end(buf.data() + buf.size()),
-    buf(buf)
-  {}
-
-  void* beg;
-  void* end;
-  std::vector<char> buf;
-};
-
-MemoryHolder read_file(const std::filesystem::path& p) {
+std::vector<char> read_file(const std::filesystem::path& p) {
   const size_t fsize = std::filesystem::file_size(p);
 
   std::ifstream in(p, std::ios::binary);
@@ -73,8 +61,24 @@ MemoryHolder read_file(const std::filesystem::path& p) {
   std::vector<char> buf(fsize);
   in.read(buf.data(), fsize);
 
-  return MemoryHolder(std::move(buf));
+  return buf;
 }
+
+struct MemoryHolder {
+  MemoryHolder(std::vector<char>&& buf):
+    buf(buf),
+    beg(buf.data()),
+    end(buf.data() + buf.size())
+  {}
+
+  MemoryHolder(const std::filesystem::path& p):
+    MemoryHolder(read_file(p))
+  {}
+
+  std::vector<char> buf;
+  void* beg;
+  void* end;
+};
 
 auto load_hset(void* beg, void* end) {
   SFHASH_Error* err = nullptr;
