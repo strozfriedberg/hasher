@@ -143,7 +143,9 @@ auto make_random_hashes(RNG& rng, size_t count) {
 }
 
 template <size_t HashLength>
-auto make_radius_ls(const ConstHashsetData& hsd, uint32_t radius) {
+auto make_radius_ls(const ConstHashsetData& hsd) {
+  const auto [left, right] = make_left_right<HashLength>(hsd);
+  const auto radius = std::max(std::abs(left), std::abs(right));
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<RadiusLookupStrategy<HashLength>>(
       hsd.beg,
@@ -465,11 +467,8 @@ void do_bench(const std::filesystem::path& p) {
   RNG rng;
   auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
 
-  const auto [left, right] = make_left_right<HashLength>(hsd);
-  const auto radius = std::max(std::abs(left), std::abs(right));
-
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
-  sets.emplace_back("radius", make_radius_ls<HashLength>(hsd, radius));
+  sets.emplace_back("radius", make_radius_ls<HashLength>(hsd));
   sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd));
   sets.emplace_back("bconst2", make_block_const_ls<HashLength, 1>(hsd));
   sets.emplace_back("bconst4", make_block_const_ls<HashLength, 2>(hsd));
@@ -621,15 +620,9 @@ TEST_CASE("xxxxx") {
 
   auto hsd = std::get<2>(hset->holder.hsets[hidx]);
 
-  const auto [left, right] = make_left_right<HashLength>(hsd);
-  const auto radius = std::max(std::abs(left), std::abs(right));
-
-  std::cout << left << ' ' << right << '\n';
-  std::cout << radius << '\n';
-
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("std", make_std_ls<HashLength>(hsd));
-  sets.emplace_back("radius", make_radius_ls<HashLength>(hsd, radius));
+  sets.emplace_back("radius", make_radius_ls<HashLength>(hsd));
   sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd));
 
   sets.emplace_back("bconst2", make_block_const_ls<HashLength, 1>(hsd));
