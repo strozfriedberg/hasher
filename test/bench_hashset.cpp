@@ -347,8 +347,8 @@ template <
   size_t HashLength,
   size_t BucketBits
 >
-//std::array<std::tuple<double, double, double, double>, (1 << BucketBits)> make_linear(const ConstHashsetData& hsd) {
-std::array<std::tuple<float, float, float, float>, (1 << BucketBits)> make_linear(const ConstHashsetData& hsd) {
+//std::array<std::tuple<double, double, double, double>, (1 << BucketBits)> make_linear_bounds(const ConstHashsetData& hsd) {
+std::array<std::tuple<float, float, float, float>, (1 << BucketBits)> make_linear_bounds(const ConstHashsetData& hsd) {
 
 //  std::array<std::tuple<double, double, double, double>, (1 << BucketBits)> coef;
   std::array<std::tuple<float, float, float, float>, (1 << BucketBits)> coef;
@@ -390,7 +390,7 @@ template <
   size_t HashLength,
   size_t BucketBits
 >
-std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_buckets(const ConstHashsetData& hsd) {
+std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_const_bounds(const ConstHashsetData& hsd) {
   const uint8_t* const beg = static_cast<const uint8_t*>(hsd.beg);
   const uint8_t* const end = static_cast<const uint8_t*>(hsd.end);
 
@@ -469,24 +469,24 @@ void do_bench(const std::filesystem::path& p) {
   const auto [left, right] = make_left_right<HashLength>(hsd);
   const auto radius = std::max(std::abs(left), std::abs(right));
 
-  const auto bucket1 = make_buckets<HashLength, 1>(hsd);
-  const auto bucket2 = make_buckets<HashLength, 2>(hsd);
-  const auto bucket3 = make_buckets<HashLength, 3>(hsd);
-  const auto bucket4 = make_buckets<HashLength, 4>(hsd);
-  const auto bucket5 = make_buckets<HashLength, 5>(hsd);
-  const auto bucket6 = make_buckets<HashLength, 6>(hsd);
-  const auto bucket7 = make_buckets<HashLength, 7>(hsd);
-  const auto bucket8 = make_buckets<HashLength, 8>(hsd);
+  const auto bucket1 = make_const_bounds<HashLength, 1>(hsd);
+  const auto bucket2 = make_const_bounds<HashLength, 2>(hsd);
+  const auto bucket3 = make_const_bounds<HashLength, 3>(hsd);
+  const auto bucket4 = make_const_bounds<HashLength, 4>(hsd);
+  const auto bucket5 = make_const_bounds<HashLength, 5>(hsd);
+  const auto bucket6 = make_const_bounds<HashLength, 6>(hsd);
+  const auto bucket7 = make_const_bounds<HashLength, 7>(hsd);
+  const auto bucket8 = make_const_bounds<HashLength, 8>(hsd);
 
-  const auto linear0 = make_linear<HashLength, 0>(hsd);
-  const auto linear1 = make_linear<HashLength, 1>(hsd);
-  const auto linear2 = make_linear<HashLength, 2>(hsd);
-  const auto linear3 = make_linear<HashLength, 3>(hsd);
-  const auto linear4 = make_linear<HashLength, 4>(hsd);
-  const auto linear5 = make_linear<HashLength, 5>(hsd);
-  const auto linear6 = make_linear<HashLength, 6>(hsd);
-  const auto linear7 = make_linear<HashLength, 7>(hsd);
-  const auto linear8 = make_linear<HashLength, 8>(hsd);
+  const auto linear0 = make_linear_bounds<HashLength, 0>(hsd);
+  const auto linear1 = make_linear_bounds<HashLength, 1>(hsd);
+  const auto linear2 = make_linear_bounds<HashLength, 2>(hsd);
+  const auto linear3 = make_linear_bounds<HashLength, 3>(hsd);
+  const auto linear4 = make_linear_bounds<HashLength, 4>(hsd);
+  const auto linear5 = make_linear_bounds<HashLength, 5>(hsd);
+  const auto linear6 = make_linear_bounds<HashLength, 6>(hsd);
+  const auto linear7 = make_linear_bounds<HashLength, 7>(hsd);
+  const auto linear8 = make_linear_bounds<HashLength, 8>(hsd);
 
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
@@ -647,27 +647,27 @@ TEST_CASE("xxxxx") {
   std::cout << left << ' ' << right << '\n';
   std::cout << radius << '\n';
 
-  const auto bucket1 = make_buckets<HashLength, 1>(hsd);
-  const auto bucket2 = make_buckets<HashLength, 2>(hsd);
-  const auto bucket3 = make_buckets<HashLength, 3>(hsd);
-  const auto bucket4 = make_buckets<HashLength, 4>(hsd);
-  const auto bucket5 = make_buckets<HashLength, 5>(hsd);
-  const auto bucket6 = make_buckets<HashLength, 6>(hsd);
-  const auto bucket7 = make_buckets<HashLength, 7>(hsd);
-  const auto bucket8 = make_buckets<HashLength, 8>(hsd);
+  const auto bucket1 = make_const_bounds<HashLength, 1>(hsd);
+  const auto bucket2 = make_const_bounds<HashLength, 2>(hsd);
+  const auto bucket3 = make_const_bounds<HashLength, 3>(hsd);
+  const auto bucket4 = make_const_bounds<HashLength, 4>(hsd);
+  const auto bucket5 = make_const_bounds<HashLength, 5>(hsd);
+  const auto bucket6 = make_const_bounds<HashLength, 6>(hsd);
+  const auto bucket7 = make_const_bounds<HashLength, 7>(hsd);
+  const auto bucket8 = make_const_bounds<HashLength, 8>(hsd);
 
 /*
-  const auto linear0 = make_linear<HashLength, 0>(hsd);
-  const auto linear1 = make_linear<HashLength, 1>(hsd);
-  const auto linear2 = make_linear<HashLength, 2>(hsd);
+  const auto linear0 = make_linear_bounds<HashLength, 0>(hsd);
+  const auto linear1 = make_linear_bounds<HashLength, 1>(hsd);
+  const auto linear2 = make_linear_bounds<HashLength, 2>(hsd);
 */
-  const auto linear3 = make_linear<HashLength, 3>(hsd);
+  const auto linear3 = make_linear_bounds<HashLength, 3>(hsd);
 /*
-  const auto linear4 = make_linear<HashLength, 4>(hsd);
-  const auto linear5 = make_linear<HashLength, 5>(hsd);
-  const auto linear6 = make_linear<HashLength, 6>(hsd);
-  const auto linear7 = make_linear<HashLength, 7>(hsd);
-  const auto linear8 = make_linear<HashLength, 8>(hsd);
+  const auto linear4 = make_linear_bounds<HashLength, 4>(hsd);
+  const auto linear5 = make_linear_bounds<HashLength, 5>(hsd);
+  const auto linear6 = make_linear_bounds<HashLength, 6>(hsd);
+  const auto linear7 = make_linear_bounds<HashLength, 7>(hsd);
+  const auto linear8 = make_linear_bounds<HashLength, 8>(hsd);
 */
 
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
