@@ -421,16 +421,28 @@ std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_buckets(const Co
   return block_bounds;
 }
 
-template <
-  size_t HashLength,
-  SFHASH_HashAlgorithm HType
->
+template <SFHASH_HashAlgorithm>
+struct HashTraits {
+  static constexpr size_t length = 0;
+};
+
+template <>
+struct HashTraits<SFHASH_MD5> {
+  static constexpr size_t length = 16;
+};
+
+template <>
+struct HashTraits<SFHASH_SHA_1> {
+  static constexpr size_t length = 20;
+};
+
+template <SFHASH_HashAlgorithm HType>
 void do_bench(const std::filesystem::path & p) {
+  constexpr size_t HashLength = HashTraits<HType>::length;
+
   MmapHolder h(p);
 
   auto hset = load_hset(h.beg, h.end);
-
-  REQUIRE(sfhash_hash_length(HType) == HashLength);
 
   const int hidx = sfhash_hashset_index_for_type(hset.get(), HType);
   REQUIRE(hidx != -1);
@@ -491,11 +503,11 @@ const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare
 const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
 
 TEST_CASE("MmapLookupBenchVS") {
-  do_bench<16, SFHASH_MD5>(VS);
+  do_bench<SFHASH_MD5>(VS);
 }
 
 TEST_CASE("MmapLookupBenchNSRL") {
-  do_bench<20, SFHASH_SHA_1>(NSRL);
+  do_bench<SFHASH_SHA_1>(NSRL);
 }
 
 TEST_CASE("xxxxx") {
