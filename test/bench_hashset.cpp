@@ -156,7 +156,7 @@ auto make_radius_ls(const ConstHashsetData& hsd) {
 }
 
 template <size_t HashLength>
-auto make_std_ls(const ConstHashsetData& hsd) {
+auto make_basic_ls(const ConstHashsetData& hsd) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<BasicLookupStrategy<HashLength>>(
       hsd.beg,
@@ -487,7 +487,7 @@ void do_bench(const std::filesystem::path& p) {
   sets.emplace_back("blinear64", make_block_linear_ls<HashLength, 6>(hsd));
   sets.emplace_back("blinear128", make_block_linear_ls<HashLength, 7>(hsd));
   sets.emplace_back("blinear256", make_block_linear_ls<HashLength, 8>(hsd));
-  sets.emplace_back("std", make_std_ls<HashLength>(hsd));
+  sets.emplace_back("basic", make_basic_ls<HashLength>(hsd));
 
   do_some_lookups(gen, sets);
 }
@@ -621,7 +621,7 @@ TEST_CASE("xxxxx") {
   auto hsd = std::get<2>(hset->holder.hsets[hidx]);
 
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
-  sets.emplace_back("std", make_std_ls<HashLength>(hsd));
+  sets.emplace_back("basic", make_basic_ls<HashLength>(hsd));
   sets.emplace_back("radius", make_radius_ls<HashLength>(hsd));
   sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd));
 
