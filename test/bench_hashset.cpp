@@ -164,7 +164,8 @@ auto make_std_ls(const ConstHashsetData& hsd) {
 }
 
 template <size_t HashLength>
-auto make_two_sided_radius_ls(const ConstHashsetData& hsd, int64_t left, int64_t right) {
+auto make_two_sided_radius_ls(const ConstHashsetData& hsd) {
+  const auto [left, right] = make_left_right<HashLength>(hsd);
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<RangeLookupStrategy<HashLength>>(
       hsd.beg,
@@ -469,7 +470,7 @@ void do_bench(const std::filesystem::path& p) {
 
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("radius", make_radius_ls<HashLength>(hsd, radius));
-  sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd, left, right));
+  sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd));
   sets.emplace_back("bconst2", make_block_const_ls<HashLength, 1>(hsd));
   sets.emplace_back("bconst4", make_block_const_ls<HashLength, 2>(hsd));
   sets.emplace_back("bconst8", make_block_const_ls<HashLength, 3>(hsd));
@@ -629,7 +630,7 @@ TEST_CASE("xxxxx") {
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("std", make_std_ls<HashLength>(hsd));
   sets.emplace_back("radius", make_radius_ls<HashLength>(hsd, radius));
-  sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd, left, right));
+  sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd));
 
   sets.emplace_back("bconst2", make_block_const_ls<HashLength, 1>(hsd));
   sets.emplace_back("bconst4", make_block_const_ls<HashLength, 2>(hsd));
