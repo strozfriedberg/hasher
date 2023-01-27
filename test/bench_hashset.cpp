@@ -418,13 +418,6 @@ std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_buckets(const Co
     block_bounds[bi].second = std::max(block_bounds[bi].second, delta);
   }
 
-/*
-  for (size_t b = 0; b < block_bounds.size(); ++b) {
-    std::cout << b << ' ' << block_bounds[b].first << ' ' << block_bounds[b].second << ' ' << (block_bounds[b].second - block_bounds[b].first) << '\n';
-  }
-  std::cout << '\n';
-*/
-
   return block_bounds;
 }
 
