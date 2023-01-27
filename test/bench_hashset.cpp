@@ -21,6 +21,7 @@
 #include <array>
 #include <cmath>
 #include <cstring>
+#include <initializer_list>
 #include <iomanip>
 #include <iostream>
 #include <filesystem>
@@ -467,27 +468,28 @@ void do_bench(const std::filesystem::path& p) {
   RNG rng;
   auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
 
-  std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
-  sets.emplace_back("radius", make_radius_ls<HashLength>(hsd));
-  sets.emplace_back("2radius", make_two_sided_radius_ls<HashLength>(hsd));
-  sets.emplace_back("bconst2", make_block_const_ls<HashLength, 1>(hsd));
-  sets.emplace_back("bconst4", make_block_const_ls<HashLength, 2>(hsd));
-  sets.emplace_back("bconst8", make_block_const_ls<HashLength, 3>(hsd));
-  sets.emplace_back("bconst16", make_block_const_ls<HashLength, 4>(hsd));
-  sets.emplace_back("bconst32", make_block_const_ls<HashLength, 5>(hsd));
-  sets.emplace_back("bconst64", make_block_const_ls<HashLength, 6>(hsd));
-  sets.emplace_back("bconst128", make_block_const_ls<HashLength, 7>(hsd));
-  sets.emplace_back("bconst256", make_block_const_ls<HashLength, 8>(hsd));
-  sets.emplace_back("blinear1", make_block_linear_ls<HashLength, 0>(hsd));
-  sets.emplace_back("blinear2", make_block_linear_ls<HashLength, 1>(hsd));
-  sets.emplace_back("blinear4", make_block_linear_ls<HashLength, 2>(hsd));
-  sets.emplace_back("blinear8", make_block_linear_ls<HashLength, 3>(hsd));
-  sets.emplace_back("blinear16", make_block_linear_ls<HashLength, 4>(hsd));
-  sets.emplace_back("blinear32", make_block_linear_ls<HashLength, 5>(hsd));
-  sets.emplace_back("blinear64", make_block_linear_ls<HashLength, 6>(hsd));
-  sets.emplace_back("blinear128", make_block_linear_ls<HashLength, 7>(hsd));
-  sets.emplace_back("blinear256", make_block_linear_ls<HashLength, 8>(hsd));
-  sets.emplace_back("basic", make_basic_ls<HashLength>(hsd));
+  std::initializer_list<std::pair<std::string, std::unique_ptr<LookupStrategy>>>sets = {
+    { "radius", make_radius_ls<HashLength>(hsd) },
+    { "2radius", make_two_sided_radius_ls<HashLength>(hsd) },
+    { "bconst2", make_block_const_ls<HashLength, 1>(hsd) },
+    { "bconst4", make_block_const_ls<HashLength, 2>(hsd) },
+    { "bconst8", make_block_const_ls<HashLength, 3>(hsd) },
+    { "bconst16", make_block_const_ls<HashLength, 4>(hsd) },
+    { "bconst32", make_block_const_ls<HashLength, 5>(hsd) },
+    { "bconst64", make_block_const_ls<HashLength, 6>(hsd) },
+    { "bconst128", make_block_const_ls<HashLength, 7>(hsd) },
+    { "bconst256", make_block_const_ls<HashLength, 8>(hsd) },
+    { "blinear1", make_block_linear_ls<HashLength, 0>(hsd) },
+    { "blinear2", make_block_linear_ls<HashLength, 1>(hsd) },
+    { "blinear4", make_block_linear_ls<HashLength, 2>(hsd) },
+    { "blinear8", make_block_linear_ls<HashLength, 3>(hsd) },
+    { "blinear16", make_block_linear_ls<HashLength, 4>(hsd) },
+    { "blinear32", make_block_linear_ls<HashLength, 5>(hsd) },
+    { "blinear64", make_block_linear_ls<HashLength, 6>(hsd) },
+    { "blinear128", make_block_linear_ls<HashLength, 7>(hsd) },
+    { "blinear256", make_block_linear_ls<HashLength, 8>(hsd) },
+    { "basic", make_basic_ls<HashLength>(hsd) }
+  };
 
   do_some_lookups(gen, sets);
 }
