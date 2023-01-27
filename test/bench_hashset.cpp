@@ -450,7 +450,7 @@ auto setup_hset(const std::filesystem::path& p) {
   return std::make_tuple(
     std::move(h),
     std::move(hset),
-    std::get<2>(hset->holder.hsets[hidx]);
+    std::get<2>(hset->holder.hsets[hidx])
   );
 }
 
