@@ -191,15 +191,14 @@ auto make_block_const_hsd(const ConstHashsetData& hsd) {
 
 template <
   size_t HashLength,
-  size_t BucketBits,
-  class Blocks
+  size_t BucketBits
 >
-auto make_block_linear_hsd(const ConstHashsetData& hsd, Blocks blocks) {
+auto make_block_linear_hsd(const ConstHashsetData& hsd) {
   return std::unique_ptr<LookupStrategy>{
     std::make_unique<BlockLinearLookupStrategy<HashLength, BucketBits>>(
       hsd.beg,
       hsd.end,
-      blocks
+      make_linear_bounds<HashLength, BucketBits>(hsd)
     )
   };
 }
@@ -468,16 +467,6 @@ void do_bench(const std::filesystem::path& p) {
   const auto [left, right] = make_left_right<HashLength>(hsd);
   const auto radius = std::max(std::abs(left), std::abs(right));
 
-  const auto linear0 = make_linear_bounds<HashLength, 0>(hsd);
-  const auto linear1 = make_linear_bounds<HashLength, 1>(hsd);
-  const auto linear2 = make_linear_bounds<HashLength, 2>(hsd);
-  const auto linear3 = make_linear_bounds<HashLength, 3>(hsd);
-  const auto linear4 = make_linear_bounds<HashLength, 4>(hsd);
-  const auto linear5 = make_linear_bounds<HashLength, 5>(hsd);
-  const auto linear6 = make_linear_bounds<HashLength, 6>(hsd);
-  const auto linear7 = make_linear_bounds<HashLength, 7>(hsd);
-  const auto linear8 = make_linear_bounds<HashLength, 8>(hsd);
-
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
   sets.emplace_back("2radius", make_two_sided_radius_hsd<HashLength>(hsd, left, right));
@@ -489,15 +478,15 @@ void do_bench(const std::filesystem::path& p) {
   sets.emplace_back("bconst64", make_block_const_hsd<HashLength, 6>(hsd));
   sets.emplace_back("bconst128", make_block_const_hsd<HashLength, 7>(hsd));
   sets.emplace_back("bconst256", make_block_const_hsd<HashLength, 8>(hsd));
-  sets.emplace_back("blinear1", make_block_linear_hsd<HashLength, 0>(hsd, linear0));
-  sets.emplace_back("blinear2", make_block_linear_hsd<HashLength, 1>(hsd, linear1));
-  sets.emplace_back("blinear4", make_block_linear_hsd<HashLength, 2>(hsd, linear2));
-  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd, linear3));
-  sets.emplace_back("blinear16", make_block_linear_hsd<HashLength, 4>(hsd, linear4));
-  sets.emplace_back("blinear32", make_block_linear_hsd<HashLength, 5>(hsd, linear5));
-  sets.emplace_back("blinear64", make_block_linear_hsd<HashLength, 6>(hsd, linear6));
-  sets.emplace_back("blinear128", make_block_linear_hsd<HashLength, 7>(hsd, linear7));
-  sets.emplace_back("blinear256", make_block_linear_hsd<HashLength, 8>(hsd, linear8));
+  sets.emplace_back("blinear1", make_block_linear_hsd<HashLength, 0>(hsd));
+  sets.emplace_back("blinear2", make_block_linear_hsd<HashLength, 1>(hsd));
+  sets.emplace_back("blinear4", make_block_linear_hsd<HashLength, 2>(hsd));
+  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd));
+  sets.emplace_back("blinear16", make_block_linear_hsd<HashLength, 4>(hsd));
+  sets.emplace_back("blinear32", make_block_linear_hsd<HashLength, 5>(hsd));
+  sets.emplace_back("blinear64", make_block_linear_hsd<HashLength, 6>(hsd));
+  sets.emplace_back("blinear128", make_block_linear_hsd<HashLength, 7>(hsd));
+  sets.emplace_back("blinear256", make_block_linear_hsd<HashLength, 8>(hsd));
   sets.emplace_back("std", make_std_hsd<HashLength>(hsd));
 
   do_some_lookups(gen, sets);
@@ -637,20 +626,6 @@ TEST_CASE("xxxxx") {
   std::cout << left << ' ' << right << '\n';
   std::cout << radius << '\n';
 
-/*
-  const auto linear0 = make_linear_bounds<HashLength, 0>(hsd);
-  const auto linear1 = make_linear_bounds<HashLength, 1>(hsd);
-  const auto linear2 = make_linear_bounds<HashLength, 2>(hsd);
-*/
-  const auto linear3 = make_linear_bounds<HashLength, 3>(hsd);
-/*
-  const auto linear4 = make_linear_bounds<HashLength, 4>(hsd);
-  const auto linear5 = make_linear_bounds<HashLength, 5>(hsd);
-  const auto linear6 = make_linear_bounds<HashLength, 6>(hsd);
-  const auto linear7 = make_linear_bounds<HashLength, 7>(hsd);
-  const auto linear8 = make_linear_bounds<HashLength, 8>(hsd);
-*/
-
   std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> sets;
   sets.emplace_back("std", make_std_hsd<HashLength>(hsd));
   sets.emplace_back("radius", make_radius_hsd<HashLength>(hsd, radius));
@@ -666,17 +641,17 @@ TEST_CASE("xxxxx") {
   sets.emplace_back("bconst256", make_block_const_hsd<HashLength, 8>(hsd));
 
 /*
-  sets.emplace_back("blinear1", make_block_linear_hsd<HashLength, 0>(hsd, linear0));
-  sets.emplace_back("blinear2", make_block_linear_hsd<HashLength, 1>(hsd, linear1));
-  sets.emplace_back("blinear4", make_block_linear_hsd<HashLength, 2>(hsd, linear2));
+  sets.emplace_back("blinear1", make_block_linear_hsd<HashLength, 0>(hsd));
+  sets.emplace_back("blinear2", make_block_linear_hsd<HashLength, 1>(hsd));
+  sets.emplace_back("blinear4", make_block_linear_hsd<HashLength, 2>(hsd));
 */
-  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd, linear3));
+  sets.emplace_back("blinear8", make_block_linear_hsd<HashLength, 3>(hsd));
 /*
-  sets.emplace_back("blinear16", make_block_linear_hsd<HashLength, 4>(hsd, linear4));
-  sets.emplace_back("blinear32", make_block_linear_hsd<HashLength, 5>(hsd, linear5));
-  sets.emplace_back("blinear64", make_block_linear_hsd<HashLength, 6>(hsd, linear6));
-  sets.emplace_back("blinear128", make_block_linear_hsd<HashLength, 7>(hsd, linear7));
-  sets.emplace_back("blinear256", make_block_linear_hsd<HashLength, 8>(hsd, linear8));
+  sets.emplace_back("blinear16", make_block_linear_hsd<HashLength, 4>(hsd));
+  sets.emplace_back("blinear32", make_block_linear_hsd<HashLength, 5>(hsd));
+  sets.emplace_back("blinear64", make_block_linear_hsd<HashLength, 6>(hsd));
+  sets.emplace_back("blinear128", make_block_linear_hsd<HashLength, 7>(hsd));
+  sets.emplace_back("blinear256", make_block_linear_hsd<HashLength, 8>(hsd));
 */
 
   std::vector<bool> hits(sets.size());
