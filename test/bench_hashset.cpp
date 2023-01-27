@@ -431,18 +431,33 @@ struct HashTraits<SFHASH_SHA_1> {
   static constexpr size_t length = 20;
 };
 
-template <SFHASH_HashAlgorithm HType>
-void do_bench(const std::filesystem::path & p) {
-  constexpr size_t HashLength = HashTraits<HType>::length;
-
-  MmapHolder h(p);
+template <
+  SFHASH_HashAlgorithm HType,
+  class Holder
+>
+auto setup_hset(const std::filesystem::path& p) {
+  Holder h(p);
 
   auto hset = load_hset(h.beg, h.end);
 
   const int hidx = sfhash_hashset_index_for_type(hset.get(), HType);
   REQUIRE(hidx != -1);
 
-  auto hsd = std::get<2>(hset->holder.hsets[hidx]);
+  return std::make_tuple(
+    std::move(h),
+    std::move(hset),
+    std::get<2>(hset->holder.hsets[hidx]);
+  );
+}
+
+template <
+  SFHASH_HashAlgorithm HType,
+  class Holder
+>
+void do_bench(const std::filesystem::path& p) {
+  constexpr size_t HashLength = HashTraits<HType>::length;
+
+  auto [h, hset, hsd] = setup_hset<HType, Holder>(p);
 
   RNG rng;
   auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
@@ -498,11 +513,11 @@ const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare
 const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
 
 TEST_CASE("MmapLookupBenchVS") {
-  do_bench<SFHASH_MD5>(VS);
+  do_bench<SFHASH_MD5, MmapHolder>(VS);
 }
 
 TEST_CASE("MmapLookupBenchNSRL") {
-  do_bench<SFHASH_SHA_1>(NSRL);
+  do_bench<SFHASH_SHA_1, MmapHolder>(NSRL);
 }
 
 TEST_CASE("xxxxx") {
