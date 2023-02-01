@@ -219,7 +219,7 @@ TEST_CASE("hashset_lookup") {
 
   // lookup some MD5s
 
-  std::vector<std::pair<std::array<uint8_t,16>, bool>> tests_16{
+  std::vector<std::pair<std::array<uint8_t, 16>, bool>> tests_16{
     { to_bytes<16>("00000000000000000000000000000000"), false },
     { to_bytes<16>("deadbeefdeadbeefdeadbeefdeadbeef"), false },
     { to_bytes<16>("ffffffffffffffffffffffffffffffff"), false }
@@ -233,7 +233,7 @@ TEST_CASE("hashset_lookup") {
 
   // lookup some SHA1s
 
-  std::vector<std::pair<std::array<uint8_t,20>, bool>> tests_20{
+  std::vector<std::pair<std::array<uint8_t, 20>, bool>> tests_20{
     { to_bytes<20>("0000000000000000000000000000000000000000"), false },
     { to_bytes<20>("deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"), false },
     { to_bytes<20>("ffffffffffffffffffffffffffffffffffffffff"), false }
