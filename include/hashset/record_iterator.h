@@ -19,31 +19,25 @@ struct RecordProxy {
   span<uint8_t> rec;
   std::unique_ptr<uint8_t[]> tmp;
 
-//    std::cerr << "RecordProxy(std::span) " << to_hex(rec) << '\n';
 // C++20: RecordProxy(std::span<uint8_t> rec): rec(rec) {
   RecordProxy(span<uint8_t> rec): rec(rec) {
   }
 
   RecordProxy(const RecordProxy& o): rec(o.rec) {
-//    std::cerr << "RecordProxy(const RecordProxy&) " << to_hex(o.rec) << '\n';
   }
 
   RecordProxy& operator=(const RecordProxy& o) noexcept {
-//    std::cerr << "RecordProxy::operator=(const RecordProxy&) " << to_hex(rec) << " <= " << to_hex(o.rec) << '\n';
     std::memcpy(rec.data(), o.rec.data(), rec.size());
     return *this;
   }
 
   RecordProxy(RecordProxy&& o) noexcept {
-//    std::cerr << "RecordProxy(RecordProxy&&) " << to_hex(o.rec) << '\n';
-
     tmp.reset(new uint8_t[o.rec.size()]);
     std::memcpy(tmp.get(), o.rec.data(), o.rec.size());
     rec = { tmp.get(), o.rec.size() };
   }
 
   RecordProxy& operator=(RecordProxy&& o) noexcept {
-//    std::cerr << "RecordProxy::operator=(RecordProxy&&) " << to_hex(rec) << " <= " << to_hex(o.rec) << '\n';
     std::memcpy(rec.data(), o.rec.data(), rec.size());
     return *this;
   }
@@ -223,25 +217,20 @@ struct HashRecordProxy {
   std::unique_ptr<uint8_t[]> tmp;
   uint64_t tmp_idx;
 
-//    std::cerr << "RecordProxy(std::span) " << to_hex(rec) << '\n';
 // C++20:  HashRecordProxy(std::span<uint8_t> rec, uint64_t* idx): rec(rec), idx(idx) {
   HashRecordProxy(span<uint8_t> rec, uint64_t* idx): rec(rec), idx(idx) {
   }
 
   HashRecordProxy(const HashRecordProxy& o): rec(o.rec), idx(o.idx) {
-//    std::cerr << "RecordProxy(const RecordProxy&) " << to_hex(o.rec) << '\n';
   }
 
   HashRecordProxy& operator=(const HashRecordProxy& o) noexcept {
-//    std::cerr << "RecordProxy::operator=(const RecordProxy&) " << to_hex(rec) << " <= " << to_hex(o.rec) << '\n';
     std::memcpy(rec.data(), o.rec.data(), rec.size());
     *idx = *(o.idx);
     return *this;
   }
 
   HashRecordProxy(HashRecordProxy&& o) noexcept {
-//    std::cerr << "RecordProxy(RecordProxy&&) " << to_hex(o.rec) << '\n';
-
     tmp.reset(new uint8_t[o.rec.size()]);
     std::memcpy(tmp.get(), o.rec.data(), o.rec.size());
     rec = { tmp.get(), o.rec.size() };
@@ -293,7 +282,6 @@ void swap(HashRecordProxy a, HashRecordProxy b);
 
 //void swap(RecordProxy& a, RecordProxy& b);
 }
-
 
 class HashRecordIterator {
 public:
