@@ -143,90 +143,6 @@ auto make_random_hashes(RNG& rng, size_t count) {
 }
 
 template <size_t HashLength>
-auto make_radius_ls(const ConstHashsetData& hsd) {
-  const auto [left, right] = make_left_right<HashLength>(hsd);
-  const auto radius = std::max(std::abs(left), std::abs(right));
-  return std::unique_ptr<LookupStrategy>{
-    std::make_unique<RadiusLookupStrategy<HashLength>>(
-      hsd.beg,
-      hsd.end,
-      radius
-    )
-  };
-}
-
-template <size_t HashLength>
-auto make_basic_ls(const ConstHashsetData& hsd) {
-  return std::unique_ptr<LookupStrategy>{
-    std::make_unique<BasicLookupStrategy<HashLength>>(
-      hsd.beg,
-      hsd.end
-    )
-  };
-}
-
-template <size_t HashLength>
-auto make_two_sided_radius_ls(const ConstHashsetData& hsd) {
-  const auto [left, right] = make_left_right<HashLength>(hsd);
-  return std::unique_ptr<LookupStrategy>{
-    std::make_unique<RangeLookupStrategy<HashLength>>(
-      hsd.beg,
-      hsd.end,
-      left,
-      right
-    )
-  };
-}
-
-template <
-  size_t HashLength,
-  size_t BucketBits
->
-auto make_block_const_ls(const ConstHashsetData& hsd) {
-  return std::unique_ptr<LookupStrategy>{
-    std::make_unique<BlockLookupStrategy<HashLength, BucketBits>>(
-      hsd.beg,
-      hsd.end,
-      make_const_bounds<HashLength, BucketBits>(hsd)
-    )
-  };
-}
-
-template <
-  size_t HashLength,
-  size_t BucketBits
->
-auto make_block_linear_ls(const ConstHashsetData& hsd) {
-  return std::unique_ptr<LookupStrategy>{
-    std::make_unique<BlockLinearLookupStrategy<HashLength, BucketBits>>(
-      hsd.beg,
-      hsd.end,
-      make_linear_bounds<HashLength, BucketBits>(hsd)
-    )
-  };
-}
-
-template <
-  class HashGenerator,
-  class SetList
->
-void do_some_lookups(HashGenerator& gen, const SetList& sets) {
-  for (size_t i = 1; i <= 100000; i *= 10) {
-    do_some_lookups(gen(i), sets);
-  }
-}
-
-template <
-  class LookupList,
-  class SetList
->
-void do_some_lookups(const LookupList& ll, const SetList& sets) {
-  for (const auto& [name, hs]: sets) {
-    do_check(name, *hs, ll);
-  }
-}
-
-template <size_t HashLength>
 std::pair<int64_t, int64_t> make_left_right(const ConstHashsetData& hsd) {
 
   const uint8_t* const beg = static_cast<const uint8_t*>(hsd.beg);
@@ -423,6 +339,96 @@ std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_const_bounds(con
   }
 
   return block_bounds;
+}
+
+
+template <size_t HashLength>
+auto make_radius_ls(const ConstHashsetData& hsd) {
+  const auto [left, right] = make_left_right<HashLength>(hsd);
+  const auto radius = std::max(std::abs(left), std::abs(right));
+  return std::unique_ptr<LookupStrategy>{
+    std::make_unique<RadiusLookupStrategy<HashLength>>(
+      hsd.beg,
+      hsd.end,
+      radius
+    )
+  };
+}
+
+template <size_t HashLength>
+auto make_basic_ls(const ConstHashsetData& hsd) {
+  return std::unique_ptr<LookupStrategy>{
+    std::make_unique<BasicLookupStrategy<HashLength>>(
+      hsd.beg,
+      hsd.end
+    )
+  };
+}
+
+template <size_t HashLength>
+auto make_two_sided_radius_ls(const ConstHashsetData& hsd) {
+  const auto [left, right] = make_left_right<HashLength>(hsd);
+  return std::unique_ptr<LookupStrategy>{
+    std::make_unique<RangeLookupStrategy<HashLength>>(
+      hsd.beg,
+      hsd.end,
+      left,
+      right
+    )
+  };
+}
+
+template <
+  size_t HashLength,
+  size_t BucketBits
+>
+auto make_block_const_ls(const ConstHashsetData& hsd) {
+  return std::unique_ptr<LookupStrategy>{
+    std::make_unique<BlockLookupStrategy<HashLength, BucketBits>>(
+      hsd.beg,
+      hsd.end,
+      make_const_bounds<HashLength, BucketBits>(hsd)
+    )
+  };
+}
+
+template <
+  size_t HashLength,
+  size_t BucketBits
+>
+auto make_block_linear_ls(const ConstHashsetData& hsd) {
+  return std::unique_ptr<LookupStrategy>{
+    std::make_unique<BlockLinearLookupStrategy<HashLength, BucketBits>>(
+      hsd.beg,
+      hsd.end,
+      make_linear_bounds<HashLength, BucketBits>(hsd)
+    )
+  };
+}
+
+template <
+  class HashGenerator,
+  class SetList,
+  class IterationsGenerator
+>
+void do_some_lookups(
+  const SetList& sets,
+  IterationsGenerator igen,
+  HashGenerator& hgen)
+{
+  for (size_t i: igen) {
+    do_some_lookups(sets, hgen(i));
+  }
+}
+
+template <
+  class LookupList,
+  class SetList
+>
+void do_some_lookups(const SetList& sets, const LookupList& ll) {
+  for (const auto& [name, hs]: sets) {
+    do_check(name, *hs, ll);
+  }
 }
 
 template <SFHASH_HashAlgorithm>
