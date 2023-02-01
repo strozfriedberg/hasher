@@ -392,4 +392,4 @@ private:
   uint64_t* indices;
 };
 
-//C++20: static_assert(std::random_access_iterator<HashRecordIterator>);
+// C++20: static_assert(std::random_access_iterator<HashRecordIterator>);
