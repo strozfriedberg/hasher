@@ -523,6 +523,36 @@ auto make_oom_sequence(size_t beg, size_t end) {
 }
 */
 
+template <SFHASH_HashAlgorithm HType>
+auto make_std_ls_cases() {
+  constexpr size_t HashLength = HashTraits<HType>::length;
+
+  std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy> (*)(const ConstHashsetData&)>> sets = {
+    { "radius", make_radius_ls<HashLength> },
+    { "2radius", make_two_sided_radius_ls<HashLength> },
+    { "bconst2", make_block_const_ls<HashLength, 1> },
+    { "bconst4", make_block_const_ls<HashLength, 2> },
+    { "bconst8", make_block_const_ls<HashLength, 3> },
+    { "bconst16", make_block_const_ls<HashLength, 4> },
+    { "bconst32", make_block_const_ls<HashLength, 5> },
+    { "bconst64", make_block_const_ls<HashLength, 6> },
+    { "bconst128", make_block_const_ls<HashLength, 7> },
+    { "bconst256", make_block_const_ls<HashLength, 8> },
+    { "blinear1", make_block_linear_ls<HashLength, 0> },
+    { "blinear2", make_block_linear_ls<HashLength, 1> },
+    { "blinear4", make_block_linear_ls<HashLength, 2> },
+    { "blinear8", make_block_linear_ls<HashLength, 3> },
+    { "blinear16", make_block_linear_ls<HashLength, 4> },
+    { "blinear32", make_block_linear_ls<HashLength, 5> },
+    { "blinear64", make_block_linear_ls<HashLength, 6> },
+    { "blinear128", make_block_linear_ls<HashLength, 7> },
+    { "blinear256", make_block_linear_ls<HashLength, 8> },
+    { "basic", make_basic_ls<HashLength> }
+  };
+
+  return sets;
+}
+
 template <
   SFHASH_HashAlgorithm HType,
   class Holder,
