@@ -1,10 +1,11 @@
+#include "cpp20.h"
 #include "hset_decoder.h"
 
 #include "hasher/common.h"
 
 #include "helper.h"
 
-#include <bit>
+// C++20: #include <bit>
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -133,7 +134,7 @@ TEST_CASE("parse_hhdr") {
     0x89, 0x67, 0x45, 0x23, 0x01, 0x00, 0x00, 0x00
   };
 
-  const uint32_t htype = std::bit_width(static_cast<uint32_t>(SFHASH_SHA_1)) - 1;
+  const uint32_t htype = bit_width(static_cast<uint32_t>(SFHASH_SHA_1)) - 1;
 
   const Chunk ch{Chunk::Type::HHDR | htype, std::begin(buf), std::end(buf)};
 

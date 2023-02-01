@@ -52,16 +52,16 @@ FuzzyHash::FuzzyHash(const char* a, const char* b):
   * This is a workaround for clang <= 14. Once 15 is out
   * we should remove this #if.
   */
-  #if defined __clang__ && __clang_major__ <= 14
+// C++20: #if defined __clang__ && __clang_major__ <= 14
   Data(a, std::distance(a, b))
-  #else
-  Data(a, b)
-  #endif
+// C++20: #else
+// C++20: Data(a, b)
+// C++20: #endif
 {
   const char* i = std::find(std::begin(Data), std::end(Data), ':');
   const char* j = std::find(i + 1, std::end(Data), ':');
   const char* k = std::find(j + 1, std::end(Data), ',');
-  #if defined __clang__ && __clang_major__ <= 14
+// C++20: #if defined __clang__ && __clang_major__ <= 14
   const char* bls = std::min(i + 1, std::end(Data));
   const char* dbs = std::min(j + 1, std::end(Data));
   const char* fns = std::min(k + 1, std::end(Data));
@@ -72,11 +72,11 @@ FuzzyHash::FuzzyHash(const char* a, const char* b):
   Block = {bls, i2j};
   DoubleBlock = {dbs, j2k};
   Filename = {fns, k2e};
-  #else
-  Block = {std::min(i + 1, std::end(Data)), j};
-  DoubleBlock = {std::min(j + 1, std::end(Data)), k};
-  Filename = {std::min(k + 1, std::end(Data)), std::end(Data)};
-  #endif
+// C++20: #else
+// C++20: Block = {std::min(i + 1, std::end(Data)), j};
+// C++20: DoubleBlock = {std::min(j + 1, std::end(Data)), k};
+// C++20: Filename = {std::min(k + 1, std::end(Data)), std::end(Data)};
+// C++20: #endif
 }
 
 std::string FuzzyHash::hash() const {
@@ -126,8 +126,10 @@ std::string FuzzyHash::filename() const {
   }
   else {
     // strip leading and trailing double quotes
-    const auto pos = Filename.starts_with('"') ? 1 : 0;
-    const auto len = Filename.size() - (Filename.ends_with('"') ? 1 : 0) - pos;
+// C++20: const auto pos = Filename.starts_with('"') ? 1 : 0;
+    const auto pos = Filename.front() == '"' ? 1 : 0;
+// C++20: const auto len = Filename.size() - (Filename.ends_with('"') ? 1 : 0) - pos;
+    const auto len = Filename.size() - (Filename.back() == '"' ? 1 : 0) - pos;
     // unguard the remaining double quotes
     return replaceAll(Filename.substr(pos, len), "\\\"", "\"");
   }

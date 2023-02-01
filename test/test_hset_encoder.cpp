@@ -1,3 +1,4 @@
+#include "cpp20.h"
 #include "hset_encoder.h"
 #include "hex.h"
 #include "rwutil.h"
@@ -5,7 +6,7 @@
 #include <algorithm>
 #include <cstring>
 #include <initializer_list>
-#include <span>
+//C++20: #include <span>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -60,7 +61,8 @@ TEST_CASE("write_chunk") {
   };
 
   std::vector<char> buf(sizeof(exp));
-  CHECK(write_chunk<f>(buf.data(), "ABCD", "1234") == sizeof(exp));
+// C++20: CHECK(write_chunk<f>(buf.data(), "ABCD", "1234") == sizeof(exp));
+  CHECK(write_chunk(f, buf.data(), "ABCD", "1234") == sizeof(exp));
   CHECK(!std::memcmp(buf.data(), exp, sizeof(exp)));
 }
 
@@ -114,7 +116,8 @@ TEST_CASE("length_fhdr") {
 }
 
 template <auto func, typename... Args>
-void chunk_data_tester(const std::span<const uint8_t> exp, Args&&... args) {
+// C++20: void chunk_data_tester(const std::span<const uint8_t> exp, Args&&... args) {
+void chunk_data_tester(const span<const uint8_t> exp, Args&&... args) {
   std::vector<char> buf(exp.size());
   CHECK(func(std::forward<Args>(args)..., buf.data()) == exp.size());
   CHECK(!std::memcmp(buf.data(), exp.data(), exp.size()));
@@ -144,7 +147,8 @@ TEST_CASE("write_fhdr_data") {
   };
 
   chunk_data_tester<write_fhdr_data>(
-    std::span{exp}, version, name, desc, ts
+// C++20:    std::span{exp}, version, name, desc, ts
+    span{exp}, version, name, desc, ts
   );
 }
 
@@ -170,7 +174,8 @@ TEST_CASE("write_hhnn_data") {
   };
 
   chunk_data_tester<write_hhnn_data>(
-    std::span{exp}, hi, hash_count
+// C++20:   std::span{exp}, hi, hash_count
+    span{exp}, hi, hash_count
   );
 }
 
@@ -199,7 +204,8 @@ TEST_CASE("write_hint_data") {
   }
 
   chunk_data_tester<write_hint_data>(
-    std::span{exp}, block_bounds
+// C++20:    std::span{exp}, block_bounds
+    span{exp}, block_bounds
   );
 }
 
@@ -276,7 +282,8 @@ TEST_CASE("write_rhdr_data") {
   };
 
   chunk_data_tester<write_rhdr_data>(
-    std::span{exp}, fields, record_count
+// C++20:   std::span{exp}, fields, record_count
+    span{exp}, fields, record_count
   );
 }
 
@@ -329,7 +336,8 @@ TEST_CASE("write_ftoc_data") {
   };
 
   chunk_data_tester<write_ftoc_data>(
-    std::span{exp}, toc
+// C++20:   std::span{exp}, toc
+    span{exp}, toc
   );
 }
 

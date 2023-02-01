@@ -110,7 +110,11 @@ public:
     return toc_cur == other.toc_cur;
   }
 
-  bool operator!=(const TOCIterator&) const noexcept = default;
+// C++20:
+//  bool operator!=(const TOCIterator&) const noexcept = default;
+  bool operator!=(const TOCIterator& other) const noexcept {
+    return toc_cur != other.toc_cur;
+  }
 
 private:
   void advance_chunk();

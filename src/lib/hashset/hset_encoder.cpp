@@ -1,7 +1,7 @@
 #include "hset_encoder.h"
 
 #include <algorithm>
-#include <bit>
+// C++20: #include <bit>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -23,6 +23,7 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "cpp20.h"
 #include "error.h"
 #include "hex.h"
 #include "rwutil.h"
@@ -149,7 +150,9 @@ size_t write_fhdr(
   const std::string& timestamp,
   char* out)
 {
-  return write_chunk<write_fhdr_data>(
+// C++20: return write_chunk<write_fhdr_data>(
+  return write_chunk(
+    write_fhdr_data,
     out,
     "FHDR",
     version,
@@ -160,12 +163,12 @@ size_t write_fhdr(
 }
 
 uint32_t make_hhnn_type(uint32_t hash_type) {
-  return Chunk::Type::HHDR | (std::bit_width(hash_type) - 1);
+  return Chunk::Type::HHDR | (bit_width(hash_type) - 1);
 }
 
 std::string make_hhnn_str(uint32_t hash_type) {
   // nn is stored big-endian
-  hash_type = to_be<uint16_t>(std::bit_width(hash_type) - 1);
+  hash_type = to_be<uint16_t>(bit_width(hash_type) - 1);
   return {
     'H',
     'H',
@@ -208,7 +211,9 @@ size_t write_hhnn(
   uint64_t hash_count,
   char* out)
 {
-  return write_chunk<write_hhnn_data>(
+// C++20: return write_chunk<write_hhnn_data>(
+  return write_chunk(
+    write_hhnn_data,
     out,
     make_hhnn_str(hi.type).c_str(),
     hi,
@@ -284,7 +289,9 @@ size_t write_hint(
   const std::vector<std::pair<int64_t, int64_t>>& block_bounds,
   char* out)
 {
-  return write_chunk<write_hint_data>(
+// C++20: return write_chunk<write_hint_data>(
+  return write_chunk(
+    write_hint_data,
     out,
     "HINT",
     block_bounds
@@ -310,7 +317,9 @@ size_t write_hdat(
   const HashsetData& hdat,
   char* out)
 {
-  return write_chunk<write_hdat_data>(
+// C++20: return write_chunk<write_hdat_data>(
+  return write_chunk(
+    write_hdat_data,
     out,
     "HDAT",
     hdat
@@ -336,7 +345,9 @@ size_t write_ridx(
   const RecordIndex& ridx,
   char* out)
 {
-  return write_chunk<write_ridx_data>(
+// C++20: return write_chunk<write_ridx_data>(
+  return write_chunk(
+    write_ridx_data,
     out,
     "RIDX",
     ridx
@@ -389,7 +400,7 @@ size_t write_rhdr_data(
   out += write_le<uint64_t>(record_count, out);
 
   for (const auto& hi: fields) {
-    out += write_le<uint16_t>(std::bit_width(static_cast<uint32_t>(hi.type)) - 1, out);
+    out += write_le<uint16_t>(bit_width(static_cast<uint32_t>(hi.type)) - 1, out);
     out += write_pstring(hi.name, out);
     out += write_le<uint64_t>(hi.length, out);
   }
@@ -402,7 +413,9 @@ size_t write_rhdr(
   uint64_t record_count,
   char* out)
 {
-  return write_chunk<write_rhdr_data>(
+// C++20: return write_chunk<write_rhdr_data>(
+  return write_chunk(
+    write_rhdr_data,
     out,
     "RHDR",
     fields,
@@ -461,7 +474,9 @@ size_t write_rdat(
   const RecordData& rdat,
   char* out)
 {
-  return write_chunk<write_rdat_data>(
+// C++20: return write_chunk<write_rdat_data>(
+  return write_chunk(
+    write_rdat_data,
     out,
     "RDAT",
     rdat
@@ -497,7 +512,9 @@ size_t write_ftoc(
   const TableOfContents& toc,
   char* out)
 {
-  return write_chunk<write_ftoc_data>(
+// C++20: return write_chunk<write_ftoc_data>(
+  return write_chunk(
+    write_ftoc_data,
     out,
     "FTOC",
     toc
@@ -518,7 +535,9 @@ size_t write_fend_data(char*) {
 
 size_t write_fend(char* out)
 {
-  return write_chunk<write_fend_data>(
+// C++20: return write_chunk<write_fend_data>(
+  return write_chunk(
+    write_fend_data,
     out,
     "FEND"
   );
@@ -822,11 +841,11 @@ std::vector<std::string_view> split(std::string_view s, char delim) {
     * This is a workaround for clang <= 14. Once 15 is out
     * we should remove this #if.
     */
-    #if defined __clang__ && __clang_major__ <= 14
+// C++20: #if defined __clang__ && __clang_major__ <= 14
     splits.emplace_back(i, std::distance(i, j));
-    #else
-    splits.emplace_back(i, j);
-    #endif
+// C++20: #else
+// C++20: splits.emplace_back(i, j);
+// C++20: #endif
     i = j != s.end() ? j + 1 : j;
   } while (i != s.end());
 

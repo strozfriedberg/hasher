@@ -50,8 +50,10 @@ size_t write_hashset(
 
 void size_to_u64(uint8_t* dst, const char* src, size_t dlen);
 
-template <auto func, typename... Args>
+// C++20: template <auto func, typename... Args>
+template <typename Func, typename... Args>
 size_t write_chunk(
+  Func func,
   char* out,
   const char* chunk_type,
   Args&&... args)
