@@ -485,6 +485,7 @@ struct OOMIterator {
   }
 
   OOMIterator& operator++() noexcept {
+    ++i;
     return *this;
   }
 
