@@ -341,7 +341,6 @@ std::array<std::pair<int64_t, int64_t>, (1 << BucketBits)> make_const_bounds(con
   return block_bounds;
 }
 
-
 template <size_t HashLength>
 auto make_radius_ls(const ConstHashsetData& hsd) {
   const auto [left, right] = make_left_right<HashLength>(hsd);
