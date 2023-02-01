@@ -21,7 +21,6 @@
 #include <array>
 #include <cmath>
 #include <cstring>
-#include <initializer_list>
 #include <iomanip>
 #include <iostream>
 #include <filesystem>
@@ -66,8 +65,8 @@ std::vector<char> read_file(const std::filesystem::path& p) {
 }
 
 struct MemoryHolder {
-  MemoryHolder(std::vector<char>&& buf):
-    buf(buf),
+  MemoryHolder(std::vector<char>&& dbuf):
+    buf(dbuf),
     beg(buf.data()),
     end(buf.data() + buf.size())
   {}
