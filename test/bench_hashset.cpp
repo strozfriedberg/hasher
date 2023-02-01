@@ -265,7 +265,7 @@ std::pair<float, float> least_upper_bound(const std::vector<Point<T>>& pts) {
 
   // check each segment for best fit
 
-  for (auto j = 1; j < pts.size(); ++j) {
+  for (auto j = 1u; j < pts.size(); ++j) {
     auto i = j - 1;
 
     const float a = float(pts[j].y - pts[i].y) / (pts[j].x - pts[i].x);
@@ -296,7 +296,7 @@ std::pair<float, float> greatest_lower_bound(const std::vector<Point<T>>& pts) {
 
   // check each segment for best fit
 
-  for (auto j = 1; j < pts.size(); ++j) {
+  for (auto j = 1u; j < pts.size(); ++j) {
     auto i = j - 1;
 
     const float a = double(pts[j].y - pts[i].y) / (pts[j].x - pts[i].x);
