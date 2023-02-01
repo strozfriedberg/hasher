@@ -251,12 +251,14 @@ std::pair<int64_t, int64_t> make_left_right(const ConstHashsetData& hsd) {
   return { left, right };
 }
 
-double distance(const Point& p, double a, double b) {
+template <class T>
+double distance(const Point<T>& p, double a, double b) {
   return std::abs(b + a * p.x - p.y) / std::sqrt(1 + a * a);
 }
 
 //std::pair<double, double> least_upper_bound(const std::vector<Point>& pts) {
-std::pair<float, float> least_upper_bound(const std::vector<Point>& pts) {
+template <class T>
+std::pair<float, float> least_upper_bound(const std::vector<Point<T>>& pts) {
 
   float min_err = std::numeric_limits<float>::max();
   float best_a = 0.0;
@@ -287,7 +289,8 @@ std::pair<float, float> least_upper_bound(const std::vector<Point>& pts) {
 }
 
 //std::pair<double, double> greatest_lower_bound(const std::vector<Point>& pts) {
-std::pair<float, float> greatest_lower_bound(const std::vector<Point>& pts) {
+template <class T>
+std::pair<float, float> greatest_lower_bound(const std::vector<Point<T>>& pts) {
   float min_err = std::numeric_limits<double>::max();
   float best_a = 0.0;
   float best_b = 0.0;
@@ -317,7 +320,8 @@ std::pair<float, float> greatest_lower_bound(const std::vector<Point>& pts) {
 }
 
 //std::tuple<double, double, double, double> make_linear_bounds(const std::vector<Point> pts, size_t active_bucket) {
-std::tuple<float, float, float, float> make_linear_bounds(const std::vector<Point> pts, size_t active_bucket) {
+template <class T>
+std::tuple<float, float, float, float> make_linear_bounds(const std::vector<Point<T>> pts, size_t active_bucket) {
   const auto uch = upper_ch(pts);
   const auto lch = lower_ch(pts);
 
@@ -362,7 +366,7 @@ std::array<std::tuple<float, float, float, float>, (1 << BucketBits)> make_linea
 
   const size_t count = (end - beg) / HashLength;
 
-  std::vector<Point> pts;
+  std::vector<Point<int64_t>> pts;
   size_t active_bucket = 0;
 
   for (size_t i = 0; i < count; ++i) {

@@ -33,7 +33,6 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hasher/libblake3_hasher.cpp \
 	src/lib/hasher/libcrypto_hasher.cpp \
 	src/lib/hasher/quick_hasher.cpp \
-	src/lib/hashset/convex_hull.cpp \
 	src/lib/hashset/hset.cpp \
 	src/lib/hashset/hset_decoder.cpp \
 	src/lib/hashset/hset_encoder.cpp \
