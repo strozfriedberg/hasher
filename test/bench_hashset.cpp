@@ -465,56 +465,109 @@ auto setup_hset(const std::filesystem::path& p) {
   );
 }
 
+template <size_t HashLength>
+auto make_hash_generator() {
+  return [rng = RNG()](size_t count) mutable {
+    return make_random_hashes<HashLength>(rng, count);
+  };
+}
+
+struct OOMIterator {
+  bool operator==(const OOMIterator& o) const noexcept {
+    return i == o.i;
+  }
+
+  bool operator!=(const OOMIterator& o) const noexcept {
+    return i != o.i;
+  }
+
+  size_t operator*() const noexcept {
+    return std::pow(10, i);
+  }
+
+  OOMIterator& operator++() noexcept {
+    return *this;
+  }
+
+  OOMIterator operator++(int) noexcept {
+    OOMIterator itr{*this};
+    ++(*this);
+    return itr;
+  }
+
+  size_t i;
+};
+
+struct OOMSequence {
+  OOMSequence(size_t beg, size_t end): b(beg), e(end) {}
+
+  OOMIterator begin() const {
+    return OOMIterator{b};
+  }
+
+  OOMIterator end() const {
+    return OOMIterator{e};
+  }
+
+  size_t b, e;
+};
+
+auto make_oom_sequence(size_t beg, size_t end) {
+  return OOMSequence(beg, end);
+}
+
+// C++20: so much less faff
+/*
+auto make_oom_sequence(size_t beg, size_t end) {
+  return std::views::iota(beg, end) | std::views::transform([](size_t i) { return std::pow(10, i); });
+}
+*/
+
 template <
   SFHASH_HashAlgorithm HType,
-  class Holder
+  class Holder,
+  class IterationsGenerator,
+  class CaseList
 >
-void do_bench(const std::filesystem::path& p) {
+void do_bench(const std::filesystem::path& p, IterationsGenerator count_seq, const CaseList& cases) {
   constexpr size_t HashLength = HashTraits<HType>::length;
 
   auto [h, hset, hsd] = setup_hset<HType, Holder>(p);
 
-  RNG rng;
-  auto gen = [&rng](size_t count) { return make_random_hashes<HashLength>(rng, count); };
+  std::vector<std::pair<std::string, std::unique_ptr<LookupStrategy>>> strats;
+  for (const auto& [name, func]: cases) {
+    strats.emplace_back(name, func(hsd));
+  }
 
-  std::initializer_list<std::pair<std::string, std::unique_ptr<LookupStrategy>>>sets = {
-    { "radius", make_radius_ls<HashLength>(hsd) },
-    { "2radius", make_two_sided_radius_ls<HashLength>(hsd) },
-    { "bconst2", make_block_const_ls<HashLength, 1>(hsd) },
-    { "bconst4", make_block_const_ls<HashLength, 2>(hsd) },
-    { "bconst8", make_block_const_ls<HashLength, 3>(hsd) },
-    { "bconst16", make_block_const_ls<HashLength, 4>(hsd) },
-    { "bconst32", make_block_const_ls<HashLength, 5>(hsd) },
-    { "bconst64", make_block_const_ls<HashLength, 6>(hsd) },
-    { "bconst128", make_block_const_ls<HashLength, 7>(hsd) },
-    { "bconst256", make_block_const_ls<HashLength, 8>(hsd) },
-    { "blinear1", make_block_linear_ls<HashLength, 0>(hsd) },
-    { "blinear2", make_block_linear_ls<HashLength, 1>(hsd) },
-    { "blinear4", make_block_linear_ls<HashLength, 2>(hsd) },
-    { "blinear8", make_block_linear_ls<HashLength, 3>(hsd) },
-    { "blinear16", make_block_linear_ls<HashLength, 4>(hsd) },
-    { "blinear32", make_block_linear_ls<HashLength, 5>(hsd) },
-    { "blinear64", make_block_linear_ls<HashLength, 6>(hsd) },
-    { "blinear128", make_block_linear_ls<HashLength, 7>(hsd) },
-    { "blinear256", make_block_linear_ls<HashLength, 8>(hsd) },
-    { "basic", make_basic_ls<HashLength>(hsd) }
-  };
+  auto hgen = make_hash_generator<HashLength>();
 
-  do_some_lookups(gen, sets);
+  do_some_lookups(strats, count_seq, hgen);
 }
 
 const std::filesystem::path VS{"/home/juckelman/projects/hashsets/src/virusshare/vs-445.hset"};
 const std::filesystem::path NSRL{"/home/juckelman/projects/hashsets/src/nsrl/rds-2.78/nsrl-rds-2.78.hset"};
 
 TEST_CASE("MmapLookupBenchVS") {
-  do_bench<SFHASH_MD5, MmapHolder>(VS);
+  const auto cases = make_std_ls_cases<SFHASH_MD5>();
+  do_bench<SFHASH_MD5, MmapHolder>(VS, make_oom_sequence(0, 6), cases);
 }
 
 TEST_CASE("MmapLookupBenchNSRL") {
-  do_bench<SFHASH_SHA_1, MmapHolder>(NSRL);
+  const auto cases = make_std_ls_cases<SFHASH_SHA_1>();
+  do_bench<SFHASH_SHA_1, MmapHolder>(NSRL, make_oom_sequence(0, 6), cases);
 }
 
-TEST_CASE("xxxxx") {
+TEST_CASE("MemoryLookupBenchVS") {
+  const auto cases = make_std_ls_cases<SFHASH_MD5>();
+  do_bench<SFHASH_MD5, MemoryHolder>(VS, make_oom_sequence(0, 6), cases);
+}
+
+TEST_CASE("MemoryLookupBenchNSRL") {
+  const auto cases = make_std_ls_cases<SFHASH_SHA_1>();
+  do_bench<SFHASH_SHA_1, MemoryHolder>(NSRL, make_oom_sequence(0, 6), cases);
+}
+
+TEST_CASE("agreement") {
   const std::vector<std::array<uint8_t, 20>> test1_in{
     to_bytes<20>("03056bc08003a879889005a316b5f9159b1cba5a"),
     to_bytes<20>("04d4b13b2cf44056a14a1550640492a907469e9e"),
@@ -645,19 +698,15 @@ TEST_CASE("xxxxx") {
   sets.emplace_back("bconst128", make_block_const_ls<HashLength, 7>(hsd));
   sets.emplace_back("bconst256", make_block_const_ls<HashLength, 8>(hsd));
 
-/*
   sets.emplace_back("blinear1", make_block_linear_ls<HashLength, 0>(hsd));
   sets.emplace_back("blinear2", make_block_linear_ls<HashLength, 1>(hsd));
   sets.emplace_back("blinear4", make_block_linear_ls<HashLength, 2>(hsd));
-*/
   sets.emplace_back("blinear8", make_block_linear_ls<HashLength, 3>(hsd));
-/*
   sets.emplace_back("blinear16", make_block_linear_ls<HashLength, 4>(hsd));
   sets.emplace_back("blinear32", make_block_linear_ls<HashLength, 5>(hsd));
   sets.emplace_back("blinear64", make_block_linear_ls<HashLength, 6>(hsd));
   sets.emplace_back("blinear128", make_block_linear_ls<HashLength, 7>(hsd));
   sets.emplace_back("blinear256", make_block_linear_ls<HashLength, 8>(hsd));
-*/
 
   std::vector<bool> hits(sets.size());
 
