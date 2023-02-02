@@ -248,7 +248,7 @@ std::tuple<float, float, float, float> make_linear_bounds(const std::vector<Poin
   std::cout << '\n';
 */
   const auto ub = least_upper_bound(uch);
-  std::cout << ub.first << ' ' << ub.second << "\n\n";
+//  std::cout << ub.first << ' ' << ub.second << "\n\n";
 
 /*
   std::cout << "lch " << active_bucket << '\n';
@@ -259,7 +259,7 @@ std::tuple<float, float, float, float> make_linear_bounds(const std::vector<Poin
 */
 
   const auto lb = greatest_lower_bound(lch);
-  std::cout << lb.first << ' ' << lb.second << "\n\n";
+//  std::cout << lb.first << ' ' << lb.second << "\n\n";
 
   return { lb.first, lb.second, ub.first, ub.second };
 }
@@ -780,7 +780,7 @@ void dump_data(const std::filesystem::path & p) {
     const size_t e = expected_index(hh[i].data(), count);
     const int64_t delta = static_cast<int64_t>(i) - static_cast<int64_t>(e);
 
-    std::cout << e << ' ' << delta << '\n';
+//    std::cout << e << ' ' << delta << '\n';
   }
 }
 
