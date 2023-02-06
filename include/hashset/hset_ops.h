@@ -9,7 +9,8 @@
 #include <vector>
 #include <utility>
 
-void collect_hash_types(const auto& fields, auto& types) {
+template <class Fields, class Types>
+void collect_hash_types(const Fields& fields, Types& types) {
   for (const auto& rfd: fields) {
     types.emplace(
       static_cast<SFHASH_HashAlgorithm>(rfd.type),
@@ -18,7 +19,8 @@ void collect_hash_types(const auto& fields, auto& types) {
   }
 }
 
-void make_output_records(const uint8_t* ibeg, const uint8_t* iend, size_t irlen, const auto& ofields, std::vector<std::vector<uint8_t>>& out) {
+template <class OFields>
+void make_output_records(const uint8_t* ibeg, const uint8_t* iend, size_t irlen, const OFields& ofields, std::vector<std::vector<uint8_t>>& out) {
   for (const uint8_t* ir = ibeg; ir < iend; ir += irlen) {
     std::vector<uint8_t> orec;
     for (const auto& [i, hlen]: ofields) {

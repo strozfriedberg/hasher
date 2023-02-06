@@ -13,7 +13,7 @@ uint32_t expected_index(const uint8_t* h, uint32_t set_size) {
    * we see that (high * set_size) fits into 64 bits without overflow, so
    * can compute the expected index as (high * set_size) >> 32.
    */
-  const uint64_t high32 = boost::endian::native_to_big<uint32_t>(
+  const uint64_t high32 = boost::endian::big_to_native<uint32_t>(
     *reinterpret_cast<const uint32_t*>(h)
   );
   return static_cast<uint32_t>((high32 * set_size) >> 32);

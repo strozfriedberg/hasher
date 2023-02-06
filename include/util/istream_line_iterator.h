@@ -37,9 +37,15 @@ public:
     return itr;
   }
 
-  bool operator==(const IstreamLineIterator&) const = default;
+// C++20: bool operator==(const IstreamLineIterator&) const = default;
+  bool operator==(const IstreamLineIterator& o) const {
+    return in == o.in && line == o.line;
+  }
 
-  bool operator!=(const IstreamLineIterator&) const = default;
+// C++20: bool operator!=(const IstreamLineIterator&) const = default;
+  bool operator!=(const IstreamLineIterator& o) const {
+    return !(*this == o);
+  }
 
 private:
   void advance() {
@@ -57,4 +63,4 @@ private:
   std::string line;
 };
 
-static_assert(std::input_iterator<IstreamLineIterator>);
+// C++20: static_assert(std::input_iterator<IstreamLineIterator>);

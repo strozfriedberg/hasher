@@ -6,45 +6,72 @@
 #include <iterator>
 #include <memory>
 #include <ostream>
-#include <span>
+//C++20: #include <span>
 
 #include <iostream>
 
+#include "cpp20.h"
 #include "hex.h"
 #include "hashset/arrow_proxy.h"
 
 struct RecordProxy {
-  std::span<uint8_t> rec;
+// C++20: std::span<uint8_t> rec;
+  span<uint8_t> rec;
   std::unique_ptr<uint8_t[]> tmp;
 
-  RecordProxy(std::span<uint8_t> rec): rec(rec) {
-//    std::cerr << "RecordProxy(std::span) " << to_hex(rec) << '\n';
+// C++20: RecordProxy(std::span<uint8_t> rec): rec(rec) {
+  RecordProxy(span<uint8_t> rec): rec(rec) {
   }
 
   RecordProxy(const RecordProxy& o): rec(o.rec) {
-//    std::cerr << "RecordProxy(const RecordProxy&) " << to_hex(o.rec) << '\n';
   }
 
   RecordProxy& operator=(const RecordProxy& o) noexcept {
-//    std::cerr << "RecordProxy::operator=(const RecordProxy&) " << to_hex(rec) << " <= " << to_hex(o.rec) << '\n';
     std::memcpy(rec.data(), o.rec.data(), rec.size());
     return *this;
   }
 
   RecordProxy(RecordProxy&& o) noexcept {
-//    std::cerr << "RecordProxy(RecordProxy&&) " << to_hex(o.rec) << '\n';
-
     tmp.reset(new uint8_t[o.rec.size()]);
     std::memcpy(tmp.get(), o.rec.data(), o.rec.size());
     rec = { tmp.get(), o.rec.size() };
   }
 
   RecordProxy& operator=(RecordProxy&& o) noexcept {
-//    std::cerr << "RecordProxy::operator=(RecordProxy&&) " << to_hex(rec) << " <= " << to_hex(o.rec) << '\n';
     std::memcpy(rec.data(), o.rec.data(), rec.size());
     return *this;
   }
 
+  int cmp(const RecordProxy& o) const noexcept {
+    return std::memcmp(rec.data(), o.rec.data(), rec.size());
+  }
+
+  bool operator==(const RecordProxy& o) const noexcept {
+    return cmp(o) == 0;
+  }
+
+  bool operator!=(const RecordProxy& o) const noexcept {
+    return !(*this == o);
+  }
+
+  bool operator<(const RecordProxy& o) const noexcept {
+    return cmp(o) < 0;
+  }
+
+  bool operator<=(const RecordProxy& o) const noexcept {
+    return cmp(o) <= 0;
+  }
+
+  bool operator>(const RecordProxy& o) const noexcept {
+    return cmp(o) > 0;
+  }
+
+  bool operator>=(const RecordProxy& o) const noexcept {
+    return cmp(o) >= 0;
+  }
+
+// C++20:
+/*
   auto operator<=>(const RecordProxy& o) const noexcept {
     return std::memcmp(rec.data(), o.rec.data(), rec.size());
   }
@@ -52,6 +79,7 @@ struct RecordProxy {
   bool operator==(const RecordProxy& o) const noexcept {
     return (*this <=> o) == 0;
   }
+*/
 };
 
 std::ostream& operator<<(std::ostream& out, const RecordProxy& r);
@@ -66,7 +94,7 @@ void swap(RecordProxy a, RecordProxy b);
 //void swap(RecordProxy& a, RecordProxy& b);
 }
 
-static_assert(std::swappable<RecordProxy>);
+//C++20: static_assert(std::swappable<RecordProxy>);
 
 class RecordIterator {
 public:
@@ -149,12 +177,27 @@ public:
     return *(*this + n);
   }
 
+  bool operator<(const RecordIterator& o) const noexcept {
+    return cur < o.cur;
+  }
+
+  bool operator<=(const RecordIterator& o) const noexcept {
+    return cur <= o.cur;
+  }
+
+// C++20:
+/*
   auto operator<=>(const RecordIterator& o) const noexcept {
     return cur - o.cur;
   }
+*/
 
   bool operator==(const RecordIterator& o) const noexcept {
     return cur == o.cur;
+  }
+
+  bool operator!=(const RecordIterator& o) const noexcept {
+    return cur != o.cur;
   }
 
   friend std::ostream& operator<<(std::ostream& out, const RecordIterator& i);
@@ -164,33 +207,30 @@ private:
   uint64_t record_length;
 };
 
-static_assert(std::random_access_iterator<RecordIterator>);
+// C++20: static_assert(std::random_access_iterator<RecordIterator>);
 
 struct HashRecordProxy {
-  std::span<uint8_t> rec;
+// C++20: std::span<uint8_t> rec;
+  span<uint8_t> rec;
   uint64_t* idx;
 
   std::unique_ptr<uint8_t[]> tmp;
   uint64_t tmp_idx;
 
-  HashRecordProxy(std::span<uint8_t> rec, uint64_t* idx): rec(rec), idx(idx) {
-//    std::cerr << "RecordProxy(std::span) " << to_hex(rec) << '\n';
+// C++20:  HashRecordProxy(std::span<uint8_t> rec, uint64_t* idx): rec(rec), idx(idx) {
+  HashRecordProxy(span<uint8_t> rec, uint64_t* idx): rec(rec), idx(idx) {
   }
 
   HashRecordProxy(const HashRecordProxy& o): rec(o.rec), idx(o.idx) {
-//    std::cerr << "RecordProxy(const RecordProxy&) " << to_hex(o.rec) << '\n';
   }
 
   HashRecordProxy& operator=(const HashRecordProxy& o) noexcept {
-//    std::cerr << "RecordProxy::operator=(const RecordProxy&) " << to_hex(rec) << " <= " << to_hex(o.rec) << '\n';
     std::memcpy(rec.data(), o.rec.data(), rec.size());
     *idx = *(o.idx);
     return *this;
   }
 
   HashRecordProxy(HashRecordProxy&& o) noexcept {
-//    std::cerr << "RecordProxy(RecordProxy&&) " << to_hex(o.rec) << '\n';
-
     tmp.reset(new uint8_t[o.rec.size()]);
     std::memcpy(tmp.get(), o.rec.data(), o.rec.size());
     rec = { tmp.get(), o.rec.size() };
@@ -200,12 +240,13 @@ struct HashRecordProxy {
   }
 
   HashRecordProxy& operator=(HashRecordProxy&& o) noexcept {
-//    std::cerr << "RecordProxy::operator=(RecordProxy&&) " << to_hex(rec) << " <= " << to_hex(o.rec) << '\n';
     std::memcpy(rec.data(), o.rec.data(), rec.size());
     *idx = *(o.idx);
     return *this;
   }
 
+// C++20:
+/*
   auto operator<=>(const HashRecordProxy& o) const noexcept {
     const auto r = std::memcmp(rec.data(), o.rec.data(), rec.size());
     return r == 0 ? static_cast<int64_t>(*(o.idx)) - static_cast<int64_t>(*idx) : r;
@@ -213,6 +254,20 @@ struct HashRecordProxy {
 
   bool operator==(const HashRecordProxy& o) const noexcept {
     return (*this <=> o) == 0;
+  }
+*/
+
+  int cmp(const HashRecordProxy& o) const noexcept {
+    const auto r = std::memcmp(rec.data(), o.rec.data(), rec.size());
+    return r == 0 ? static_cast<int64_t>(*(o.idx)) - static_cast<int64_t>(*idx) : r;
+  }
+
+  bool operator<(const HashRecordProxy& o) const noexcept {
+    return cmp(o) < 0;
+  }
+
+  bool operator==(const HashRecordProxy& o) const noexcept {
+    return cmp(o) == 0;
   }
 };
 
@@ -227,7 +282,6 @@ void swap(HashRecordProxy a, HashRecordProxy b);
 
 //void swap(RecordProxy& a, RecordProxy& b);
 }
-
 
 class HashRecordIterator {
 public:
@@ -312,12 +366,23 @@ public:
     return *(*this + n);
   }
 
+  bool operator<(const HashRecordIterator& o) const noexcept {
+    return pos < o.pos;
+  }
+
+// C++20:
+/*
   auto operator<=>(const HashRecordIterator& o) const noexcept {
     return pos - o.pos;
   }
+*/
 
   bool operator==(const HashRecordIterator& o) const noexcept {
     return pos == o.pos;
+  }
+
+  bool operator!=(const HashRecordIterator& o) const noexcept {
+    return pos != o.pos;
   }
 
 private:
@@ -327,4 +392,4 @@ private:
   uint64_t* indices;
 };
 
-static_assert(std::random_access_iterator<HashRecordIterator>);
+// C++20: static_assert(std::random_access_iterator<HashRecordIterator>);
