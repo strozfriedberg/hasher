@@ -219,7 +219,7 @@ TEST_CASE("hashset_lookup") {
 
   // lookup some MD5s
 
-  std::vector<std::pair<std::array<uint8_t,16>, bool>> tests_16{
+  std::vector<std::pair<std::array<uint8_t, 16>, bool>> tests_16{
     { to_bytes<16>("00000000000000000000000000000000"), false },
     { to_bytes<16>("deadbeefdeadbeefdeadbeefdeadbeef"), false },
     { to_bytes<16>("ffffffffffffffffffffffffffffffff"), false }
@@ -233,7 +233,7 @@ TEST_CASE("hashset_lookup") {
 
   // lookup some SHA1s
 
-  std::vector<std::pair<std::array<uint8_t,20>, bool>> tests_20{
+  std::vector<std::pair<std::array<uint8_t, 20>, bool>> tests_20{
     { to_bytes<20>("0000000000000000000000000000000000000000"), false },
     { to_bytes<20>("deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"), false },
     { to_bytes<20>("ffffffffffffffffffffffffffffffffffffffff"), false }
@@ -260,6 +260,56 @@ TEST_CASE("hashset_record_field_index_for_type") {
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_MD5) == 9);
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_SHA_1) == 26);
   CHECK(sfhash_hashset_record_field_index_for_type(&hset, SFHASH_BLAKE3) == -1);
+}
+
+TEST_CASE("hashset_lookup_bulk") {
+  // create a test hset
+  std::array sha1s{
+    to_bytes<20>("0af8e028c7048ad772ddec2200ec7e0e4d58b0c3"),
+    to_bytes<20>("1127ceb2c2d789c1d7615b12082ca30222f3c612"),
+    to_bytes<20>("3e909896b309492e00444212bb2b270b5809a0cf"),
+    to_bytes<20>("5cb3a026273fd180a9cfc32bfe3da8730e4bd192"),
+    to_bytes<20>("6007cca8643961ed5f374d2dbf0394dc88110cdb"),
+    to_bytes<20>("78e7f1736d31d8b5b1beb41e2e41769754d3cf3f"),
+    to_bytes<20>("a40ea2ba2d45f9aa4d2b31adfcad0bbdb6670452"),
+    to_bytes<20>("b46c74716a8b1fbf5fedc75f58c9c72b53631123"),
+    to_bytes<20>("c1ec34d963283b8ca0ac899164dfbb3fc2321e38"),
+    to_bytes<20>("fad37e52be19b7a6ea321b848f2d6de4b75efcc9")
+  };
+
+  SFHASH_Hashset hset;
+
+  hset.holder.hsets.emplace_back(
+    HashsetHeader{ SFHASH_SHA_1, "sha1", 20, 0 },
+    HashsetHint{},
+    ConstHashsetData{ sha1s.begin(), sha1s.end() },
+    std::unique_ptr<LookupStrategy>(new BasicLookupStrategy<20>(sha1s.begin(), sha1s.end())),
+    ConstRecordIndex{}
+  );
+
+  // lookup some SHA1s
+
+  std::vector<std::array<uint8_t, 20>> lookup{
+    to_bytes<20>("0000000000000000000000000000000000000000"),
+    to_bytes<20>("deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"),
+    to_bytes<20>("ffffffffffffffffffffffffffffffffffffffff"),
+    to_bytes<20>("6007cca8643961ed5f374d2dbf0394dc88110cdb"),
+    to_bytes<20>("1127ceb2c2d789c1d7615b12082ca30222f3c612")
+  };
+
+  std::vector<uint8_t> results(lookup.size());
+
+  sfhash_hashset_lookup_bulk(
+    &hset,
+    0,
+    lookup.data(),
+    lookup.size(),
+    reinterpret_cast<bool*>(results.data())
+  );
+
+  const std::vector<uint8_t> exp{ false, false, false, true, true};
+
+  CHECK(results == exp);
 }
 
 TEST_CASE("hashset_record_field") {

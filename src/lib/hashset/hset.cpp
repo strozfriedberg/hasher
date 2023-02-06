@@ -77,6 +77,19 @@ bool sfhash_hashset_lookup(
   return std::get<std::unique_ptr<LookupStrategy>>(hset->holder.hsets[tidx])->contains(static_cast<const uint8_t*>(hash));
 }
 
+void sfhash_hashset_lookup_bulk(
+  const SFHASH_Hashset* hset,
+  size_t tidx,
+  const void* hashes,
+  size_t hashes_length,
+  bool* results
+) {
+  const size_t hash_length = std::get<0>(hset->holder.hsets[tidx]).hash_length;
+  for (size_t i = 0; i < hashes_length; ++i) {
+    results[i] = sfhash_hashset_lookup(hset, tidx, hashes + i * hash_length);
+  }
+}
+
 int hashset_record_field_index_for_type(
   const RecordHeader& rhdr,
   SFHASH_HashAlgorithm htype

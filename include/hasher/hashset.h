@@ -83,6 +83,14 @@ bool sfhash_hashset_lookup(
   const void* hash
 );
 
+void sfhash_hashset_lookup_bulk(
+  const SFHASH_Hashset* hset,
+  size_t tidx,
+  const void* hashes,
+  size_t hashes_length,
+  bool* results
+);
+
 struct SFHASH_HashsetRecordRange {
   size_t beg;
   size_t end;
