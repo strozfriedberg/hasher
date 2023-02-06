@@ -10,6 +10,4 @@ public:
   virtual ~LookupStrategy() {}
 
   virtual bool contains(const uint8_t* hash) const = 0;
-
-  virtual const uint8_t* data() const = 0;
 };
