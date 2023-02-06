@@ -86,7 +86,11 @@ void sfhash_hashset_lookup_bulk(
 ) {
   const size_t hash_length = std::get<0>(hset->holder.hsets[tidx]).hash_length;
   for (size_t i = 0; i < hashes_length; ++i) {
-    results[i] = sfhash_hashset_lookup(hset, tidx, hashes + i * hash_length);
+    results[i] = sfhash_hashset_lookup(
+      hset,
+      tidx,
+      static_cast<const uint8_t*>(hashes) + i * hash_length
+    );
   }
 }
 
