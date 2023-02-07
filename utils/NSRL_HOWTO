@@ -16,6 +16,6 @@ unzip legacy/NSRLFile.txt.zip
 sort -mu modm leg >unified
 
 # Create the hset
-./mkhashset.py sha1 'NSRL RDS 2.71' 'The NSRL RDS Modern Minimal + Legacy 2.71' <unified >rds_2.71_asdf_hashes.hset
+mkhashset 'NSRL RDS 2.79' 'The NSRL RDS Modern Minimal + Legacy 2.79' SHA1 MD5 size false true unified nsrl-rds-2.79.hset
 
 3. Upload the hashset to the E2E testdata bucket in S3.

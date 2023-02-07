@@ -33,10 +33,6 @@ public:
     );
   }
 
-  virtual const uint8_t* data() const {
-    return reinterpret_cast<const uint8_t*>(HashesBeg.get());
-  }
-
 protected:
   std::unique_ptr<
     std::array<uint8_t, HashLength>[],

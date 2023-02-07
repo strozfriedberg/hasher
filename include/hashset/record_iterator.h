@@ -1,12 +1,12 @@
 #pragma once
 
-#include <concepts>
+// C++20: #include <concepts>
 #include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <ostream>
-//C++20: #include <span>
+// C++20: #include <span>
 
 #include <iostream>
 
