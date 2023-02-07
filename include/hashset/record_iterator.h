@@ -6,7 +6,7 @@
 #include <iterator>
 #include <memory>
 #include <ostream>
-//C++20: #include <span>
+// C++20: #include <span>
 
 #include <iostream>
 
