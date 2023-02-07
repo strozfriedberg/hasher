@@ -370,6 +370,10 @@ public:
     return pos < o.pos;
   }
 
+  bool operator>(const HashRecordIterator& o) const noexcept {
+    return pos > o.pos;
+  }
+
 // C++20:
 /*
   auto operator<=>(const HashRecordIterator& o) const noexcept {
