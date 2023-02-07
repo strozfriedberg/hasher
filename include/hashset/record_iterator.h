@@ -185,6 +185,10 @@ public:
     return cur <= o.cur;
   }
 
+  bool operator>(const RecordIterator& o) const noexcept {
+    return cur > o.cur;
+  }
+
 // C++20:
 /*
   auto operator<=>(const RecordIterator& o) const noexcept {
