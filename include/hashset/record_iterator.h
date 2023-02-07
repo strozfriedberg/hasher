@@ -1,6 +1,6 @@
 #pragma once
 
-#include <concepts>
+// C++20: #include <concepts>
 #include <cstdint>
 #include <cstring>
 #include <iterator>
