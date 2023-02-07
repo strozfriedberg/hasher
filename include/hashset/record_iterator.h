@@ -185,6 +185,14 @@ public:
     return cur <= o.cur;
   }
 
+  bool operator>(const RecordIterator& o) const noexcept {
+    return cur > o.cur;
+  }
+
+  bool operator>=(const RecordIterator& o) const noexcept {
+    return cur >= o.cur;
+  }
+
 // C++20:
 /*
   auto operator<=>(const RecordIterator& o) const noexcept {
@@ -368,6 +376,18 @@ public:
 
   bool operator<(const HashRecordIterator& o) const noexcept {
     return pos < o.pos;
+  }
+
+  bool operator<=(const HashRecordIterator& o) const noexcept {
+    return pos <= o.pos;
+  }
+
+  bool operator>(const HashRecordIterator& o) const noexcept {
+    return pos > o.pos;
+  }
+
+  bool operator>=(const HashRecordIterator& o) const noexcept {
+    return pos >= o.pos;
   }
 
 // C++20:
