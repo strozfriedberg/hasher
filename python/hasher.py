@@ -382,7 +382,7 @@ class Error(Handle):
         return self.handle
 
     def __str__(self):
-        return self.handle.contents.message.decode('utf-8') if self.handle else ''
+        return self.handle.contents.message.decode('utf-8', errors='backslashreplace') if self.handle else ''
 
 
 def hash_name(alg):
