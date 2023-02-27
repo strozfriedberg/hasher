@@ -9,4 +9,4 @@ Version: @PACKAGE_VERSION@
 
 Cflags: -I${includedir}
 Libs: -L${libdir} -lhasher
-Libs.private: -lfuzzy -lblake3
+Libs.private: -lfuzzy
