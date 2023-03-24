@@ -34,7 +34,7 @@ HASH_TYPE = {
     'sha3_512':  1 <<  9,
     'blake3':    1 << 10,
     'quick_md5': 1 << 13,
-    'other':     1 <  31
+    'other':     1 << 31
 }
 
 
