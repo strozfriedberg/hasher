@@ -1,21 +1,19 @@
-1. Download Modern RDS (minimal) and Legacy RDS: https://www.nist.gov/itl/ssd/software-quality-group/national-software-reference-library-nsrl/nsrl-download/current-rds
+1. Download Modern RDS (minimal) and Legacy RDS (minimal): https://www.nist.gov/itl/ssd/software-quality-group/national-software-reference-library-nsrl/nsrl-download/current-rds
 
-2. 
+2. Process what you downloaded:
 
-# Extract the Modern Minimal hashes 
-unzip rds_modernm.zip
-./nsrldump.py <rds_modernm/NSRLFile.txt >modm
+# Unzip the archives
+unzip RDS_2023.03.1_legacy_minimal.zip
+unzip RDS_2023.03.1_modern_minimal.zip
 
-# Extract the Legacy hashes
-mkdir legacy
-7z x RDS_legacy.iso -olegacy
-unzip legacy/NSRLFile.txt.zip
-./nsrldump.py <NSRLFile.txt >leg
+# Extract the hashes
+sqlite3 -separator ' ' RDS_2023.03.1_modern_minimal.db 'SELECT sha256, sha1, md5, file_size FROM FILE' >mod
+sqlite3 -separator ' ' RDS_2023.03.1_legacy_minimal.db 'SELECT sha256, sha1, md5, file_size FROM FILE' >leg
 
 # Merge the two hashsets
-sort -mu modm leg >unified
+sort -mu mod leg >unified
 
 # Create the hset
-mkhashset 'NSRL RDS 2.79' 'The NSRL RDS Modern Minimal + Legacy 2.79' SHA1 MD5 size false true unified nsrl-rds-2.79.hset
+mkhashset 'NSRL RDS 2023.03.1' 'The NSRL RDS Modern Minimal + Legacy 2023.03.1' SHA2_256 SHA1 MD5 size false true unified nsrl-rds-2023.03.1.hset
 
 3. Upload the hashset to the E2E testdata bucket in S3.
