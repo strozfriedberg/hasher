@@ -3,10 +3,10 @@
 #include "helper.h"
 
 #include "hex.h"
-#include "hset_encoder.h"
 #include "util.h"
 #include "hasher/hashset.h"
 #include "hashset/hset.h"
+#include "hashset/hset_encoder.h"
 
 #include <cstring>
 #include <iostream>

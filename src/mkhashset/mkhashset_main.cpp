@@ -24,9 +24,9 @@ for i in NSRLFile.*.txt.gz ; do zcat $i | ./nsrldump.py ; done | mkhashset 'NSRL
 #include <iostream>
 #include <vector>
 
-#include "hset_encoder.h"
 #include "util.h"
 #include "hasher/hashset.h"
+#include "hashset/hset_encoder.h"
 
 int main(int argc, char** argv) {
   if (argc < 7) {
