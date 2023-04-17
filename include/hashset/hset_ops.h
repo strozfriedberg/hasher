@@ -1,9 +1,9 @@
 #pragma once
 
 #include "error.h"
-#include "hset_decoder.h"
 #include "throw.h"
 #include "hasher/hashset.h"
+#include "hashset/hset_decoder.h"
 
 #include <cstddef>
 #include <vector>

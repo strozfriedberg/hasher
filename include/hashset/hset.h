@@ -1,5 +1,5 @@
-#include "hset_decoder.h"
 #include "hasher/hashset.h"
+#include "hashset/hset_decoder.h"
 
 struct SFHASH_Hashset {
   Holder holder;
