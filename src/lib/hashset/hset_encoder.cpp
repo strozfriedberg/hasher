@@ -645,7 +645,7 @@ size_t length_hset_hashsets_only(
 
     len += length_alignment_padding(len, 4096);
 //    len += length_hdat(std::get<0>(hsets[i]).hash_count, std::get<0>(hsets[i]).hash_length);
-    len += length_hdat(record_count, std::get<0>(hsets[i]).hash_length);
+    len += length_hdat(record_count, std::get<HashsetHeader>(hsets[i]).hash_length);
   }
 
   len += length_fend();
@@ -1134,7 +1134,7 @@ void sfhash_hashset_builder_add_hash(
     if (length > 0) {
       auto& out = bctx->tmp_hashes_out[field_pos];
       out.write(static_cast<const char*>(record), length);
-      ++std::get<0>(bctx->hsets[field_pos]).hash_count;
+      ++std::get<HashsetHeader>(bctx->hsets[field_pos]).hash_count;
     }
   }
 
@@ -1273,7 +1273,7 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
       const auto& f = bctx->tmp_hashes_files[i];
       auto fsize = std::filesystem::file_size(f);
 
-      auto& hhdr = std::get<0>(bctx->hsets[i]);
+      auto& hhdr = std::get<HashsetHeader>(bctx->hsets[i]);
 
       {
         bip::file_mapping fm(f.string().c_str(), bip::read_write);
@@ -1343,8 +1343,8 @@ uint64_t hashset_builder_write(SFHASH_HashsetBuildCtx* bctx) {
       ftoc.entries.emplace_back(off, Chunk::Type::HDAT);
       off2hbidx[off] = i;
 
-      auto& hhdr = std::get<0>(bctx->hsets[i]);
-      auto& hdat = std::get<2>(bctx->hsets[i]);
+      auto& hhdr = std::get<HashsetHeader>(bctx->hsets[i]);
+      auto& hdat = std::get<HashsetData>(bctx->hsets[i]);
 
       const auto& f = bctx->tmp_hashes_files[i];
 
