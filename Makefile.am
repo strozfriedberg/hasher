@@ -36,6 +36,7 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hashset/hset.cpp \
 	src/lib/hashset/hset_decoder.cpp \
 	src/lib/hashset/hset_encoder.cpp \
+	src/lib/hashset/hset_encoder_chunks.cpp \
 	src/lib/hashset/hset_ops.cpp \
 	src/lib/hashset/hset_structs.cpp \
 	src/lib/hashset/record_iterator.cpp \
