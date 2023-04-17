@@ -23,6 +23,11 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+
+namespace bip = boost::interprocess;
+
 #include "cpp20.h"
 #include "error.h"
 #include "hex.h"
@@ -33,11 +38,6 @@
 #include "hasher/hasher.h"
 #include "hasher/hashset.h"
 #include "util/istream_line_range.h"
-
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-
-namespace bip = boost::interprocess;
 
 const std::map<
   SFHASH_HashAlgorithm,
