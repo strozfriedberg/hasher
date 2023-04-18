@@ -113,12 +113,10 @@ src_mkhashset_mkhashset_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 bin_PROGRAMS = src/fuzzy/fuzzy src/hasher/hasher src/mkhashset/mkhashset
 
-check_PROGRAMS = test/test
-
-noinst_PROGRAMS = test/bench_hex test/bench_hsd
+check_PROGRAMS = test/test test/bench_hex test/bench_hsd
 
 TESTS = \
-	$(check_PROGRAMS) \
+	test/test \
 	python/test.sh
 
 test_test_SOURCES = \
