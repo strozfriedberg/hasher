@@ -9,6 +9,9 @@
 #include "rwutil.h"
 #include "hashset/hset_structs.h"
 
+struct binary_fuse8_s;
+using binary_fuse8_t = binary_fuse8_s;
+
 template <auto func, typename... Args>
 size_t length_chunk(Args&&... args)
 {
@@ -114,6 +117,14 @@ size_t write_hint(
   const std::vector<std::pair<int64_t, int64_t>>& block_bounds,
   char* out
 );
+
+size_t length_filter_data(uint64_t hash_count);
+
+size_t length_filter(uint64_t hash_count);
+
+size_t write_filter_data(const binary_fuse8_t* filter, char* out);
+
+size_t write_filter(const binary_fuse8_t* filter, char* out);
 
 size_t length_hdat_data(size_t hash_count, size_t hash_size);
 
