@@ -5,11 +5,11 @@
 #include "hasher/hashset.h"
 
 #include "hex.h"
-#include "hset_decoder.h"
 #include "throw.h"
 #include "util.h"
 #include "hashset/convex_hull.h"
 #include "hashset/hset.h"
+#include "hashset/hset_decoder.h"
 #include "hashset/lookupstrategy.h"
 #include "hashset/basic_ls.h"
 #include "hashset/block_ls.h"

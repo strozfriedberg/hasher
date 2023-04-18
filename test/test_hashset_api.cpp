@@ -5,10 +5,10 @@
 
 #include "helper.h"
 
-#include "hset_encoder.h"
 #include "hasher/hashset.h"
 #include "hashset/basic_ls.h"
 #include "hashset/hset.h"
+#include "hashset/hset_encoder.h"
 #include "hashset/lookupstrategy.h"
 
 #include <array>

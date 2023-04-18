@@ -1,54 +1,21 @@
 #pragma once
 
 #include <cstddef>
-#include <filesystem>
-#include <fstream>
-#include <iosfwd>
+#include <cstdint>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "rwutil.h"
-#include "hasher/hashset.h"
 #include "hashset/hset_structs.h"
 
-struct SFHASH_HashsetBuildCtx {
-  TableOfContents ftoc;
-  FileHeader fhdr;
-  RecordHeader rhdr;
-  RecordData rdat;
-  std::vector<
-    std::tuple<
-      HashsetHeader,
-      HashsetHint,
-      HashsetData,
-      RecordIndex
-    >
-  > hsets;
-
-  bool with_records;
-  bool with_hashsets;
-
-  std::filesystem::path outfile;
-  std::ofstream out;
-
-  std::vector<std::filesystem::path> tmp_hashes_files;
-  std::vector<std::ofstream> tmp_hashes_out;
-
-  size_t field_pos;
-};
-
-size_t write_hashset(
-  const char* hashset_name,
-  const char* hashset_desc,
-  const SFHASH_HashAlgorithm* htypes,
-  size_t htypes_len,
-  std::istream& in,
-  std::vector<uint8_t>& out
-);
-
-void size_to_u64(uint8_t* dst, const char* src, size_t dlen);
+template <auto func, typename... Args>
+size_t length_chunk(Args&&... args)
+{
+  return 4 + // chunk type
+         8 + // chunk data length
+         func(std::forward<Args>(args)...);
+}
 
 // C++20: template <auto func, typename... Args>
 template <typename Func, typename... Args>
@@ -80,6 +47,8 @@ size_t length_magic();
 
 size_t write_magic(char* out);
 
+size_t length_hset_hash(); 
+
 size_t length_fhdr_data(
   const std::string& hashset_name,
   const std::string& hashset_desc,
@@ -107,6 +76,10 @@ size_t write_fhdr(
   const std::string& timestamp,
   char* out
 );
+
+uint32_t make_hhnn_type(uint32_t hash_type);
+
+std::string make_hhnn_str(uint32_t hash_type);
 
 size_t length_hhnn_data(
   const RecordFieldDescriptor& hi
@@ -212,6 +185,11 @@ size_t write_rdat_data(
 );
 
 size_t write_rdat(
+  const RecordData& rdat,
+  char* out
+);
+
+size_t write_rdat(
   const std::vector<RecordFieldDescriptor>& fields,
   const std::vector<std::vector<std::vector<uint8_t>>>& records,
   char* out
@@ -231,24 +209,10 @@ size_t write_ftoc(
   char* out
 );
 
-void check_strlen(const char* s, const char* sname);
+size_t length_fend_data();
 
-void write_hset(
-  std::istream& in,
-  const std::vector<SFHASH_HashAlgorithm>& htypes,
-  const std::vector<std::pair<void (*)(uint8_t* dst, const char* src, size_t dlen), size_t>>& conv,
-  const char* hset_name,
-  const char* hset_desc,
-  const std::filesystem::path& outfile,
-  const std::filesystem::path& tmpdir,
-  bool with_records,
-  bool with_hashsets
-);
+size_t length_fend();
 
-std::vector<
-  std::pair<
-    void (*)(uint8_t* dst, const char* src, size_t dlen),
-    size_t
-  >
->
-make_text_converters(const std::vector<SFHASH_HashAlgorithm>& htypes);
+size_t write_fend_data(char*);
+
+size_t write_fend(char* out);
