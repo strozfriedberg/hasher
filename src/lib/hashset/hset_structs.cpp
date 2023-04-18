@@ -41,6 +41,13 @@ std::ostream& operator<<(std::ostream& out, const HashsetHint& hint) {
              << ' ' << hint.end;
 }
 
+std::ostream& operator<<(std::ostream& out, const HashsetFilter& filter) {
+  return out << "FLTR\n"
+             << ' ' << filter.filter_type << '\n'
+             << ' ' << filter.beg << '\n'
+             << ' ' << filter.end;
+}
+
 template <class HDAT>
 std::ostream& out_hdat(std::ostream& out, const HDAT& hdat) {
   return out << "HDAT\n"
