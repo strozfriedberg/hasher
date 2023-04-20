@@ -237,6 +237,7 @@ size_t write_filter_data(
 {
   const char* beg = out;
 
+  out += write_le<uint16_t>(FilterType::BINARY_FUSE, out);
   out += write_le<uint64_t>(filter->Seed, out);
   out += write_le<uint32_t>(filter->SegmentLength, out);
   out += write_le<uint32_t>(filter->SegmentLengthMask, out);
