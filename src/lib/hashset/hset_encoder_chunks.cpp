@@ -208,7 +208,10 @@ size_t length_filter_data(uint64_t hash_count) {
   // thing to do is to allocate one, check its size, and throw it away.
   auto filter = make_unique_del(
     new binary_fuse8_t(),
-    binary_fuse8_free
+    [](binary_fuse8_t* f) {
+      binary_fuse8_free(f);
+      delete f; // binary_fuse8_free oddly does _not_ free f
+    }
   );
 
   const bool ok = binary_fuse8_allocate(hash_count, filter.get());
