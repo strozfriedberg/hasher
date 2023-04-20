@@ -12,6 +12,8 @@
 #include <tuple>
 #include <utility>
 
+#include <binaryfusefilter.h>
+
 #include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("write_chunk") {
@@ -188,6 +190,48 @@ TEST_CASE("write_hdat_data") {
     reinterpret_cast<uint8_t*>(456)
   };
   CHECK(write_hdat_data(hdat, nullptr) == 456 - 123);
+}
+
+TEST_CASE("length_filter") {
+  CHECK(length_filter_data(50) == 126);
+  CHECK(length_filter(50) == 138);
+}
+
+TEST_CASE("write_length_data") {
+  uint8_t exp[] = {
+    // filter type
+    0x01,
+    0x00,
+    // Seed
+    0x01, 0x23, 0x45, 0x67, 0x89, 0x10, 0x32, 0x54,
+    // SegmentLength
+    0x01, 0x02, 0x03, 0x04,
+    // SegmentLengthMask
+    0x05, 0x06, 0x07, 0x08,
+    // SegmentCount
+    0x09, 0x0A, 0x0B, 0x0C,
+    // SegmentCountLength
+    0x0D, 0x0E, 0x0F, 0x10,
+    // ArrayLength
+    0x0A, 0x00, 0x00, 0x00,
+    // Fingerprints
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A
+  };
+
+  binary_fuse8_t filter{
+    *reinterpret_cast<const uint64_t*>(exp + 2),
+    *reinterpret_cast<const uint32_t*>(exp + 10),
+    *reinterpret_cast<const uint32_t*>(exp + 14),
+    *reinterpret_cast<const uint32_t*>(exp + 18),
+    *reinterpret_cast<const uint32_t*>(exp + 22),
+    *reinterpret_cast<const uint32_t*>(exp + 26),
+    exp + 30
+  };
+
+  chunk_data_tester<write_filter_data>(
+// C++20:    std::span{exp}, filter
+    span<uint8_t>{exp}, &filter
+  );
 }
 
 TEST_CASE("length_ridx") {
