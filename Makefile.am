@@ -35,6 +35,7 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hasher/quick_hasher.cpp \
 	src/lib/hashset/hset.cpp \
 	src/lib/hashset/hset_decoder.cpp \
+	src/lib/hashset/hset_decoder_chunks.cpp \
 	src/lib/hashset/hset_encoder.cpp \
 	src/lib/hashset/hset_encoder_chunks.cpp \
 	src/lib/hashset/hset_ops.cpp \
@@ -130,6 +131,7 @@ test_test_SOURCES = \
 	test/test_hashsetdata_util.cpp \
 	test/test_hex.cpp \
 	test/test_hset_decoder.cpp \
+	test/test_hset_decoder_chunks.cpp \
 	test/test_hset_encoder.cpp \
 	test/test_hset_encoder_chunks.cpp \
 	test/test_hset_ops.cpp \
