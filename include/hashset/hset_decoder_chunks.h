@@ -12,6 +12,8 @@ FileHeader parse_fhdr(const Chunk& ch);
 
 HashsetHeader parse_hhdr(const Chunk& ch);
 
+HashsetFilter parse_filter(const Chunk& ch);
+
 HashsetHint parse_hint(const Chunk& ch);
 
 ConstHashsetData parse_hdat(const Chunk& ch);

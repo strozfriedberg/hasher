@@ -66,6 +66,15 @@ RecordHeader parse_rhdr(const Chunk& ch) {
   return rhdr;
 }
 
+HashsetFilter parse_filter(const Chunk& ch) {
+  const uint8_t* cur = ch.dbeg;
+  return {
+    read_le<uint16_t>(ch.dbeg, cur, ch.dend),
+    cur,
+    ch.dend
+  };
+}
+
 HashsetHint parse_hint(const Chunk& ch) {
   const uint8_t* cur = ch.dbeg;
   return {

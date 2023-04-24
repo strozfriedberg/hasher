@@ -140,11 +140,10 @@ TEST_CASE("parse_hhdr") {
   CHECK(parse_hhdr(ch) == exp);
 }
 
-/*
 TEST_CASE("parse_filter") {
   const uint8_t buf[] = {
     // filter type
-    0x12, 0x34,
+    0x34, 0x12,
     // data!
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
   };
@@ -155,7 +154,6 @@ TEST_CASE("parse_filter") {
 
   CHECK(parse_filter(ch) == exp);
 }
-*/
 
 TEST_CASE("parse_hint") {
   const uint8_t buf[] = {
