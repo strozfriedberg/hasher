@@ -7,4 +7,4 @@
 	url = https://github.com/greg7mdp/parallel-hashmap.git
 [submodule "vendors/xor_singleheader"]
 	path = vendors/xor_singleheader
-	url = https://github.com/uckelman-sf/xor_singleheader.git
+	url = https://github.com/FastFilter/xor_singleheader.git
