@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/vendors/parallel-hashmap $(PROJECT_CPPFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/vendors/parallel-hashmap -I$(srcdir)/vendors/xor_singleheader/include $(PROJECT_CPPFLAGS)
 AM_CXXFLAGS = $(PROJECT_CXXFLAGS)
 AM_LDFLAGS = $(PROJECT_LDFLAGS)
 
@@ -35,6 +35,7 @@ src_lib_libhasherint_la_SOURCES = \
 	src/lib/hasher/quick_hasher.cpp \
 	src/lib/hashset/hset.cpp \
 	src/lib/hashset/hset_decoder.cpp \
+	src/lib/hashset/hset_decoder_chunks.cpp \
 	src/lib/hashset/hset_encoder.cpp \
 	src/lib/hashset/hset_encoder_chunks.cpp \
 	src/lib/hashset/hset_ops.cpp \
@@ -113,12 +114,10 @@ src_mkhashset_mkhashset_LDADD = $(HASHER_LIB) $(PROJECT_LIBS)
 
 bin_PROGRAMS = src/fuzzy/fuzzy src/hasher/hasher src/mkhashset/mkhashset
 
-check_PROGRAMS = test/test
-
-noinst_PROGRAMS = test/bench_hex test/bench_hsd
+check_PROGRAMS = test/test test/bench_hex test/bench_hsd
 
 TESTS = \
-	$(check_PROGRAMS) \
+	test/test \
 	python/test.sh
 
 test_test_SOURCES = \
@@ -132,6 +131,7 @@ test_test_SOURCES = \
 	test/test_hashsetdata_util.cpp \
 	test/test_hex.cpp \
 	test/test_hset_decoder.cpp \
+	test/test_hset_decoder_chunks.cpp \
 	test/test_hset_encoder.cpp \
 	test/test_hset_encoder_chunks.cpp \
 	test/test_hset_ops.cpp \

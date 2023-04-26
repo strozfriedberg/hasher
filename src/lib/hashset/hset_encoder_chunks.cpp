@@ -2,9 +2,12 @@
 
 #include "cpp20.h"
 #include "rwutil.h"
+#include "util.h"
 
 #include <cstring>
 #include <numeric>
+
+#include <binaryfusefilter.h>
 
 size_t length_alignment_padding(uint64_t pos, uint64_t align) {
   return (align - pos % align) % align;
@@ -195,6 +198,67 @@ size_t write_hint(
     out,
     "HINT",
     block_bounds
+  );
+}
+
+size_t length_filter_data(uint64_t hash_count) {
+  // There is no function which returns the length of the data array in a
+  // binary fuse filter with a given number of input elements, and computing
+  // it manually is fiddly; the simplest, though aggravatinly inefficient,
+  // thing to do is to allocate one, check its size, and throw it away.
+  auto filter = make_unique_del(
+    new binary_fuse8_t(),
+    [](binary_fuse8_t* f) {
+      binary_fuse8_free(f);
+      delete f; // binary_fuse8_free oddly does _not_ free f
+    }
+  );
+
+  const bool ok = binary_fuse8_allocate(hash_count, filter.get());
+  THROW_IF(!ok, "out of memory");
+
+  return 2 + // filter type
+         sizeof(uint64_t) +
+         sizeof(uint32_t) +
+         sizeof(uint32_t) +
+         sizeof(uint32_t) +
+         sizeof(uint32_t) +
+         sizeof(uint32_t) +
+         filter->ArrayLength;
+}
+
+size_t length_filter(uint64_t hash_count) {
+  return length_chunk<length_filter_data>(hash_count);
+}
+
+size_t write_filter_data(
+  const binary_fuse8_t* filter,
+  char* out)
+{
+  const char* beg = out;
+
+  out += write_le<uint16_t>(FilterType::BINARY_FUSE, out);
+  out += write_le<uint64_t>(filter->Seed, out);
+  out += write_le<uint32_t>(filter->SegmentLength, out);
+  out += write_le<uint32_t>(filter->SegmentLengthMask, out);
+  out += write_le<uint32_t>(filter->SegmentCount, out);
+  out += write_le<uint32_t>(filter->SegmentCountLength, out);
+  out += write_le<uint32_t>(filter->ArrayLength, out);
+  out += write_bytes(filter->Fingerprints, filter->ArrayLength, out);
+
+  return out - beg;
+}
+
+size_t write_filter(
+  const binary_fuse8_t* filter,
+  char* out)
+{
+// C++20: return write_chunk<write_filter_data>(
+  return write_chunk(
+    write_filter_data,
+    out,
+    "FLTR",
+    filter
   );
 }
 

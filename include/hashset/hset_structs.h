@@ -77,6 +77,25 @@ enum HintType {
   BLOCK_LINEAR = 4
 };
 
+struct HashsetFilter {
+  uint16_t filter_type;
+  const void* beg;
+  const void* end;
+
+// C++20: bool operator==(const HashsetFilter&) const = default;
+  bool operator==(const HashsetFilter& o) const {
+    return filter_type == o.filter_type &&
+           beg == o.beg &&
+           end == o.end;
+  }
+};
+
+std::ostream& operator<<(std::ostream& out, const HashsetFilter& filter);
+
+enum FilterType {
+  BINARY_FUSE = 1
+};
+
 struct HashsetData {
   uint8_t* beg;
   uint8_t* end;
@@ -182,6 +201,7 @@ struct Chunk {
     HHDR = 0x48480000,
     HDAT = 0x48444154,
     HINT = 0x48494E54,
+    FLTR = 0x464C5452,
     RIDX = 0x52494458,
     FEND = 0x46454E44
   };

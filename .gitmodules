@@ -5,3 +5,6 @@
 [submodule "vendors/parallel-hashmap"]
 	path = vendors/parallel-hashmap
 	url = https://github.com/greg7mdp/parallel-hashmap.git
+[submodule "vendors/xor_singleheader"]
+	path = vendors/xor_singleheader
+	url = https://github.com/FastFilter/xor_singleheader.git
