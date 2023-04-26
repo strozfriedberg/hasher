@@ -3,6 +3,7 @@
 #include "config.h"
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 
