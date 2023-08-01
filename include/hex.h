@@ -25,7 +25,11 @@ void to_hex(char* dst, const void* src, size_t slen);
 
 template <typename C>
 #if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(HAVE_FUNC_ATTRIBUTE_TARGET_CLONES)
-__attribute__((target_clones("avx2", "sse4.1", "default")))
+__attribute__((target_clones(
+#ifdef HAVE_X86INTRIN_H
+"avx2", "sse4.1",
+#endif
+"default")))
 #endif
 std::string to_hex(C beg, C end) {
   std::string ret((end - beg) * 2, '\0');
