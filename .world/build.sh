@@ -5,7 +5,7 @@
 make_it
 
 if [ "$Target" = 'windows' ]; then
-  MAKE_FLAGS+=' LOG_COMPILER=wine'
+  MAKE_FLAGS+=' LOG_COMPILER=.world/wine_wrapper.sh'
 fi
 
 make_check_it
