@@ -7,7 +7,6 @@ ctypes bindings for libhasher
 """
 
 from ctypes import *
-
 import os
 from pathlib import Path
 import sys
@@ -15,20 +14,33 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-lib_base = 'libhasher'
 
-exts = {'win32': '.dll', 'darwin': '.dylib'}
+def load_library(base: str) -> None:
+    if sys.platform == 'win32':
+        ext = '.dll'
+        os.add_dll_directory(Path(__file__).parent.parent.parent / Path("win64"))
+    elif sys.platform == 'linux':
+        ext = '.so'
+    elif sys.platform == 'darwin':
+        ext = '.dylib'
+    else:
+        ext = ''
 
-lib_name = lib_base + exts.get(sys.platform, '.so')
+    name = base + ext
 
-if sys.platform == 'win32':
-    os.add_dll_directory(Path(__file__).parent.parent / Path("win64"))
+    try:
+        # try the current directory
+        here = str(Path(__file__).parent / name)
+        return CDLL(here)
+    except OSError:
+        try:
+            # try sys.path
+            return CDLL(name)
+        except OSError as e:
+            raise ImportError(f"Failed to load {name} from {here} or {sys.path}") from e
 
-try:
-    _hasher = CDLL(lib_name)
-except Exception as e:
-    logger.critical("Could not load {} from {}".format(lib_name, sys.path))
-    raise e
+
+_hasher = load_library('libhasher')
 
 
 #
