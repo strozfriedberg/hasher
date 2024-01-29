@@ -29,6 +29,10 @@
 /m4/lt~obsolete.m4
 /python/*.log
 /python/*.trs
+/python/.venv
+/python/build
+/python/dist
+/python/hasher.egg-info
 /src/fuzzy/fuzzy
 /src/hasher/hasher
 /src/lib/hasher.pc
