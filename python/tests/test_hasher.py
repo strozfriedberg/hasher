@@ -301,7 +301,7 @@ class TestFuzzyMatcher(unittest.TestCase):
 
 class TestHashSetAPI(unittest.TestCase):
     def test_hashset_info_good(self):
-        with open('../test/good.hset', 'rb') as f:
+        with open('../../test/good.hset', 'rb') as f:
             with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as buf:
                 with hasher.HSet.load(buf) as hset:
                     self.assertEqual('Test Name', hset.name())
