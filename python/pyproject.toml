@@ -14,4 +14,4 @@ packages = ["hasher"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-hasher = ["libhasher.so", "libhasher.dylib"]
+hasher = ["libhasher.so", "libhasher.dylib", ".dynamic_link_me"]
