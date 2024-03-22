@@ -1,0 +1,17 @@
+[project]
+name = "hasher"
+version = "0.1.0"
+authors = [{name = "Joel Uckelman", email = "joel.uckelman@aon.co.uk"}]
+description = "hey"
+dependencies = ["libfuzzy"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["hasher"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+hasher = ["libhasher.so", "libhasher.dylib", ".dynamic_link_me"]
