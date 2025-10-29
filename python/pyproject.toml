@@ -1,7 +1,7 @@
 [project]
 name = "hasher"
 version = "0.1.0"
-authors = [{name = "Joel Uckelman", email = "joel.uckelman@aon.co.uk"}]
+authors = [{name = "Joel Uckelman", email = "joel.uckelman@levelblue.com"}]
 description = "hey"
 dependencies = ["libfuzzy"]
 
